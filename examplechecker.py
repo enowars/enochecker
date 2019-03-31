@@ -13,7 +13,7 @@ class ExampleChecker(BaseChecker):
 
     As well as methods:
     self.connect() connects to the remote server.
-    self.http_get and self.http_post request from http.
+    self.get and self.post request from http.
     self.team_db is a dict that stores its contents to filesystem. (call .persist() to make sure)
     self.readline_expect(): fails if it's not read correctly
 

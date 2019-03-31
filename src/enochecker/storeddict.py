@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.Logger(__name__)
 logger.setLevel(logging.DEBUG)
 
-DB_DEFAULT_DIR = "{}/.data".format(os.getcwd())  # Default location db files will be stored in -> usually cwd.
+DB_DEFAULT_DIR = os.path.join(os.getcwd(), ".data")  # Default location db files will be stored in -> usually cwd.
 # TODO: Force remove locks after a while?
 DB_LOCK_RETRYCOUNT = 6  # 2**6 / 10 seconds are 6.4 secs. -> That's how long the db will wait for a log
 DB_PREFIX = "_store_"  # Prefix all db files will get
@@ -92,7 +92,6 @@ class StoredDict(collections.MutableMapping):
         self._local_lock = threading.RLock()
 
         makedirs(self.path, exist_ok=True)
-        Path()
         atexit.register(self._cleanup)
         self._stopping = False
 

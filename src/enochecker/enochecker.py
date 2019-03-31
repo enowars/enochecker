@@ -14,7 +14,6 @@ from urllib.parse import urlparse
 
 import requests
 from future.utils import with_metaclass
-from requests import HTTPError, ConnectTimeout, ConnectionError
 
 from concurrent.futures import TimeoutError
 
@@ -71,23 +70,23 @@ def parse_args(argv=None):
 
     runparser = subparsers.add_parser("run", help="Run checker on cmdline")
     runparser.add_argument('method', choices=choices,
-                        help='The Method, one of {} or "listen" to start checker service'.format(CHECKER_METHODS))
+                           help='The Method, one of {} or "listen" to start checker service'.format(CHECKER_METHODS))
     runparser.add_argument("-a", '--address', type=str, default=None,
-                        help="The ip or address of the remote team to check")
+                           help="The ip or address of the remote team to check")
     runparser.add_argument("-n", '--team_name', type=str, default="team",
-                        help="The teamname of the team to check")
+                           help="The teamname of the team to check")
     runparser.add_argument("-r", '--round', type=int, default=1,
-                        help="The round we are in right now")
+                           help="The round we are in right now")
     runparser.add_argument("-f", '--flag', type=str, default="ENOFLAGENOFLAG=",
-                        help="The Flag, a Fake flag or a Unique ID, depending on the mode")
+                           help="The Flag, a Fake flag or a Unique ID, depending on the mode")
     runparser.add_argument("-t", '--max_time', type=int, default=30,
-                        help="The maximum amount of time the script has to execute in seconds")
+                           help="The maximum amount of time the script has to execute in seconds")
     runparser.add_argument("-i", '--call_idx', type=int, default=0,
-                        help="Unique numerical index per round. Each id only occurs once and is tighly packed, "
-                             "starting with 0. In a service supporting multiple flags, this would be used to "
-                             "decide which flag to place.")
+                           help="Unique numerical index per round. Each id only occurs once and is tighly packed, "
+                                "starting with 0. In a service supporting multiple flags, this would be used to "
+                                "decide which flag to place.")
     runparser.add_argument('-p', '--port', nargs='?', type=int,
-                        help="The port the checker should attack")
+                           help="The port the checker should attack")
 
     return parser.parse_args(args=argv)  # type: argparse.Namespace
 
@@ -189,12 +188,12 @@ class BaseChecker(with_metaclass(ABCMeta, object)):
         except EnoException as eno:
             self.info("Checker[{}] result: {}({})".format(eno.result, self.method, eno), exc_info=True)
             return eno.result
-        except HTTPError as ex:
+        except requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=True)
             return Result.ENOFLAG
         except (
-                ConnectionError,  # requests
-                ConnectTimeout,  # requests
+                requests.ConnectionError,  # requests
+                requests.ConnectTimeout,  # requests
                 TimeoutError,
                 socket.timeout,
                 ConnectionError,
@@ -350,16 +349,18 @@ class BaseChecker(with_metaclass(ABCMeta, object)):
         # noinspection PyProtectedMember
         return url._replace(netloc=netloc).geturl()
 
-    def connect(self, host=None, port=None, timeout=30):
-        # type: (Optional[str], Optional[int], int) -> SimpleSocket
+    def connect(self, host=None, port=None, timeout=None):
+        # type: (Optional[str], Optional[int], Optional[int]) -> SimpleSocket
         """
         Opens a socket/telnet connection to the remote host.
         Use connect(..).get_socket() for the raw socket.
         :param host: the host to connect to (defaults to self.address)
         :param port: the port to connect to (defaults to self.port)
-        :param timeout: timeout on connection
+        :param timeout: timeout on connection (defaults to self.max_time)
         :return: A connected Telnet instance
         """
+        if timeout is None:
+            timeout = self.max_time
         if port is None:
             port = self.port
         if host is None:
@@ -397,11 +398,11 @@ class BaseChecker(with_metaclass(ABCMeta, object)):
         self.http_useragent = new_agent
         return new_agent
 
-    def http_post(self, route="/", params=None, port=None, scheme="http", raise_http_errors=False, timeout=30,
-                  **kwargs):
-        # type: (str, Any, Optional[int], str, bool, int, ...) -> requests.Response
+    def http_post(self, route="/", params=None, port=None, scheme="http", raise_http_errors=False, timeout=None,
+             **kwargs):
+        # type: (str, Any, Optional[int], str, bool, Optional[int], ...) -> requests.Response
         """
-        Performs a requests.post to the current host.
+        Performs a (http) requests.post to the current host.
         Caches cookies in self.http_session
         :param params: The parameter
         :param route: The route
@@ -414,10 +415,10 @@ class BaseChecker(with_metaclass(ABCMeta, object)):
         kwargs.setdefault('allow_redirects', True)
         return self.http("post", route, params, port, scheme, raise_http_errors, timeout, **kwargs)
 
-    def http_get(self, route="/", params=None, port=None, scheme="http", raise_http_errors=False, timeout=30, **kwargs):
-        # type: (str, Any, Optional[int], str, bool, int, ...) -> requests.Response
+    def http_get(self, route="/", params=None, port=None, scheme="http", raise_http_errors=False, timeout=None, **kwargs):
+        # type: (str, Any, Optional[int], str, bool, Optional[int], ...) -> requests.Response
         """
-        Performs a requests.get to the current host.
+        Performs a (http) requests.get to the current host.
         Caches cookies in self.http_session
         :param params: The parameter
         :param route: The route
@@ -430,9 +431,9 @@ class BaseChecker(with_metaclass(ABCMeta, object)):
         kwargs.setdefault('allow_redirects', True)
         return self.http("get", route, params, port, scheme, raise_http_errors, timeout, **kwargs)
 
-    def http(self, method, route="/", params=None, port=None, scheme="http", raise_http_errors=False, timeout=30,
+    def http(self, method, route="/", params=None, port=None, scheme="http", raise_http_errors=False, timeout=None,
              **kwargs):
-        # type: (str, str, Any, Optional[int], str, bool, int, ...) -> requests.Response
+        # type: (str, str, Any, Optional[int], str, bool, Optional[int], ...) -> requests.Response
         """
         Performs an http request (requests lib) to the current host.
         Caches cookies in self.http_session
@@ -442,10 +443,12 @@ class BaseChecker(with_metaclass(ABCMeta, object)):
         :param port: The remote port in case it has not been specified at creation
         :param scheme: The scheme (defaults to http)
         :param raise_http_errors: If True, will raise exception on http error codes (4xx, 5xx)
-        :param timeout: How long we'll try to connect
+        :param timeout: How long we'll try to connect (default: self.max_time)
         :return: The response
         """
         url = self._sanitize_url(route, port, scheme)
+        if timeout is None:
+            timeout = self.max_time
         self.debug("Request: {} {} with params: {} and {} secs timeout.".format(method, url, params, timeout))
         resp = self.http_session.request(method, url, params=params, timeout=timeout, **kwargs)
         if raise_http_errors:
@@ -463,6 +466,8 @@ def run(checker, args=None):
     :return:  Never returns.
     """
     parsed = parse_args(args)
-    if not getattr(parsed, "listen_port"):
+    if hasattr(parsed, "listen_port") and parsed.listen_port:
+        listen(checker, port=parsed.listen_port)
+        exit(0)  # should never get here anyway
+    else:
         exit(checker(parsed))
-    listen(checker, port=parsed.listen_port)
