@@ -4,21 +4,85 @@ This is the checker lib that shall be used by all checkers in ENOWARS3.
 
 For a simple checker, subclass `enochecker.BaseChecker`.
 ```python
-class ExampleChecker(BaseChecker):
+from enochecker import BaseChecker, BrokenServiceException, run
+
+class AwesomeChecker(BaseChecker):
+
     def putflag(self):  # type: () -> None
         # TODO: Put flag to service
-        self.http_get("/putflaghere")
+        self.debug("flag is {}".format(self.flag))
+        self.http_post("/putflaghere", params={"flag": self.flag})
         # ...
         
     def getflag(self):  # type: () -> None
         # tTODO: Get the flag.
-        self.http_post("/dothings")
+        if not self.http_get("/getflag") == self.flag:
+            raise BrokenServiceException("Ooops, wrong Flag")
+        
+    def putnoise(self):
+        # put some noise
+        with self.connect() as telnet:
+            telnet.write(self.noise) 
+    
+    def getnoise(self):
+        with self.connect() as telnet:
+            telnet.write("gimmeflag\n")
+            telnet.read_expect(self.noise)
+        
+    def havoc(self):
+        self.http("FUNFUN").text == "FUNFUN"
+        
         
 if __name__ == "__main__":
-    run(ExampleChecker)
+    run(AwesomeChecker)
 ```
 
 A full example, including helpful comments, can be found in [examplechecker.py](examplechecker.py).
 
 The full API specification can be found [docs/api.md](docs/api.md).
 (Generated from docstring using `pydocmd simple ...`).
+
+## Launch Checker
+The goal is to have checkers launched via uSWGI and the Engine talking to it via http. 
+For testing, however, you can use the commandline instead:
+
+```
+usage: check.py run [-h] [-a ADDRESS] [-n TEAM_NAME] [-r ROUND] [-f FLAG]
+                    [-t MAX_TIME] [-i CALL_IDX] [-p [PORT]]
+                    {putflag,getflag,putnoise,getnoise,havoc,listen}
+
+positional arguments:
+  {putflag,getflag,putnoise,getnoise,havoc,listen}
+                        The Method, one of ['putflag', 'getflag', 'putnoise',
+                        'getnoise', 'havoc'] or "listen" to start checker
+                        service
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -a ADDRESS, --address ADDRESS
+                        The ip or address of the remote team to check
+  -n TEAM_NAME, --team_name TEAM_NAME
+                        The teamname of the team to check
+  -r ROUND, --round ROUND
+                        The round we are in right now
+  -f FLAG, --flag FLAG  The Flag, a Fake flag or a Unique ID, depending on the
+                        mode
+  -t MAX_TIME, --max_time MAX_TIME
+                        The maximum amount of time the script has to execute
+                        in seconds
+  -i CALL_IDX, --call_idx CALL_IDX
+                        Unique numerical index per round. Each id only occurs
+                        once and is tighly packed, starting with 0. In a
+                        service supporting multiple flags, this would be used
+                        to decide which flag to place.
+  -p [PORT], --port [PORT]
+                        The port the checker should attack
+
+````
+
+## Why use it at all?
+
+Many nice features for CTF Checker writing, obviously.
+Also, under-the-hood changes on the Engine can be made without any problems.
+
+Now, code away :).
