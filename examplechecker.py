@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#from src.enochecker import *
 from enochecker import *
 
 
@@ -20,7 +21,7 @@ class ExampleChecker(BaseChecker):
     (Or read the source, Luke)
     """
 
-    def store_flag(self):  # type: () -> None
+    def putflag(self):  # type: () -> None
         """
             This method stores a flag in the service.
             In case multiple flags are provided, self.call_idx gives the appropriate index.
@@ -38,7 +39,7 @@ class ExampleChecker(BaseChecker):
         else:
             raise ValueError("Call_Idx {} exceeds the amount of flags. Not supported.".format(self.call_idx))
 
-    def retrieve_flag(self):  # type: () -> None
+    def getflag(self):  # type: () -> None
         """
         This method retrieves a flag from the service.
         Use self.flag to get the flag that needs to be recovered and self.roudn to get the round the flag was placed in.
@@ -58,7 +59,7 @@ class ExampleChecker(BaseChecker):
         else:
             raise ValueError("Call_idx {} not supported!".format(self.call_idx))  # Internal error.
 
-    def store_noise(self):  # type: () -> None
+    def putnoise(self):  # type: () -> None
         """
         This method stores noise in the service. The noise should later be recoverable.
         The difference between noise and flag is, tht noise does not have to remain secret for other teams.
@@ -71,7 +72,7 @@ class ExampleChecker(BaseChecker):
         """
         self.team_db["noise"] = self.noise
 
-    def retrieve_noise(self):  # type: () -> None
+    def getnoise(self):  # type: () -> None
         """
         This method retrieves noise in the service.
         The noise to be retrieved is inside self.flag
@@ -102,5 +103,6 @@ class ExampleChecker(BaseChecker):
 
 
 if __name__ == "__main__":
+    run(ExampleChecker)
     # Example params could be: [StoreFlag localhost ENOFLAG 1 ENOFLAG 50 1]
-    exit(ExampleChecker(port=1337).run())
+    # exit(ExampleChecker(port=1337).run())

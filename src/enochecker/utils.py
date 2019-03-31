@@ -236,7 +236,8 @@ def serve_once(html, start_port=5000, autoincrement_port=True, content_type='tex
 
 class SimpleSocket(telnetlib.Telnet):
     """
-    Telnetlib with some additions
+    Telnetlib with some additions.
+    Read Telnetlib doku for more.
     """
 
     def readline_expect(self, expected, read_until=b"\n", timeout=30):

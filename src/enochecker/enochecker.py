@@ -9,7 +9,7 @@ import json
 import logging
 import sys
 from abc import ABCMeta, abstractmethod
-from typing import Optional, Callable, Any, Dict
+from typing import Optional, Callable, Any, Dict, List, Union
 from urllib.parse import urlparse
 
 import requests
@@ -22,6 +22,7 @@ from .utils import snake_caseify, SimpleSocket
 from .storeddict import StoredDict, DB_DEFAULT_DIR
 from .useragents import random_useragent
 from .results import Result, EnoException
+from .checkerservice import listen
 
 if "TimeoutError" not in globals():  # Python2
     # noinspection PyShadowingBuiltins
@@ -34,16 +35,16 @@ logger.setLevel(logging.DEBUG)
 VALID_ARGS = ["method", "address", "port", "team_name", "round", "flag", "max_time", "call_idx"]
 
 CHECKER_METHODS = [
-    "StoreFlag",
-    "RetrieveFlag",
-    "StoreNoise",
-    "RetrieveNoise",
-    "Havoc"
+    "putflag",
+    "getflag",
+    "putnoise",
+    "getnoise",
+    "havoc"
 ]
 
 
 def parse_args(argv=None):
-    # type: (argparse.Namespace) -> argparse.Namespace
+    # type: (Union[None, List[str], argparse.Namespace]) -> argparse.Namespace
     """
     Returns the parsed argparser args.
     Args look like this:
@@ -60,26 +61,34 @@ def parse_args(argv=None):
     :return: args object
     """
     if argv is None:
-        argv = parse_args(sys.argv[1:])
+        return parse_args(sys.argv[1:])
+    choices = CHECKER_METHODS + ["listen"]
     parser = argparse.ArgumentParser(description="Your friendly checker script")
-    parser.add_argument('method', choices=CHECKER_METHODS,
-                        help='The Method, one of {}'.format(CHECKER_METHODS))
-    parser.add_argument('address', type=str,
+    subparsers = parser.add_subparsers(help="The checker runmode")
+
+    listen = subparsers.add_parser("listen", help="Spawn checker service")
+    listen.add_argument('listen_port', help="The port the checker service should listen on")
+
+    runparser = subparsers.add_parser("run", help="Run checker on cmdline")
+    runparser.add_argument('method', choices=choices,
+                        help='The Method, one of {} or "listen" to start checker service'.format(CHECKER_METHODS))
+    runparser.add_argument("-a", '--address', type=str, default=None,
                         help="The ip or address of the remote team to check")
-    parser.add_argument('team_name', type=str,
-                        help="The teamname team to check")
-    parser.add_argument('round', type=int,
+    runparser.add_argument("-n", '--team_name', type=str, default="team",
+                        help="The teamname of the team to check")
+    runparser.add_argument("-r", '--round', type=int, default=1,
                         help="The round we are in right now")
-    parser.add_argument('flag', type=str,
+    runparser.add_argument("-f", '--flag', type=str, default="ENOFLAGENOFLAG=",
                         help="The Flag, a Fake flag or a Unique ID, depending on the mode")
-    parser.add_argument('max_time', type=int,
-                        help="The maximum amount of time the script has to execute")
-    parser.add_argument('call_idx', type=int,
+    runparser.add_argument("-t", '--max_time', type=int, default=30,
+                        help="The maximum amount of time the script has to execute in seconds")
+    runparser.add_argument("-i", '--call_idx', type=int, default=0,
                         help="Unique numerical index per round. Each id only occurs once and is tighly packed, "
                              "starting with 0. In a service supporting multiple flags, this would be used to "
                              "decide which flag to place.")
-    parser.add_argument('-p', '--port', nargs='?', type=int,
-                        help="The port the script should use")
+    runparser.add_argument('-p', '--port', nargs='?', type=int,
+                        help="The port the checker should attack")
+
     return parser.parse_args(args=argv)  # type: argparse.Namespace
 
 
@@ -90,13 +99,12 @@ class BaseChecker(with_metaclass(ABCMeta, object)):
     Magic.
     """
 
-    def __init__(self,
-                 method=None, address=None, team_name=None, round=None, flag=None, call_idx=None,
+    def __init__(self, method=None, address=None, team_name=None, round=None, flag=None, call_idx=None,
                  max_time=None, port=None, storage_dir=DB_DEFAULT_DIR, from_args=True):
         # type: (Optional[str], Optional[str], Optional[str], Optional[int], Optional[str], Optional[int], Optional[int], Optional[int], str, bool) -> None
         """
         Inits the Checker, filling the params, according to:
-        :param: method: The method
+        :param: method: The method (optional, can set this at run())
         :param: port for all networking methods of this checker
         :param: start_action set to false to not run the action
         :param: from_args: If true, uses parse_args() to fill all parameters that were passed as `None`.
@@ -183,7 +191,7 @@ class BaseChecker(with_metaclass(ABCMeta, object)):
             return eno.result
         except HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=True)
-            return Result.ENOWORKS
+            return Result.ENOFLAG
         except (
                 ConnectionError,  # requests
                 ConnectTimeout,  # requests
@@ -204,7 +212,7 @@ class BaseChecker(with_metaclass(ABCMeta, object)):
                 db.persist()
 
     @abstractmethod
-    def store_flag(self):
+    def putflag(self):
         # type: () -> Optional[Result]
         """
         This method stores a flag in the service.
@@ -219,7 +227,7 @@ class BaseChecker(with_metaclass(ABCMeta, object)):
         pass
 
     @abstractmethod
-    def retrieve_flag(self):
+    def getflag(self):
         # type: () -> Optional[Result]
         """
         This method retrieves a flag from the service.
@@ -233,7 +241,7 @@ class BaseChecker(with_metaclass(ABCMeta, object)):
         pass
 
     @abstractmethod
-    def store_noise(self):
+    def putnoise(self):
         # type: () -> Optional[Result]
         """
         This method stores noise in the service. The noise should later be recoverable.
@@ -248,7 +256,7 @@ class BaseChecker(with_metaclass(ABCMeta, object)):
         pass
 
     @abstractmethod
-    def retrieve_noise(self):
+    def getnoise(self):
         # type: () -> Optional[Result]
         """
         This method retrieves noise in the service.
@@ -305,7 +313,7 @@ class BaseChecker(with_metaclass(ABCMeta, object)):
         Prefer db_team_local or db_round_local
         :return: The global db
         """
-        return self.db("gobal")
+        return self.db("global")
 
     @property
     def team_db(self):
@@ -443,3 +451,18 @@ class BaseChecker(with_metaclass(ABCMeta, object)):
         if raise_http_errors:
             resp.raise_for_status()
         return resp
+
+
+def run(checker, args=None):
+    # type: (BaseChecker, Union[None, List[str], argparse.Namespace]) -> None
+    """
+    # Runs a checker, either from cmdline or as uwsgi script.
+    :param checker: The checker (subclass of basechecker) to run
+    :param force_service: if True (non-default), the server will skip arg parsing and immediately spawn the web service.
+    :param args: optional parameter, providing parameters
+    :return:  Never returns.
+    """
+    parsed = parse_args(args)
+    if not getattr(parsed, "listen_port"):
+        exit(checker(parsed))
+    listen(checker, port=parsed.listen_port)

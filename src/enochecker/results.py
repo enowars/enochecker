@@ -7,7 +7,7 @@ class Result(IntEnum):
     """
     INTERNAL_ERROR = 1  # The checker crashed
     OK = 2  # Everything is alright
-    ENOWORKS = 3  # (ENOFLAG)
+    ENOWORKS = 3  # (ENOFLAG/mumble)
     OFFLINE = 4  # It's dead, jim
 
     # noinspection PyTypeChecker
