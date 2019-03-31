@@ -42,6 +42,10 @@ A full example, including helpful comments, can be found in [examplechecker.py](
 The full API specification can be found [docs/api.md](docs/api.md).
 (Generated from docstring using `pydocmd simple ...`).
 
+## Installation
+For now, the library can be installed using pip/git, like:
+`pip install git+https://github.com/domenukk/enochecker`
+
 ## Launch Checker
 The goal is to have checkers launched via uSWGI and the Engine talking to it via http. 
 For testing, however, you can use the commandline instead:
