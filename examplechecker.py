@@ -102,6 +102,7 @@ class ExampleChecker(BaseChecker):
         self.http_get("/")  # This will probably fail fail, depending on what params you give the script. :)
 
 
+app = ExampleChecker.service  # This can be used for uswgi.
 if __name__ == "__main__":
     run(ExampleChecker)
     # Example params could be: [StoreFlag localhost ENOFLAG 1 ENOFLAG 50 1]

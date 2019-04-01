@@ -1,5 +1,6 @@
 import socket
 
+from flask import Flask
 from future.standard_library import install_aliases
 
 install_aliases()
@@ -9,7 +10,7 @@ import json
 import logging
 import sys
 from abc import ABCMeta, abstractmethod
-from typing import Optional, Callable, Any, Dict, List, Union
+from typing import Optional, Callable, Any, Dict, List, Union, Type
 from urllib.parse import urlparse
 
 import requests
@@ -21,7 +22,7 @@ from .utils import snake_caseify, SimpleSocket
 from .storeddict import StoredDict, DB_DEFAULT_DIR
 from .useragents import random_useragent
 from .results import Result, EnoException
-from .checkerservice import listen
+from .checkerservice import init_service
 
 if "TimeoutError" not in globals():  # Python2
     # noinspection PyShadowingBuiltins
@@ -91,7 +92,27 @@ def parse_args(argv=None):
     return parser.parse_args(args=argv)  # type: argparse.Namespace
 
 
-class BaseChecker(with_metaclass(ABCMeta, object)):
+class _CheckerMeta(ABCMeta):
+    """
+    Some python magic going on right here.
+    Each time we subclass BaseChecker, this __init__ is called.
+    ABCMeta is used as superclass instead of type, such that BaseChecker is declared abstract -> needs to be overridden.
+    """
+
+    def __init__(cls, name, bases, clsdict):
+        # type: (Type[_CheckerMeta], str, Dict[Any]) -> None
+        """
+        Called whenever this class is subclassed.
+        :param name: The name of the new class
+        :param bases: Bases classes this class inherits from.
+        :param clsdict: Contents of this class (.__dict__)
+        """
+        if len(cls.mro()) > 2:  # 1==BaseChecker
+            cls.service = init_service(cls)  # type: Flask
+        super(_CheckerMeta, cls).__init__(name, bases, clsdict)
+
+
+class BaseChecker(with_metaclass(_CheckerMeta, object)):
     """
     All you base are belong to us. Also all your flags. And checker scripts.
     Override the methods given here, then simply init and .run().
@@ -133,6 +154,7 @@ class BaseChecker(with_metaclass(ABCMeta, object)):
                     setattr(self, key, val)
 
         self.config = {x: getattr(self, x) for x in VALID_ARGS}
+
         self.debug("Initialized checker with {}".format(json.dumps(self.config)))
 
     def _setup_logger(self):
@@ -399,7 +421,7 @@ class BaseChecker(with_metaclass(ABCMeta, object)):
         return new_agent
 
     def http_post(self, route="/", params=None, port=None, scheme="http", raise_http_errors=False, timeout=None,
-             **kwargs):
+                  **kwargs):
         # type: (str, Any, Optional[int], str, bool, Optional[int], ...) -> requests.Response
         """
         Performs a (http) requests.post to the current host.
@@ -415,7 +437,8 @@ class BaseChecker(with_metaclass(ABCMeta, object)):
         kwargs.setdefault('allow_redirects', True)
         return self.http("post", route, params, port, scheme, raise_http_errors, timeout, **kwargs)
 
-    def http_get(self, route="/", params=None, port=None, scheme="http", raise_http_errors=False, timeout=None, **kwargs):
+    def http_get(self, route="/", params=None, port=None, scheme="http", raise_http_errors=False, timeout=None,
+                 **kwargs):
         # type: (str, Any, Optional[int], str, bool, Optional[int], ...) -> requests.Response
         """
         Performs a (http) requests.get to the current host.
@@ -456,8 +479,8 @@ class BaseChecker(with_metaclass(ABCMeta, object)):
         return resp
 
 
-def run(checker, args=None):
-    # type: (BaseChecker, Union[None, List[str], argparse.Namespace]) -> None
+def run(checker_cls, args=None):
+    # type: (Type[BaseChecker], Union[None, List[str], argparse.Namespace]) -> None
     """
     # Runs a checker, either from cmdline or as uwsgi script.
     :param checker: The checker (subclass of basechecker) to run
@@ -467,7 +490,7 @@ def run(checker, args=None):
     """
     parsed = parse_args(args)
     if hasattr(parsed, "listen_port") and parsed.listen_port:
-        listen(checker, port=parsed.listen_port)
+        checker_cls.service.run(host="0.0.0.0", port=parsed.listen_port)
         exit(0)  # should never get here anyway
     else:
-        exit(checker(parsed))
+        exit(checker_cls(parsed))
