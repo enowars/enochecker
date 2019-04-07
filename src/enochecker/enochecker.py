@@ -32,7 +32,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.Logger(__name__)
 logger.setLevel(logging.DEBUG)
 
-VALID_ARGS = ["method", "address", "port", "team_name", "round", "flag", "max_time", "call_idx"]
+VALID_ARGS = ["method", "address", "team", "round", "flag", "timeout", "flag_idx"]
 
 CHECKER_METHODS = [
     "putflag",
@@ -76,20 +76,18 @@ def parse_args(argv=None):
                            help='The Method, one of {} or "listen" to start checker service'.format(CHECKER_METHODS))
     runparser.add_argument("-a", '--address', type=str, default="localhost",
                            help="The ip or address of the remote team to check")
-    runparser.add_argument("-n", '--team_name', type=str, default="team",
-                           help="The teamname of the team to check")
+    runparser.add_argument("-t", '--team', type=str, default="team",
+                           help="The name of the target team to check")
     runparser.add_argument("-r", '--round', type=int, default=1,
                            help="The round we are in right now")
     runparser.add_argument("-f", '--flag', type=str, default="ENOFLAGENOFLAG=",
                            help="The Flag, a Fake flag or a Unique ID, depending on the mode")
-    runparser.add_argument("-t", '--max_time', type=int, default=30,
+    runparser.add_argument("-x", '--timeout', type=int, default=30,
                            help="The maximum amount of time the script has to execute in seconds")
-    runparser.add_argument("-i", '--call_idx', type=int, default=0,
+    runparser.add_argument("-i", '--flag_idx', type=int, default=0,
                            help="Unique numerical index per round. Each id only occurs once and is tighly packed, "
                                 "starting with 0. In a service supporting multiple flags, this would be used to "
                                 "decide which flag to place.")
-    runparser.add_argument('-p', '--port', nargs='?', type=int,
-                           help="The port the checker should attack")
 
     return parser.parse_args(args=argv)  # type: argparse.Namespace
 
@@ -121,13 +119,13 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
     Magic.
     """
 
-    def __init__(self, method=None, address=None, team_name=None, round=None, flag=None, call_idx=None,
-                 max_time=None, port=None, storage_dir=DB_DEFAULT_DIR, from_args=True):
-        # type: (Optional[str], Optional[str], Optional[str], Optional[int], Optional[str], Optional[int], Optional[int], Optional[int], str, bool) -> None
+    def __init__(self, run_id=None, method=None, address=None, team=None, round=None, flag=None, flag_idx=None,
+                 timeout=None, storage_dir=DB_DEFAULT_DIR, from_args=True):
+        # type: (Optional[int], Optional[str], Optional[str], Optional[str], Optional[int], Optional[str], Optional[int], Optional[int], str, bool) -> None
         """
         Inits the Checker, filling the params, according to:
+        :oaram: run_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
         :param: method: The method (optional, can set this at run())
-        :param: port for all networking methods of this checker
         :param: start_action set to false to not run the action
         :param: from_args: If true, uses parse_args() to fill all parameters that were passed as `None`.
         """
@@ -137,14 +135,18 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         self.http_session = requests.session()  # type: requests.Session
         self.http_useragent = random_useragent()
 
+        self.run_id = run_id  # type: int
         self.method = method  # type: str
         self.address = address  # type: str
-        self.port = port  # type: int
-        self.team_name = team_name  # type: str
+        self.team = team  # type: str
         self.round = round  # type: int
         self.flag = flag  # type: str
-        self.max_time = max_time  # type: int
-        self.call_idx = call_idx  # type: int
+        self.timeout = timeout  # type: int
+        self.flag_idx = flag_idx  # type: int
+
+        if not hasattr(self, "port"):
+            self.warning("No default port defined.")
+            self.port = -1
 
         if from_args and any([(getattr(self, x) is None) for x in VALID_ARGS]):
             args = parse_args(sys.argv[1:])
@@ -239,7 +241,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         # type: () -> Optional[Result]
         """
         This method stores a flag in the service.
-        In case multiple flags are provided, self.call_idx gives the appropriate index.
+        In case multiple flags are provided, self.flag_idx gives the appropriate index.
         The flag itself can be retrieved from self.flag.
         On error, raise an Eno Exception.
         :raises EnoException on error
@@ -269,7 +271,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         """
         This method stores noise in the service. The noise should later be recoverable.
         The difference between noise and flag is, tht noise does not have to remain secret for other teams.
-        This method can be called many times per round. Check how often using self.call_idx.
+        This method can be called many times per round. Check how often using self.flag_idx.
         On error, raise an EnoException.
         :raises EnoException on error
         :return this function can return a result if it wants
@@ -285,7 +287,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         This method retrieves noise in the service.
         The noise to be retrieved is inside self.flag
         The difference between noise and flag is, tht noise does not have to remain secret for other teams.
-        This method can be called many times per round. Check how often using call_idx.
+        This method can be called many times per round. Check how often using flag_idx.
         On error, raise an EnoException.
         :raises EnoException on error
         :return this function can return a result if it wants
@@ -355,7 +357,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         :param team: Return a db for an other team. If none, the db for the local team will be returned.
         :return: The team local db
         """
-        team = team if team is not None else self.team_name
+        team = team if team is not None else self.team
         return self.db("team_{}".format(team), ignore_locks=True)
 
     # ---- Networking specific methods ---- #
@@ -380,11 +382,11 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         Use connect(..).get_socket() for the raw socket.
         :param host: the host to connect to (defaults to self.address)
         :param port: the port to connect to (defaults to self.port)
-        :param timeout: timeout on connection (defaults to self.max_time)
+        :param timeout: timeout on connection (defaults to self.timeout)
         :return: A connected Telnet instance
         """
         if timeout is None:
-            timeout = self.max_time
+            timeout = self.timeout
         if port is None:
             port = self.port
         if host is None:
@@ -468,12 +470,12 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         :param port: The remote port in case it has not been specified at creation
         :param scheme: The scheme (defaults to http)
         :param raise_http_errors: If True, will raise exception on http error codes (4xx, 5xx)
-        :param timeout: How long we'll try to connect (default: self.max_time)
+        :param timeout: How long we'll try to connect (default: self.timeout)
         :return: The response
         """
         url = self._sanitize_url(route, port, scheme)
         if timeout is None:
-            timeout = self.max_time
+            timeout = self.timeout
         self.debug("Request: {} {} with params: {} and {} secs timeout.".format(method, url, params, timeout))
         resp = self.http_session.request(method, url, params=params, timeout=timeout, **kwargs)
         if raise_http_errors:

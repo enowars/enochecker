@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-#from src.enochecker import *
-from enochecker import *
+# from src.enochecker import *
+from src.enochecker import *
 
 
 class ExampleChecker(BaseChecker):
@@ -21,10 +21,12 @@ class ExampleChecker(BaseChecker):
     (Or read the source, Luke)
     """
 
+    port = 80  # The port will automatically be picked up as default by self.connect and self.http.
+
     def putflag(self):  # type: () -> None
         """
             This method stores a flag in the service.
-            In case multiple flags are provided, self.call_idx gives the appropriate index.
+            In case multiple flags are provided, self.flag_idx gives the appropriate index.
             The flag itself can be retrieved from self.flag.
             On error, raise an Eno Exception.
             :raises EnoException on error
@@ -32,12 +34,12 @@ class ExampleChecker(BaseChecker):
                     if nothing is returned, the service status is considered okay.
                     the preferred way to report errors in the service is by raising an appropriate enoexception
         """
-        if self.call_idx == 0:
+        if self.flag_idx == 0:
             self.team_db[sha256ify(self.flag)] = self.flag
-        elif self.call_idx == 1:
+        elif self.flag_idx == 1:
             self.global_db["{}_{}".format(self.address, self.flag)] = "Different place for different flag_idx"
         else:
-            raise ValueError("Call_Idx {} exceeds the amount of flags. Not supported.".format(self.call_idx))
+            raise ValueError("Call_Idx {} exceeds the amount of flags. Not supported.".format(self.flag_idx))
 
     def getflag(self):  # type: () -> None
         """
@@ -49,21 +51,21 @@ class ExampleChecker(BaseChecker):
                 if nothing is returned, the service status is considered okay.
                 the preferred way to report errors in the service is by raising an appropriate enoexception
         """
-        if self.call_idx == 0:
+        if self.flag_idx == 0:
             if not self.team_db.get(sha256ify(self.flag), None) == self.flag:
                 raise BrokenServiceException("We did not get flag 0 back :/")
-        elif self.call_idx == 1:
+        elif self.flag_idx == 1:
             if not self.global_db.get("{}_{}".format(self.address, self.flag), None) == "Different place for " \
                                                                                         "different flag_idx":
                 raise BrokenServiceException("Flag 2 was missing. Service is broken.")
         else:
-            raise ValueError("Call_idx {} not supported!".format(self.call_idx))  # Internal error.
+            raise ValueError("Call_idx {} not supported!".format(self.flag_idx))  # Internal error.
 
     def putnoise(self):  # type: () -> None
         """
         This method stores noise in the service. The noise should later be recoverable.
         The difference between noise and flag is, tht noise does not have to remain secret for other teams.
-        This method can be called many times per round. Check how often using self.call_idx.
+        This method can be called many times per round. Check how often using self.flag_idx.
         On error, raise an EnoException.
         :raises EnoException on error
         :return this function can return a result if it wants
@@ -77,7 +79,7 @@ class ExampleChecker(BaseChecker):
         This method retrieves noise in the service.
         The noise to be retrieved is inside self.flag
         The difference between noise and flag is, tht noise does not have to remain secret for other teams.
-        This method can be called many times per round. Check how often using call_idx.
+        This method can be called many times per round. Check how often using flag_idx.
         On error, raise an EnoException.
         :raises EnoException on error
         :return this function can return a result if it wants

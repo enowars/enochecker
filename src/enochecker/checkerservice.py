@@ -20,7 +20,8 @@ def index():
     :return: Printable fun..
     """
     logging.info("Request on /")
-    return '<a href="https://www.youtube.com/watch?v=SBClImpnfAg">check it out now</a>'
+    return '<p>Expecting POST with a JSON of [runId, address, team, round, flag, timout, flagIndex]</p>' \
+           '<a href="https://www.youtube.com/watch?v=SBClImpnfAg">check it out now</a>'
 
 
 # method=None, address=None, team_name=None, round=None, flag=None, call_idx=None,
@@ -33,20 +34,36 @@ def checker_route(checker_cls):
     :return: A flask app that can be passed to a uWSGI server or run using .run().
     """
 
-    def serve_checker(method):
-        # type: (str) -> Response
+    def serve_checker():
+        # type: () -> Response
         """
         Serves a single checker request
+
+        JSON looks like:
+        {
+            runId: number,
+            //method: str,
+            address: str,
+            //serviceId: number,
+            //serviceName: str,
+            //teamId: int
+            team: str,
+            round: number,
+            flag: str,
+            timeout: int,
+            flagIndex: int,
+        }
+
         :param method: the method to run in a checker.
         :return: jsonified result of the checker.
         """
         logger.info(request.json)
         json = request.json
+
         # TODO: Find a nice way to set service port? Is that even needed?
-        checker = checker_cls(method=method, address=json["Address"], team_name=json["TeamName"],
+        checker = checker_cls(method=json["method"], run_id=json["runId"], address=json["address"], team=json["team"],
                               round=json["CurrentRoundId"],
-                              flag=json["Payload"], call_idx=json["TaskIndex"], max_time=json["MaxRunningTime"],
-                              port=0x70D0)
+                              flag=json["flag"], flag_idx=json["flagIndex"], timeout=json["timeout"])
         result = checker.run(method).name
         logger.info("Run resulted in {}: {}".format(result, request.json))
         return jsonify({"result": result})
@@ -60,7 +77,7 @@ def init_service(checker):
     app = Flask(__name__)
     app.route("/", methods=["GET"])(index)
 
-    app.route('/<method>', methods=['POST'])(
+    app.route('/', methods=['POST'])(
         checker_route(checker)
     )
 
