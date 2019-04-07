@@ -5,10 +5,10 @@ class Result(IntEnum):
     """
     Result Values to be returned from a Checker
     """
-    INTERNAL_ERROR = 1  # The checker crashed
-    OK = 2  # Everything is alright
-    ENOWORKS = 3  # (ENOFLAG/mumble)
-    OFFLINE = 4  # It's dead, jim
+    INTERNAL_ERROR = -1  # The checker crashed
+    OK = 0  # Everything is alright
+    ENOWORKS = 1  # (ENOFLAG/mumble)
+    OFFLINE = 2  # It's dead, jim
 
     # noinspection PyTypeChecker
     @classmethod

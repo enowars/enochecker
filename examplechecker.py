@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # from src.enochecker import *
-from src.enochecker import *
+from enochecker import *
 
 
 class ExampleChecker(BaseChecker):
