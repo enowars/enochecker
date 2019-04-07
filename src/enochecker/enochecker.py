@@ -184,7 +184,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
     # ---- Basic checker functionality ---- #
     def run(self, method=None):
-        # type: (Optional[str, Callable]) -> int
+        # type: (Optional[str, Callable]) -> Result
         """
         Executes the checker and catches errors along the way.
         :param method: When calling run, you may call a different method than the one passed on Checker creation
