@@ -64,7 +64,9 @@ def parse_args(argv=None):
         return parse_args(sys.argv[1:])
     choices = CHECKER_METHODS + ["listen"]
     parser = argparse.ArgumentParser(description="Your friendly checker script")
-    subparsers = parser.add_subparsers(help="The checker runmode")
+    # noinspection SpellCheckingInspection
+    subparsers = parser.add_subparsers(help="The checker runmode (run/listen)", dest="runmode")
+    subparsers.required = True
 
     listen = subparsers.add_parser("listen", help="Spawn checker service")
     listen.add_argument('listen_port', help="The port the checker service should listen on")
@@ -72,7 +74,7 @@ def parse_args(argv=None):
     runparser = subparsers.add_parser("run", help="Run checker on cmdline")
     runparser.add_argument('method', choices=choices,
                            help='The Method, one of {} or "listen" to start checker service'.format(CHECKER_METHODS))
-    runparser.add_argument("-a", '--address', type=str, default=None,
+    runparser.add_argument("-a", '--address', type=str, default="localhost",
                            help="The ip or address of the remote team to check")
     runparser.add_argument("-n", '--team_name', type=str, default="team",
                            help="The teamname of the team to check")
@@ -489,8 +491,11 @@ def run(checker_cls, args=None):
     :return:  Never returns.
     """
     parsed = parse_args(args)
-    if hasattr(parsed, "listen_port") and parsed.listen_port:
+    if parsed.runmode == "listen":
         checker_cls.service.run(host="0.0.0.0", port=parsed.listen_port)
-        exit(0)  # should never get here anyway
     else:
-        exit(checker_cls(parsed))
+        checker_args = vars(parsed)
+        del checker_args["runmode"]  # will always be 'run' at this point
+        result = checker_cls(**vars(parsed)).run()
+        print("Checker run resulted in Result.{}".format(result.name))
+        exit(result)
