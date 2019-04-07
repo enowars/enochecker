@@ -20,7 +20,7 @@ def index():
     :return: Printable fun..
     """
     logging.info("Request on /")
-    return '<p>Expecting POST with a JSON of [runId, address, team, round, flag, timout, flagIndex]</p>' \
+    return '<p>Expecting POST with a JSON of [runId, method{putflag, getflag, putnoise, getnoise, havoc}, address, team, round, flag, timout, flagIndex]</p>' \
            '<a href="https://www.youtube.com/watch?v=SBClImpnfAg">check it out now</a>'
 
 
@@ -42,7 +42,7 @@ def checker_route(checker_cls):
         JSON looks like:
         {
             runId: number,
-            //method: str,
+            method: str,
             address: str,
             //serviceId: number,
             //serviceName: str,
@@ -62,9 +62,9 @@ def checker_route(checker_cls):
 
         # TODO: Find a nice way to set service port? Is that even needed?
         checker = checker_cls(method=json["method"], run_id=json["runId"], address=json["address"], team=json["team"],
-                              round=json["CurrentRoundId"],
+                              round=json["round"],
                               flag=json["flag"], flag_idx=json["flagIndex"], timeout=json["timeout"])
-        result = checker.run(method).name
+        result = checker.run().name
         logger.info("Run resulted in {}: {}".format(result, request.json))
         return jsonify({"result": result})
 
