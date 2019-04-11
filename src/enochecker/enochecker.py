@@ -56,7 +56,7 @@ class RestLogHandler(logging.Handler):
         #"millis": record.msecs,
         json = {
             "message": record.getMessage(),
-            "timestamp": record.asctime,
+            "timestamp": record.asctime,  # Todo: Might not be available everywhere (?)
             "severity": record.levelname,
             "runId": self.checker.run_id,
             "tag": "{}:{}:{}".format(record.name, record.module, record.funcName),
@@ -211,10 +211,10 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         if self.log_endpoint and self.log_endpoint.startswith("http"):
             self.logger.addHandler(RestLogHandler(self))
 
-        self.debug = logging.debug  # type: Callable[[str, ...], None]
-        self.info = logging.info  # type: Callable[[str, ...], None]
-        self.warning = logging.warning  # type: Callable[[str, ...], None]
-        self.error = logging.error  # type: Callable[[str, ...], None]
+        self.debug = self.logger.debug  # type: Callable[[str, ...], None]
+        self.info = self.logger.info  # type: Callable[[str, ...], None]
+        self.warning = self.logger.warning  # type: Callable[[str, ...], None]
+        self.error = self.logger.error  # type: Callable[[str, ...], None]
 
     @property
     def noise(self):
@@ -245,12 +245,12 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 ret = getattr(self, snake_caseify(method))()
             if Result.is_valid(ret):
                 ret = Result(ret)  # Better wrap this, in case somebody returns raw ints (?)
-                self.logger.info("Checker [{}] resulted in {}".format(self.method, ret.name))
+                self.info("Checker [{}] resulted in {}".format(self.method, ret.name))
                 return ret
             if ret is not None:
-                self.logger.error("Illegal return value from {}: {}".format(self.method, ret), )
+                self.error("Illegal return value from {}: {}".format(self.method, ret), )
                 return Result.INTERNAL_ERROR
-            self.logger.info("Checker [{}] executed successfully!".format(self.method))
+            self.info("Checker [{}] executed successfully!".format(self.method))
             return Result.OK
 
         except EnoException as eno:
