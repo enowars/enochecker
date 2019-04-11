@@ -180,8 +180,8 @@ class StoredDict(collections.MutableMapping):
             try:
                 makedirs(path, exist_ok=False)
                 return
-            except OSError:
-                self.logger.debug("Waiting for lock on file {}".format(path))
+            except OSError as ex:
+                self.logger.debug("Waiting for lock on file {} (currently {})".format(path, ex))
                 time.sleep(float(2 ** i) / 10)
         raise TimeoutError("Lock for {} could not be acquired in time!".format(path))
 

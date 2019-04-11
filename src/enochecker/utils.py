@@ -258,7 +258,8 @@ class SimpleSocket(telnetlib.Telnet):
         :param logger: The optional logger to use
         :
         """
-        self.telnet = super(SimpleSocket, self).__init__(host, port, timeout)  # type: telnetlib.Telnet
+        self.telnet = super(SimpleSocket, self)  # type: telnetlib.Telnet
+        self.telnet.__init__(host, port, timeout)
         self.socket = self.telnet.get_socket()  # type: socket.socket
         if logger:
             self.logger = logger

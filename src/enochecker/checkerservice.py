@@ -1,6 +1,6 @@
 import collections
 import logging
-from typing import TYPE_CHECKING, Callable, Type, Any, List, Union, Dict
+from typing import TYPE_CHECKING, Callable, Type, Any, List, Union, Dict, Tuple
 
 from flask import Flask, Response
 from flask import jsonify
@@ -73,7 +73,8 @@ def check_type(name, val, expected_type):
             # The given type is not in the list of allowed members.
             raise ValueError("{} is not a member of expected list {}, got {}".format(name, expected_type, val))
     elif not isinstance(val, expected_type):
-        raise ValueError("{} should be a '{}' but is of type '{}'.".format(name, expected_type.__name__, type(val).__name__))
+        raise ValueError(
+            "{} should be a '{}' but is of type '{}'.".format(name, expected_type.__name__, type(val).__name__))
 
 
 def stringify_spec_entry(entry):
@@ -136,28 +137,26 @@ def json_to_kwargs(json, spec):
     return ret
 
 
-def index():
-    # type: () -> str
-    """
-    Some info about this service
-    :return: Printable fun..
-    """
-    logging.info("Request on /")
-
-    return '<p>Expecting POST with a JSON:</p><div><textarea id="jsonTextbox" rows={} cols="80">{}</textarea>{}</div>' \
-           '<a href="https://www.youtube.com/watch?v=SBClImpnfAg"><br>check it out now</a><div id="out">'.format(
-        len(spec) + 3, serialize_spec(spec), tiny_poster)
-
-
-# method=None, address=None, team_name=None, round=None, flag=None, call_idx=None,
-# max_time=None, port=None, storage_dir=DB_DEFAULT_DIR, from_args=True):
-def checker_route(checker_cls):
-    # type: (Type[BaseChecker]) -> Callable[[str], Response]
+def checker_routes(checker_cls):
+    # type: (Type[BaseChecker]) -> Tuple[Callable[[],Response], Callable[[], Response]]
     """
     Creates a flask app for the given checker class.
     :param checker_cls: The checker class to use
     :return: A flask app that can be passed to a uWSGI server or run using .run().
     """
+
+    def index():
+        # type: () -> Response
+        """
+        Some info about this service
+        :return: Printable fun..
+        """
+        logging.info("Request on /")
+
+        return Response('<h1>Welcome to {} :)</h1>'
+                        '<p>Expecting POST with a JSON:</p><div><textarea id="jsonTextbox" rows={} cols="80">{}</textarea>{}</div>'
+                        '<a href="https://www.youtube.com/watch?v=SBClImpnfAg"><br>check it out now</a><div id="out">'.format(
+                checker_cls.__name__, len(spec) + 3, serialize_spec(spec), tiny_poster))
 
     def serve_checker():
         # type: () -> Response
@@ -185,7 +184,7 @@ def checker_route(checker_cls):
                 "message": str(ex)
             })
 
-    return serve_checker
+    return index, serve_checker
 
 
 def init_service(checker):
@@ -198,10 +197,9 @@ def init_service(checker):
     """
 
     app = Flask(__name__)
-    app.route("/", methods=["GET"])(index)
+    index, checker_route = checker_routes(checker)
 
-    app.route('/', methods=['POST'])(
-        checker_route(checker)
-    )
+    app.route("/", methods=["GET"])(index)
+    app.route('/', methods=['POST'])(checker_route)
 
     return app  # Start service using service.run(host="0.0.0.0")
