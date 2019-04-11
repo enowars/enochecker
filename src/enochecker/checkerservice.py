@@ -40,9 +40,9 @@ spec = [
     Optional("logEndpoint", str, None)
 ]  # type: List[Union[Required, Optional]]
 
-tiny_ajax_sender = """
+tiny_poster = """
 <script>
-// To make testing/posting a bit easier, we can simply do it from the browser here.
+// To make testing/posting a bit easier, we can do it from the browser here.
 function post(str) {
     var xhr = new XMLHttpRequest()
     xhr.open("POST", "/")
@@ -50,13 +50,10 @@ function post(str) {
     xhr.onerror = console.error
     xhr.onload = xhr.onerror = function () {
         console.log(xhr.responseText)
-        //var sanitized = xhr.responseText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-        document.getElementById("out").innerText = "<plaintext>\\n\\nResponse:\\n\\n" + xhr.responseText
+        document.getElementById("out").innerText = "<plaintext>\\n\\n" + xhr.responseText
     }
     xhr.send(str)
 }
-
-
 </script>
 <div>
 <button onclick=post(document.getElementById("jsonTextbox").value)>Post</button></div>
@@ -149,7 +146,7 @@ def index():
 
     return '<p>Expecting POST with a JSON:</p><div><textarea id="jsonTextbox" rows={} cols="80">{}</textarea>{}</div>' \
            '<a href="https://www.youtube.com/watch?v=SBClImpnfAg"><br>check it out now</a><div id="out">'.format(
-        len(spec) + 3, serialize_spec(spec), tiny_ajax_sender)
+        len(spec) + 3, serialize_spec(spec), tiny_poster)
 
 
 # method=None, address=None, team_name=None, round=None, flag=None, call_idx=None,
