@@ -10,7 +10,7 @@ import threading
 import time
 import logging
 from functools import wraps
-from typing import Callable, Any, Dict, Set, Iterator
+from typing import Any, Dict, Set, Iterator, Optional, TypeVar, cast
 
 try:
     from pathlib import Path
@@ -20,8 +20,10 @@ except ImportError:
 from .utils import ensure_valid_filename, base64ify, debase64ify, start_daemon
 
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.Logger(__name__)
-logger.setLevel(logging.DEBUG)
+dictlogger = logging.Logger(__name__)
+dictlogger.setLevel(logging.DEBUG)
+
+T = TypeVar('T')  # typing things
 
 DB_DEFAULT_DIR = os.path.join(os.getcwd(), ".data")  # Default location db files will be stored in -> usually cwd.
 # TODO: Force remove locks after a while?
@@ -42,7 +44,7 @@ def makedirs(path, exist_ok=True):
 
 
 def _locked(func):
-    # type: (Callable) -> Callable
+    # type: (T) -> T
     """
     Internal wrapper method for StoredDict that will ensure locks on a python threading level
     :param func: StoredDict method to be wrapped
@@ -51,15 +53,17 @@ def _locked(func):
 
     @wraps(func)
     def locked(self, *args, **kwargs):
+        # type: (StoredDict, *str, **int)->Any
+        """The called function first acquires a lock and then releases it later."""
         # print("Locking...")
         self._local_lock.acquire()
         try:
             return func(self, *args, **kwargs)
         finally:
             self._local_lock.release()
-            logger.debug("Done")
+            self.logger.debug("Done")
 
-    return locked
+    return cast(T, locked)
 
 
 class StoredDict(collections.MutableMapping):
@@ -70,8 +74,9 @@ class StoredDict(collections.MutableMapping):
     Note: Complex won't be tracked.
     """
 
-    def __init__(self, base_path=DB_DEFAULT_DIR, name="default", persist_secs=3, ignore_locks=False, *args, **kwargs):
-        # type: (str, str, int, bool, *Any, **Any) -> None
+    def __init__(self, base_path=DB_DEFAULT_DIR, name="default", persist_secs=3, ignore_locks=False, logger=None, *args,
+                 **kwargs):
+        # type: (str, str, int, bool, Optional[logging.Logger], *Any, **Any) -> None
         """
         Creates a new File System backed Store.
         It quacks like a dict and will persist to filesystem every few seconds if possible. :)
@@ -80,6 +85,7 @@ class StoredDict(collections.MutableMapping):
         :param persist_secs: how often to persist dirty elements (0 means: never autostore. Call persist manually)
         :param ignore_locks: We usually write and read lock files before accessing the data.
                 This flag seaves them out.
+        :param logger: The logger instance to log events to
         """
         self._cache = {}  # type: Dict[str, any]
         self._dirties = set()  # type: Set[str]
@@ -88,6 +94,11 @@ class StoredDict(collections.MutableMapping):
         self.path = os.path.join(base_path, ensure_valid_filename(name))  # type: str
         self.persist_secs = persist_secs  # type: int
         self.ignore_locks = ignore_locks  # type: bool
+
+        if logger:
+            self.logger = logger
+        else:
+            self.logger = dictlogger
 
         self._local_lock = threading.RLock()
 
@@ -102,12 +113,14 @@ class StoredDict(collections.MutableMapping):
                 while not self._stopping:
                     time.sleep(persist_secs)
                     self.persist()
+
             self._persist_thread = start_daemon(persist_loop)
 
     @_locked
     def _cleanup(self):
         # type: () -> None
-        logger.debug("Cleaning up.")
+        """Cleans up the db: persists and releases all locks currently held."""
+        self.logger.debug("Cleaning up.")
         self._stopping = True
         self.persist()
         for lock in self._locks:
@@ -122,14 +135,17 @@ class StoredDict(collections.MutableMapping):
 
     def _dir(self, key):
         # type: (str) -> str
+        """The path for the this key"""
         return os.path.join(self.path, DB_PREFIX + base64ify(key))
 
     def _dir_jsonname(self, key):
         # type: (str) -> str
+        """The path for the json db file for this key"""
         return "{}{}".format(self._dir(key), DB_EXTENSION)
 
     def _dir_lockname(self, key):
         # type: (str) -> str
+        """The path for the lock file for this key"""
         return "{}{}".format(self._dir(key), DB_LOCK_EXTENSION)
 
     @_locked
@@ -157,15 +173,15 @@ class StoredDict(collections.MutableMapping):
         self[key] = val
         return val
 
-    @staticmethod
-    def _create_lock_file(path, retrycount=DB_LOCK_RETRYCOUNT):
+    def _create_lock_file(self, path, retrycount=DB_LOCK_RETRYCOUNT):
         # type: (str, int) -> None
+        """Creates new lock file, waiting up to retrycount seconds. Raises TimeoutError if failed."""
         for i in range(0, retrycount):
             try:
                 makedirs(path, exist_ok=False)
                 return
             except OSError:
-                logger.debug("Waiting for lock on file {}".format(path))
+                self.logger.debug("Waiting for lock on file {}".format(path))
                 time.sleep(float(2 ** i) / 10)
         raise TimeoutError("Lock for {} could not be acquired in time!".format(path))
 
@@ -245,7 +261,7 @@ class StoredDict(collections.MutableMapping):
         try:
             return self._cache[key]
         except KeyError:
-            logger.debug("Hitting disk for {}".format(key))
+            self.logger.debug("Hitting disk for {}".format(key))
 
         locked = self.is_locked(key) or self.ignore_locks
         if not locked:

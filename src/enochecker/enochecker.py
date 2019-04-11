@@ -1,4 +1,6 @@
+import datetime
 import socket
+from logging import LogRecord
 
 from flask import Flask
 from future.standard_library import install_aliases
@@ -22,25 +24,49 @@ from .utils import snake_caseify, SimpleSocket
 from .storeddict import StoredDict, DB_DEFAULT_DIR
 from .useragents import random_useragent
 from .results import Result, EnoException
-from .checkerservice import init_service
+from .checkerservice import init_service, CHECKER_METHODS
 
 if "TimeoutError" not in globals():  # Python2
     # noinspection PyShadowingBuiltins
     TimeoutError = socket.timeout
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.Logger(__name__)
-logger.setLevel(logging.DEBUG)
-
 VALID_ARGS = ["method", "address", "team", "round", "flag", "timeout", "flag_idx"]
 
-CHECKER_METHODS = [
-    "putflag",
-    "getflag",
-    "putnoise",
-    "getnoise",
-    "havoc"
-]
+
+class RestLogHandler(logging.Handler):
+    """
+    Simple handler class to send Checker logs off to the logging backend Service.
+    """
+
+    def __init__(self, checker, level=logging.DEBUG):
+        # type: (BaseChecker, int) -> None
+        """
+        Create a new handler.
+        :param checker: The checker to use
+        :param level: the Level
+        """
+
+        super(RestLogHandler, self).__init__(level)
+        self.checker = checker  # type: BaseChecker
+
+    def emit(self, record):
+        # type: (LogRecord) -> None
+        #timestamp = datetime.datetime.fromtimestamp(record.msecs/1000.0).strftime('%Y-%m-%dT%H:%M:%SZ')
+        #timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+        #"millis": record.msecs,
+        json = {
+            "message": record.getMessage(),
+            "timestamp": record.asctime,
+            "severity": record.levelname,
+            "runId": self.checker.run_id,
+            "tag": "{}:{}:{}".format(record.name, record.module, record.funcName),
+        }
+        try:
+            r = requests.post(self.checker.log_endpoint, json=json)
+            if r.status_code != 200:
+                print("Error while logging. Request to {} returned: {}".format(r.status_code, r.text))
+        except Exception as ex:
+            print("Error while logging: {}".format(ex))
 
 
 def parse_args(argv=None):
@@ -88,6 +114,8 @@ def parse_args(argv=None):
                            help="Unique numerical index per round. Each id only occurs once and is tighly packed, "
                                 "starting with 0. In a service supporting multiple flags, this would be used to "
                                 "decide which flag to place.")
+    runparser.add_argument("-l", "--log_endpoint", type=str, default="",
+                           help="URI to an optional RESTlike service accepting log jsons via POST.")
 
     return parser.parse_args(args=argv)  # type: argparse.Namespace
 
@@ -120,8 +148,8 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
     """
 
     def __init__(self, run_id=None, method=None, address=None, team=None, round=None, flag=None, flag_idx=None,
-                 timeout=None, storage_dir=DB_DEFAULT_DIR, from_args=True):
-        # type: (Optional[int], Optional[str], Optional[str], Optional[str], Optional[int], Optional[str], Optional[int], Optional[int], str, bool) -> None
+                 timeout=None, storage_dir=DB_DEFAULT_DIR, log_endpoint=None, from_args=True):
+        # type: (Optional[int], Optional[str], Optional[str], Optional[str], Optional[int], Optional[str], Optional[int], Optional[int], str, Optional[str], bool) -> None
         """
         Inits the Checker, filling the params, according to:
         :oaram: run_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
@@ -129,13 +157,15 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         :param: start_action set to false to not run the action
         :param: from_args: If true, uses parse_args() to fill all parameters that were passed as `None`.
         """
+        self.run_id = run_id  # type: int
+        self.log_endpoint = log_endpoint  # type: Optional[str]
+
         self._setup_logger()
         self.storage_dir = storage_dir
         self._active_dbs = {}  # type: Dict[str, StoredDict]
         self.http_session = requests.session()  # type: requests.Session
         self.http_useragent = random_useragent()
 
-        self.run_id = run_id  # type: int
         self.method = method  # type: str
         self.address = address  # type: str
         self.team = team  # type: str
@@ -170,6 +200,17 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         """
         self.logger = logging.Logger(type(self).__name__)  # type: logging.Logger
         self.logger.setLevel(logging.DEBUG)
+
+        # default handler
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
+
+        if self.log_endpoint and self.log_endpoint.startswith("http"):
+            self.logger.addHandler(RestLogHandler(self))
+
         self.debug = logging.debug  # type: Callable[[str, ...], None]
         self.info = logging.info  # type: Callable[[str, ...], None]
         self.warning = logging.warning  # type: Callable[[str, ...], None]
@@ -203,17 +244,18 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                     raise ValueError("Method {} not supported! Supported: {}".format(method, CHECKER_METHODS))
                 ret = getattr(self, snake_caseify(method))()
             if Result.is_valid(ret):
-                logger.info("Checker [{}] resulted in {}".format(self.method, ret))
+                ret = Result(ret)  # Better wrap this, in case somebody returns raw ints (?)
+                self.logger.info("Checker [{}] resulted in {}".format(self.method, ret.name))
                 return ret
             if ret is not None:
-                logger.error("Illegal return value from {}: {}".format(self.method, ret), )
+                self.logger.error("Illegal return value from {}: {}".format(self.method, ret), )
                 return Result.INTERNAL_ERROR
-            logger.info("Checker [{}] executed successfully!".format(self.method))
+            self.logger.info("Checker [{}] executed successfully!".format(self.method))
             return Result.OK
 
         except EnoException as eno:
             self.info("Checker[{}] result: {}({})".format(eno.result, self.method, eno), exc_info=True)
-            return eno.result
+            return Result(eno.result)
         except requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=True)
             return Result.ENOFLAG
@@ -322,10 +364,13 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         :return: A dict that will be self storing. Alternatively,
         """
         try:
-            return self._active_dbs[name]
+            db = self._active_dbs[name]
+            # TODO: Setting a new Logger backend may throw logs in the wrong direction in a multithreaded environment!
+            db.logger = self.logger
+            return db
         except KeyError:
             self.debug("DB {} was not cached.".format(name))
-            ret = StoredDict(base_path=self.storage_dir, name=name, ignore_locks=ignore_locks)
+            ret = StoredDict(base_path=self.storage_dir, name=name, ignore_locks=ignore_locks, logger=self.logger)
             self._active_dbs[name] = ret
             return ret
 
@@ -392,7 +437,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         if host is None:
             host = self.address
         self.debug("Opening socket to {}:{} (timeout {} secs).".format(host, port, timeout))
-        return SimpleSocket(host, port, timeout=timeout)
+        return SimpleSocket(host, port, timeout=timeout, logger=self.logger)
 
     @property
     def http_useragent(self):
@@ -494,7 +539,7 @@ def run(checker_cls, args=None):
     """
     parsed = parse_args(args)
     if parsed.runmode == "listen":
-        checker_cls.service.run(host="0.0.0.0", port=parsed.listen_port)
+        checker_cls.service.run(host="0.0.0.0", debug=True, port=parsed.listen_port)
     else:
         checker_args = vars(parsed)
         del checker_args["runmode"]  # will always be 'run' at this point

@@ -7,6 +7,6 @@ from .utils import assert_equals, assert_in, \
     ensure_bytes, ensure_unicode, ensure_valid_filename, snake_caseify, \
     readline_expect, serve_once, start_daemon, SimpleSocket  # the util stuff
 from .results import BrokenServiceException, EnoException, OfflineException, Result  # Possible results
-from .enochecker import run, parse_args, CHECKER_METHODS, BaseChecker  # the BaseChecker
+from .enochecker import run, parse_args, BaseChecker  # the BaseChecker
 
 name = "enochecker"

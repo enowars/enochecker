@@ -11,8 +11,7 @@ import telnetlib
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Union, Any, Optional, Dict, Callable
-
+from typing import Union, Any, Optional, Dict, Callable, List, Pattern, Match, Tuple
 
 import requests
 from .results import BrokenServiceException, OfflineException
@@ -20,8 +19,8 @@ from .results import BrokenServiceException, OfflineException
 PORT_MAX = 65535
 
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.Logger(__name__)
-logger.setLevel(logging.DEBUG)
+utilslogger = logging.Logger(__name__)
+utilslogger.setLevel(logging.DEBUG)
 
 
 def assert_in(o1, o2, message=None):
@@ -152,6 +151,11 @@ def readline_expect(telnet, expected, read_until=b"\n", timeout=30):
     :param timeout: a timeout
     :return read: the bytes read
     """
+    if hasattr(telnet, "logger"):
+        logger = telnet.logger
+    else:
+        logger = utilslogger
+
     if isinstance(expected, str):
         expected = expected.encode("utf-8")
     if isinstance(read_until, str):
@@ -184,8 +188,8 @@ def start_daemon(target):
     return t
 
 
-def serve_once(html, start_port=5000, autoincrement_port=True, content_type='text/html', headers=None):
-    # type: (Union[str, bytes, requests.Response], int, bool, str, Optional[Dict[str, str]]) -> int
+def serve_once(html, start_port=5000, autoincrement_port=True, content_type='text/html', headers=None, logger=None):
+    # type: (Union[str, bytes, requests.Response], int, bool, str, Optional[Dict[str, str]], Optional[logging.Logger]) -> int
     """
     Render Text in the users browser
     Opens a web server that serves a HTML string once and shuts down after the first request.
@@ -195,8 +199,11 @@ def serve_once(html, start_port=5000, autoincrement_port=True, content_type='tex
     :param autoincrement_port: If the port should be increased if the server cannot listen on the provided start_port
     :param content_type: The content type this server should report (change it if you want json, for example)
     :param headers: Additional headers as {header_key: value} dict.
+    :param logger: the optional logger to redirect logs to.
     :return: The port the server started listening on
     """
+    if logger is None:
+        logger = utilslogger
     if headers is None:
         headers = {}
     if isinstance(html, requests.Response):
@@ -240,14 +247,98 @@ class SimpleSocket(telnetlib.Telnet):
     Read Telnetlib doku for more.
     """
 
-    def readline_expect(self, expected, read_until=b"\n", timeout=30):
-        # type: (Union[str, bytes], Union[str, bytes], int) -> bytes
+    # pylint:  disable=protected-access
+    def __init__(self, host=None, port=0, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, logger=None):
+        # type: (str, int, int, Optional[logging.Logger]) -> None
+        """
+        Initializes a new SimpleSocket Object.
+        :param host: the host to connect to
+        :param port: the port to connect to
+        :param timeout: The timeout passed in here counts for the whole session.
+        :param logger: The optional logger to use
+        :
+        """
+        self.telnet = super(SimpleSocket, self).__init__(host, port, timeout)  # type: telnetlib.Telnet
+        self.socket = self.telnet.get_socket()  # type: socket.socket
+        if logger:
+            self.logger = logger
+        else:
+            self.logger = utilslogger
+
+    def readline_expect(self, expected, read_until=b"\n", timeout=None):
+        # type: (Union[str, bytes], Union[str, bytes], Optional[int]) -> bytes
         """
         Reads to newline (or read_until string) and assert the presence of a string in the response.
         Will raise an exception if failed.
         :param read_until: Which parameter to read until
         :param expected: the expected String to search for in the response
-        :param timeout: a timeout
+        :param timeout: The timeout (uses Telnet default if not passed in)
         :return read: the bytes read
         """
+        if timeout is None:
+            timeout = self.timeout
         return readline_expect(self, expected, read_until, timeout)
+
+    def expect(self, regexes, timeout=None):
+        # type: (List[Union[bytes, Pattern]], Optional[int])->Tuple[int, Match, bytes]
+        """
+        Read until one from a list of a regular expressions matches.
+        Use this to search for anything.
+
+        :param regexes: The first argument is a list of regular expressions, either
+        compiled (re.Pattern instances) or uncompiled (strings).
+        :param timeout: Timeout in seconds. If none, default will be taken.
+        :return: Return a tuple of three items: the index in the list of the
+            first regular expression that matches; the re.Match object
+            returned; and the text read up till and including the match.
+        """
+        if timeout is None:
+            timeout = self.timeout
+
+        # Make sure all strings are bytes, ignore compiled Regexes.
+        regexes = [ensure_bytes(x) if isinstance(x, str) else x for x in regexes]
+
+        return self.telnet.expect(list=regexes, timeout=timeout)
+
+    def read_until(self, match, timeout=None):
+        # type: (Union[bytes, str], Optional[int])->bytes
+        """
+        Read until the expected string has been seen, or a timeout is hit (default is default socket timeout).
+        
+        :param match: what to look for.
+        :param timeout: default socket timeout override
+        :return: Returns everything until the given math. When no match is found, return whatever is available instead,
+        possibly the empty string.  Raise EOFError if the connection
+        is closed and no cooked data is available.
+        """
+        if timeout is None:
+            timeout = self.timeout
+        return self.telnet.read_until(ensure_bytes(match), timeout)
+
+    def read_n_lines(self, line_count, delimiter=b"\n"):
+        # type: (int, Union[str, bytes]) -> List[bytes]
+        """
+        Read n lines from socket
+        :param line_count: the amount of lines to read
+        :param delimiter: what delimeter to use for splitting (could also be non-\n)
+        :return: a list of lines
+        """
+        return [self.read_until(ensure_bytes(delimiter)) for _ in range(line_count)]
+
+    def read_all(self):
+        # type: () -> bytes
+        """
+        Read all data until EOF; block until connection closed.
+        :return: the complete content until EOF
+        """
+        return self.telnet.read_all()
+
+    def write(self, buffer):
+        # type: (Union[str, bytes]) -> None
+        """
+        Write a string to the socket.
+        Can block if the connection is blocked.
+        May raise socket.error if the connection is closed.
+        :param buffer: The buffer to write
+        """
+        self.telnet.write(ensure_bytes(buffer))

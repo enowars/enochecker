@@ -40,4 +40,4 @@ class OfflineException(EnoException):
     """
     Service was not reachable (at least once) during our checks
     """
-    result = Result.OFFLINE  # type: Result
+    result = Result.OFFLINE  # type: int
