@@ -9,18 +9,17 @@ from enochecker import *
 
 
 class CheckerExampleImpl(BaseChecker):
+    port = 9999
 
     def __init__(self, method=CHECKER_METHODS[0], address="localhost", team_name="Testteam",
-                 round=1, flag="ENOFLAG", call_idx=0, max_time=30, port=9999,
-                 fail=False):
+                 round=1, flag="ENOFLAG", call_idx=0, max_time=30):
         """
         An mocked implementation of a checker for testing purposes
         :param method: The method the checker uses
         :param fail: If and how
         """
-        super(CheckerExampleImpl,self).__init__(method=method, address=address, team_name=team_name,
-                         round=round, flag=flag, call_idx=call_idx, max_time=max_time,
-                         port=port)
+        super(CheckerExampleImpl, self).__init__(method=method, address=address, team=team_name,
+                                                 round=round, flag=flag, flag_idx=call_idx, timeout=max_time)
         self.logger.setLevel(logging.DEBUG)
 
     def store_flag(self):
@@ -107,19 +106,13 @@ def test_dict():
     assert len(db) == 0
 
 
-def test_parser_fail():
-    with pytest.raises(SystemExit):
-        CheckerExampleImpl(method=None)
-
-
 def test_args():
-    with pytest.raises(SystemExit):
-        CheckerExampleImpl(method=None)
 
     with pytest.raises(SystemExit):
         parse_args()
 
     argv = [
+        "run",
         CHECKER_METHODS[0],
         "localhost",
         "TestTeam",
@@ -144,14 +137,14 @@ def test_checker_connections():
     # TODO: Check timeouts?
     text = "ECHO :)"
     port = serve_once(text)
-    checker = CheckerExampleImpl(CHECKER_METHODS[0], port=port)
+    checker = CheckerExampleImpl(CHECKER_METHODS[0])
     assert checker.http_get("/").text == text
 
     # Give server time to shut down
     time.sleep(0.2)
 
     port = serve_once(text)
-    checker = CheckerExampleImpl(CHECKER_METHODS[0], port=port)
+    checker = CheckerExampleImpl(CHECKER_METHODS[0])
     t = checker.connect()
     t.write(b"GET / HTTP/1.0\r\n\r\n")
     assert readline_expect(t, "HTTP")
@@ -162,23 +155,21 @@ def test_checker():
     flag = "ENOFLAG"
     noise = "buzzzz! :)"
 
-    # It definitely shouldn't be allowed to run other existing functions
-    assert CheckerExampleImpl(method="__init__").run() == Result.INTERNAL_ERROR
-
-    CheckerExampleImpl(method="StoreFlag", flag=flag).run()
+    CheckerExampleImpl(method="putflag").run()
+    return
     assert CheckerExampleImpl().team_db["flag"] == flag
-    CheckerExampleImpl(method="RetrieveFlag", flag=flag).run()
+    CheckerExampleImpl(method="getflag", flag=flag).run()
 
-    CheckerExampleImpl(method="StoreNoise", flag=noise).run()
+    CheckerExampleImpl(method="putflag", flag=noise).run()
     assert CheckerExampleImpl().team_db["noise"] == noise
-    CheckerExampleImpl(method="RetrieveNoise", flag=noise).run()
+    CheckerExampleImpl(method="getflag", flag=noise).run()
 
-    assert CheckerExampleImpl(method="Havoc").run() == Result.OFFLINE
+    assert CheckerExampleImpl(method="havoc").run() == Result.OFFLINE
 
 
 def test_useragents():
     flag = "ENOFLAG"
-    checker = CheckerExampleImpl(method="StoreFlag", flag=flag)
+    checker = CheckerExampleImpl(method="putflag", flag=flag)
     last_agent = checker.http_useragent
     new_agent = checker.http_useragent_randomize()
     assert checker.http_useragent == new_agent

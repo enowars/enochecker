@@ -91,9 +91,11 @@ class StoredDict(collections.MutableMapping):
         self._dirties = set()  # type: Set[str]
         self._locks = set()  # type: Set[str]
         self._to_delete = set()  # type: Set[str]
+        self._persist_thread = None  # type: Optional[threading.Thread]
         self.path = os.path.join(base_path, ensure_valid_filename(name))  # type: str
         self.persist_secs = persist_secs  # type: int
         self.ignore_locks = ignore_locks  # type: bool
+        self.persist_secs = persist_secs  # type: int
 
         if logger:
             self.logger = logger
@@ -108,13 +110,19 @@ class StoredDict(collections.MutableMapping):
 
         self.update(dict(*args, **kwargs))  # In case we got initialized using a dict, make sure it's in sync.
 
-        if persist_secs and persist_secs > 0:
-            def persist_loop():
-                while not self._stopping:
-                    time.sleep(persist_secs)
-                    self.persist()
+    @_locked
+    def _spawn_persist_thread(self):
+        # type: () -> None
+        """
+        Spawns a thread persisting all changes, if necessary.
+        """
+        if self.persist_secs > 0 and not self._persist_thread:
+            def persist_async():
+                self.logger.debug("Persisting {} from background.".format(self))
+                time.sleep(self.persist_secs)
+                self.persist()
 
-            self._persist_thread = start_daemon(persist_loop)
+            self._persist_thread = start_daemon(persist_async)
 
     @_locked
     def _cleanup(self):
@@ -286,6 +294,7 @@ class StoredDict(collections.MutableMapping):
         :param key: Key to store
         :param value: Value to store
         """
+
         if key in self._to_delete:
             self._to_delete.remove(key)
         self._cache[key] = value

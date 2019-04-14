@@ -32,6 +32,9 @@ if "TimeoutError" not in globals():  # Python2
 
 VALID_ARGS = ["method", "address", "team", "round", "flag", "timeout", "flag_idx"]
 
+#  Global cache for all stored dicts.  TODO: Prune this at some point?
+global_db_cache = {}  # type: Dict[str, StoredDict]
+
 
 class RestLogHandler(logging.Handler):
     """
@@ -51,9 +54,9 @@ class RestLogHandler(logging.Handler):
 
     def emit(self, record):
         # type: (LogRecord) -> None
-        #timestamp = datetime.datetime.fromtimestamp(record.msecs/1000.0).strftime('%Y-%m-%dT%H:%M:%SZ')
-        #timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-        #"millis": record.msecs,
+        # timestamp = datetime.datetime.fromtimestamp(record.msecs/1000.0).strftime('%Y-%m-%dT%H:%M:%SZ')
+        # timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+        # "millis": record.msecs,
         json = {
             "message": record.getMessage(),
             "timestamp": record.asctime,  # Todo: Might not be available everywhere (?)
@@ -148,13 +151,12 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
     """
 
     def __init__(self, run_id=None, method=None, address=None, team=None, round=None, flag=None, flag_idx=None,
-                 timeout=None, storage_dir=DB_DEFAULT_DIR, log_endpoint=None, from_args=True):
-        # type: (Optional[int], Optional[str], Optional[str], Optional[str], Optional[int], Optional[str], Optional[int], Optional[int], str, Optional[str], bool) -> None
+                 timeout=None, storage_dir=DB_DEFAULT_DIR, log_endpoint=None, from_args=True, use_db_cache=False):
+        # type: (Optional[int], Optional[str], Optional[str], Optional[str], Optional[int], Optional[str], Optional[int], Optional[int], str, Optional[str], bool, bool) -> None
         """
         Inits the Checker, filling the params, according to:
         :oaram: run_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
-        :param: method: The method (optional, can set this at run())
-        :param: start_action set to false to not run the action
+        :param: method: The method to run
         :param: from_args: If true, uses parse_args() to fill all parameters that were passed as `None`.
         """
         self.run_id = run_id  # type: int
@@ -162,7 +164,10 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
         self._setup_logger()
         self.storage_dir = storage_dir
-        self._active_dbs = {}  # type: Dict[str, StoredDict]
+        if global_db_cache:
+            self._active_dbs = global_db_cache  # type: Dict[str, StoredDict]
+        else:
+            self._active_dbs = {}  # type: Dict[str, StoredDict]
         self.http_session = requests.session()  # type: requests.Session
         self.http_useragent = random_useragent()
 
