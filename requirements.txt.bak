@@ -1,0 +1,11 @@
+requests
+websocket-client
+requests
+pytest
+flask
+aenum
+typing
+future
+futures
+pathlib2
+elastic-apm[flask]

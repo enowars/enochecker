@@ -124,7 +124,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         # type: (Optional[int], Optional[str], Optional[str], Optional[str], Optional[int], Optional[int], Optional[str], Optional[int], Optional[int], str, Optional[str], bool, bool) -> None
         """
         Inits the Checker, filling the params, according to:
-        :oaram: run_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
+        :param: run_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
         :param: method: The method to run
         """
         self.run_id = run_id  # type: int

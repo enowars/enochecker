@@ -1,6 +1,8 @@
 import collections
 import logging
+import sys
 from typing import TYPE_CHECKING, Callable, Type, Any, List, Union, Dict, Tuple
+from elasticapm.contrib.flask import ElasticAPM
 
 from flask import Flask, Response
 from flask import jsonify
@@ -15,6 +17,9 @@ if TYPE_CHECKING:
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.Logger(__name__)
 logger.setLevel(logging.DEBUG)
+
+# ElasticSearch performance monitoring
+apm = ElasticAPM()
 
 Optional = collections.namedtuple("Optional", "key type default")
 Required = collections.namedtuple("Required", "key type")
@@ -196,11 +201,14 @@ def init_service(checker):
     :param checker: the checker class to use for check requests.
     :return: a flask app with post and get routes set, ready for checking.
     """
-
     app = Flask(__name__)
     index, checker_route = checker_routes(checker)
 
     app.route("/", methods=["GET"])(index)
     app.route('/', methods=['POST'])(checker_route)
+
+    if "run" not in sys.argv:
+        # ElasticSearch Performance Monitoring (disabled on commandline)
+        apm.init_app(app, service_name=checker.__name__.split("Checker")[0])  # secret_token=SECRET)
 
     return app  # Start service using service.run(host="0.0.0.0")
