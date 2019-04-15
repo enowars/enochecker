@@ -29,7 +29,7 @@ if "TimeoutError" not in globals():  # Python2
     # noinspection PyShadowingBuiltins
     TimeoutError = socket.timeout
 
-VALID_ARGS = ["method", "address", "team", "round", "flag", "timeout", "flag_idx"]
+VALID_ARGS = ["method", "address", "team", "round", "flag", "timeout", "flag_idx", "json_logging", "log_endpoint", "round_length"]
 
 #  Global cache for all stored dicts.  TODO: Prune this at some point?
 global_db_cache = {}  # type: Dict[str, StoredDict]
@@ -70,8 +70,12 @@ def parse_args(argv=None):
                            help="The ip or address of the remote team to check")
     runparser.add_argument("-t", '--team', type=str, default="team",
                            help="The name of the target team to check")
+    runparser.add_argument("-I", "--run_id", type=int, default=1,
+                           help="An id for this run. Used to find it in the DB later.")
     runparser.add_argument("-r", '--round', type=int, default=1,
                            help="The round we are in right now")
+    runparser.add_argument("-R", "--round_length", type=int, default=300,
+                           help="The round length in seconds (default 300)")
     runparser.add_argument("-f", '--flag', type=str, default="ENOFLAGENOFLAG=",
                            help="The Flag, a Fake flag or a Unique ID, depending on the mode")
     runparser.add_argument("-x", '--timeout', type=int, default=30,
@@ -82,7 +86,7 @@ def parse_args(argv=None):
                                 "decide which flag to place.")
     runparser.add_argument("-l", "--log_endpoint", type=str, default="",
                            help="URI to an optional RESTlike service accepting log jsons via POST.")
-    runparser.add_argument("-j", "--json_logging", action='store_false',
+    runparser.add_argument("-j", "--json_logging", dest="json_logging", action='store_true',
                            help="If set, logging will be in ELK/Kibana friendly JSON format.")
 
     return parser.parse_args(args=argv)  # type: argparse.Namespace
@@ -115,15 +119,13 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
     Magic.
     """
 
-    def __init__(self, run_id=None, method=None, address=None, team=None, round=None, flag=None, flag_idx=None,
-                 timeout=None, storage_dir=DB_DEFAULT_DIR, log_endpoint=None, from_args=True, use_db_cache=True,
-                 json_logging=True):
-        # type: (Optional[int], Optional[str], Optional[str], Optional[str], Optional[int], Optional[str], Optional[int], Optional[int], str, Optional[str], bool, bool, bool) -> None
+    def __init__(self, run_id=None, method=None, address=None, team=None, round=None, round_length=300, flag=None, flag_idx=None,
+                 timeout=None, storage_dir=DB_DEFAULT_DIR, log_endpoint=None, use_db_cache=True, json_logging=True):
+        # type: (Optional[int], Optional[str], Optional[str], Optional[str], Optional[int], Optional[int], Optional[str], Optional[int], Optional[int], str, Optional[str], bool, bool) -> None
         """
         Inits the Checker, filling the params, according to:
         :oaram: run_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
         :param: method: The method to run
-        :param: from_args: If true, uses parse_args() to fill all parameters that were passed as `None`.
         """
         self.run_id = run_id  # type: int
         self.log_endpoint = log_endpoint  # type: Optional[str]
@@ -133,6 +135,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         self.address = address  # type: str
         self.team = team  # type: str
         self.round = round  # type: int
+        self.round_length = round_length  # type: int
         self.flag = flag  # type: str
         self.timeout = timeout  # type: int
         self.flag_idx = flag_idx  # type: int
@@ -153,15 +156,6 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         if not hasattr(self, "port"):
             self.warning("No default port defined.")
             self.port = -1
-
-        if from_args and any([(getattr(self, x) is None) for x in VALID_ARGS]):
-            args = parse_args(sys.argv[1:])
-
-            for key in VALID_ARGS:
-                if getattr(self, key) is None:
-                    val = getattr(args, key)
-                    self.debug("Setting value {} from commandline to {}".format(key, val))
-                    setattr(self, key, val)
 
         self.config = {x: getattr(self, x) for x in VALID_ARGS}
 
