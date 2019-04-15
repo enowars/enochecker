@@ -1,6 +1,4 @@
-import datetime
 import socket
-from logging import LogRecord
 
 from flask import Flask
 from future.standard_library import install_aliases
@@ -25,6 +23,7 @@ from .storeddict import StoredDict, DB_DEFAULT_DIR
 from .useragents import random_useragent
 from .results import Result, EnoException
 from .checkerservice import init_service, CHECKER_METHODS
+from .logging import RestLogHandler, ELKFormatter
 
 if "TimeoutError" not in globals():  # Python2
     # noinspection PyShadowingBuiltins
@@ -34,42 +33,6 @@ VALID_ARGS = ["method", "address", "team", "round", "flag", "timeout", "flag_idx
 
 #  Global cache for all stored dicts.  TODO: Prune this at some point?
 global_db_cache = {}  # type: Dict[str, StoredDict]
-
-
-class RestLogHandler(logging.Handler):
-    """
-    Simple handler class to send Checker logs off to the logging backend Service.
-    """
-
-    def __init__(self, checker, level=logging.DEBUG):
-        # type: (BaseChecker, int) -> None
-        """
-        Create a new handler.
-        :param checker: The checker to use
-        :param level: the Level
-        """
-
-        super(RestLogHandler, self).__init__(level)
-        self.checker = checker  # type: BaseChecker
-
-    def emit(self, record):
-        # type: (LogRecord) -> None
-        # timestamp = datetime.datetime.fromtimestamp(record.msecs/1000.0).strftime('%Y-%m-%dT%H:%M:%SZ')
-        # timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-        # "millis": record.msecs,
-        json = {
-            "message": record.getMessage(),
-            "timestamp": record.asctime,  # Todo: Might not be available everywhere (?)
-            "severity": record.levelname,
-            "runId": self.checker.run_id,
-            "tag": "{}:{}:{}".format(record.name, record.module, record.funcName),
-        }
-        try:
-            r = requests.post(self.checker.log_endpoint, json=json)
-            if r.status_code != 200:
-                print("Error while logging. Request to {} returned: {}".format(r.status_code, r.text))
-        except Exception as ex:
-            print("Error while logging: {}".format(ex))
 
 
 def parse_args(argv=None):
@@ -119,6 +82,8 @@ def parse_args(argv=None):
                                 "decide which flag to place.")
     runparser.add_argument("-l", "--log_endpoint", type=str, default="",
                            help="URI to an optional RESTlike service accepting log jsons via POST.")
+    runparser.add_argument("-j", "--json_logging", action='store_false',
+                           help="If set, logging will be in ELK/Kibana friendly JSON format.")
 
     return parser.parse_args(args=argv)  # type: argparse.Namespace
 
@@ -151,8 +116,9 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
     """
 
     def __init__(self, run_id=None, method=None, address=None, team=None, round=None, flag=None, flag_idx=None,
-                 timeout=None, storage_dir=DB_DEFAULT_DIR, log_endpoint=None, from_args=True, use_db_cache=False):
-        # type: (Optional[int], Optional[str], Optional[str], Optional[str], Optional[int], Optional[str], Optional[int], Optional[int], str, Optional[str], bool, bool) -> None
+                 timeout=None, storage_dir=DB_DEFAULT_DIR, log_endpoint=None, from_args=True, use_db_cache=True,
+                 json_logging=True):
+        # type: (Optional[int], Optional[str], Optional[str], Optional[str], Optional[int], Optional[str], Optional[int], Optional[int], str, Optional[str], bool, bool, bool) -> None
         """
         Inits the Checker, filling the params, according to:
         :oaram: run_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
@@ -161,15 +127,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         """
         self.run_id = run_id  # type: int
         self.log_endpoint = log_endpoint  # type: Optional[str]
-
-        self._setup_logger()
-        self.storage_dir = storage_dir
-        if global_db_cache:
-            self._active_dbs = global_db_cache  # type: Dict[str, StoredDict]
-        else:
-            self._active_dbs = {}  # type: Dict[str, StoredDict]
-        self.http_session = requests.session()  # type: requests.Session
-        self.http_useragent = random_useragent()
+        self.json_logging = json_logging  # type: bool
 
         self.method = method  # type: str
         self.address = address  # type: str
@@ -178,6 +136,19 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         self.flag = flag  # type: str
         self.timeout = timeout  # type: int
         self.flag_idx = flag_idx  # type: int
+        self.storage_dir = storage_dir
+
+        self._setup_logger()
+        if use_db_cache:
+            self._active_dbs = global_db_cache  # type: Dict[str, StoredDict]
+        else:
+            self._active_dbs = {}  # type: Dict[str, StoredDict]
+        self.http_session = requests.session()  # type: requests.Session
+        self.http_useragent = random_useragent()
+
+        if not hasattr(self, "service_name"):
+            self.service_name = type(self).__name__.split("Checker")[0]
+            self.debug("Assuming checker Name {}. If that's not the case, please override.".format(self.service_name))
 
         if not hasattr(self, "port"):
             self.warning("No default port defined.")
@@ -209,7 +180,10 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         # default handler
         handler = logging.StreamHandler(sys.stdout)
         handler.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        if self.json_logging:
+            formatter = ELKFormatter(self)
+        else:
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
 

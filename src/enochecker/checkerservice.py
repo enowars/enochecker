@@ -29,15 +29,16 @@ CHECKER_METHODS = [
 
 # The json spec a checker request follows.
 spec = [
-    Required("method", CHECKER_METHODS),
-    Required("address", str),
-    Optional("runId", int, 0),
-    Optional("team", str, "FakeTeam"),
-    Optional("round", int, 0),
-    Optional("flag", str, "ENOTESTFLAG"),
-    Optional("flagIndex", int, 0),
-    Optional("timeout", int, 30),
-    Optional("logEndpoint", str, None)
+    Required("method", CHECKER_METHODS),  # method to execute
+    Required("address", str),  # address to check
+    Optional("runId", int, 0),  # internal ID of this run inside our db
+    Optional("team", str, "FakeTeam"),  # the team name
+    Optional("round", int, 0),  # which tick we are in
+    Optional("roundLength", int, 300),  # the default tick time
+    Optional("flag", str, "ENOTESTFLAG"),  # the flag or noise to drop or get
+    Optional("flagIndex", int, 0),  # the index of this flag in a given round (starts at 0)
+    Optional("timeout", int, 30),  # timeout we have for this run
+    Optional("logEndpoint", str, None)  # endpoint to send runs to
 ]  # type: List[Union[Required, Optional]]
 
 tiny_poster = """
@@ -121,7 +122,7 @@ def json_to_kwargs(json, spec):
 
     def key_to_name(key):
         # type: (str)->str
-        key = key.replace("Index", "Idx")
+        key = key.replace("Index", "Idx")  # -> flagIndex -> flag_idx
         return snake_caseify(key)
 
     for entry in spec:

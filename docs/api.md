@@ -14,7 +14,7 @@ Args look like this:
     "$Round",
     "$Flag|$Noise",
     "$MaxRunningTime",
-    "$CallIdx" [index of this task (for each type) in the current round]
+    "$CallIdx" [index of this task (for each type) in the current tick]
 ]
 :param argv: argv. Custom argvs. Will default to sys.argv if not provided.
 :return: args object
@@ -80,7 +80,7 @@ BaseChecker.getflag(self)
 ```
 
 This method retrieves a flag from the service.
-Use self.flag to get the flag that needs to be recovered and self.roudn to get the round the flag was placed in.
+Use self.flag to get the flag that needs to be recovered and self.tick to get the tick the flag was placed in.
 On error, raise an EnoException.
 :raises EnoException on error
 :return this function can return a result if it wants
