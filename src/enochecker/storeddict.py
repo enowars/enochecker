@@ -55,13 +55,14 @@ def _locked(func):
     def locked(self, *args, **kwargs):
         # type: (StoredDict, *str, **int)->Any
         """The called function first acquires a lock and then releases it later."""
-        # print("Locking...")
+        self.logger.debug("Locking {} db".format(self.name))
         self._local_lock.acquire()
+        self.logger.debug("Log db lock for {}".format(self.name))
         try:
             return func(self, *args, **kwargs)
         finally:
             self._local_lock.release()
-            self.logger.debug("Done")
+            self.logger.debug("Released db lock for {}".format(self.name))
 
     return cast(T, locked)
 
@@ -92,6 +93,7 @@ class StoredDict(collections.MutableMapping):
         self._locks = set()  # type: Set[str]
         self._to_delete = set()  # type: Set[str]
         self._persist_thread = None  # type: Optional[threading.Thread]
+        self.name = name
         self.path = os.path.join(base_path, ensure_valid_filename(name))  # type: str
         self.persist_secs = persist_secs  # type: int
         self.ignore_locks = ignore_locks  # type: bool
@@ -118,8 +120,8 @@ class StoredDict(collections.MutableMapping):
         """
         if self.persist_secs > 0 and not self._persist_thread:
             def persist_async():
-                self.logger.debug("Persisting {} from background.".format(self))
                 time.sleep(self.persist_secs)
+                self.logger.debug("Persisting db {} from background.".format(self.name))
                 self.persist()
 
             self._persist_thread = start_daemon(persist_async)
@@ -128,7 +130,7 @@ class StoredDict(collections.MutableMapping):
     def _cleanup(self):
         # type: () -> None
         """Cleans up the db: persists and releases all locks currently held."""
-        self.logger.debug("Cleaning up.")
+        self.logger.debug("StoredDict cleanup task running.")
         self._stopping = True
         self.persist()
         for lock in self._locks:
