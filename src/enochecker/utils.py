@@ -248,23 +248,36 @@ class SimpleSocket(telnetlib.Telnet):
     """
 
     # pylint:  disable=protected-access
-    def __init__(self, host=None, port=0, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, logger=None):
-        # type: (str, int, int, Optional[logging.Logger]) -> None
+    def __init__(self, host=None, port=0, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, logger=None, timeout_fun=None):
+        # type: (str, int, int, Optional[logging.Logger], Optional[Callable[[], int]]) -> None
         """
         Initializes a new SimpleSocket Object.
         :param host: the host to connect to
         :param port: the port to connect to
         :param timeout: The timeout passed in here counts for the whole session.
         :param logger: The optional logger to use
-        :
+        :param timeout_fun: function that will output the current timeout on each call.
         """
+        super(SimpleSocket, self).__init__(host, port, timeout)
         self.telnet = super(SimpleSocket, self)  # type: telnetlib.Telnet
-        self.telnet.__init__(host, port, timeout)
         self.socket = self.telnet.get_socket()  # type: socket.socket
         if logger:
             self.logger = logger
         else:
             self.logger = utilslogger
+        self.timeout_fun = timeout_fun
+
+    @property
+    def current_default_timeout(self):
+        # type: () -> int
+        """
+        Gets the timeout default that should currently be used.
+        :return: current timeout default, either from self.timeout_fun or from timeout.
+        """
+        if self.timeout_fun:
+            return self.timeout_fun()
+        else:
+            return self.timeout
 
     def readline_expect(self, expected, read_until=b"\n", timeout=None):
         # type: (Union[str, bytes], Union[str, bytes], Optional[int]) -> bytes
@@ -277,7 +290,7 @@ class SimpleSocket(telnetlib.Telnet):
         :return read: the bytes read
         """
         if timeout is None:
-            timeout = self.timeout
+            timeout = self.current_default_timeout
         return readline_expect(self, expected, read_until, timeout)
 
     def expect(self, regexes, timeout=None):
@@ -294,7 +307,7 @@ class SimpleSocket(telnetlib.Telnet):
             returned; and the text read up till and including the match.
         """
         if timeout is None:
-            timeout = self.timeout
+            timeout = self.current_default_timeout
 
         # Make sure all strings are bytes, ignore compiled Regexes.
         regexes = [ensure_bytes(x) if isinstance(x, str) else x for x in regexes]
@@ -313,7 +326,7 @@ class SimpleSocket(telnetlib.Telnet):
         is closed and no cooked data is available.
         """
         if timeout is None:
-            timeout = self.timeout
+            timeout = self.current_default_timeout
         return self.telnet.read_until(ensure_bytes(match), timeout)
 
     def read_n_lines(self, line_count, delimiter=b"\n"):

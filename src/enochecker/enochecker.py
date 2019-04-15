@@ -1,3 +1,4 @@
+import datetime
 import socket
 
 from flask import Flask
@@ -29,7 +30,10 @@ if "TimeoutError" not in globals():  # Python2
     # noinspection PyShadowingBuiltins
     TimeoutError = socket.timeout
 
-VALID_ARGS = ["method", "address", "team", "round", "flag", "timeout", "flag_idx", "json_logging", "log_endpoint", "round_length"]
+TIME_BUFFER = 3  # type: int # time in seconds we try to finish earlier
+
+VALID_ARGS = ["method", "address", "team", "round", "flag", "timeout", "flag_idx", "json_logging", "log_endpoint",
+              "round_length"]
 
 #  Global cache for all stored dicts.  TODO: Prune this at some point?
 global_db_cache = {}  # type: Dict[str, StoredDict]
@@ -119,7 +123,8 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
     Magic.
     """
 
-    def __init__(self, run_id=None, method=None, address=None, team=None, round=None, round_length=300, flag=None, flag_idx=None,
+    def __init__(self, run_id=None, method=None, address=None, team=None, round=None, round_length=300, flag=None,
+                 flag_idx=None,
                  timeout=None, storage_dir=DB_DEFAULT_DIR, log_endpoint=None, use_db_cache=True, json_logging=True):
         # type: (Optional[int], Optional[str], Optional[str], Optional[str], Optional[int], Optional[int], Optional[str], Optional[int], Optional[int], str, Optional[str], bool, bool) -> None
         """
@@ -127,6 +132,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         :param: run_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
         :param: method: The method to run
         """
+        self.time_started_at = datetime.datetime.now()  # type: datetime
         self.run_id = run_id  # type: int
         self.log_endpoint = log_endpoint  # type: Optional[str]
         self.json_logging = json_logging  # type: bool
@@ -138,6 +144,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         self.round_length = round_length  # type: int
         self.flag = flag  # type: str
         self.timeout = timeout  # type: int
+
         self.flag_idx = flag_idx  # type: int
         self.storage_dir = storage_dir
 
@@ -159,7 +166,8 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
         self.config = {x: getattr(self, x) for x in VALID_ARGS}
 
-        self.debug("Initialized checker with {}".format(json.dumps(self.config)))
+        self.debug("Initialized checker for flag {} with in {} seconds".format(
+            json.dumps(self.config), datetime.datetime.now() - self.time_started_at))
 
     def _setup_logger(self):
         # type: () -> None
@@ -197,6 +205,24 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         :return: The noise
         """
         return self.flag
+
+    @property
+    def time_running(self):
+        # type: () -> float
+        """
+        How long this checker has been running
+        :return: time this checker has been running for
+        """
+        return (datetime.datetime.now() - self.time_started_at).total_seconds()
+
+    @property
+    def time_remaining(self):
+        # type: () -> int
+        """
+        Returns a remaining time that is save to be used as timeout (includes a buffer of TIME_BUFFER seconds)
+        :return: A save number of seconds that may still be used
+        """
+        return max(int(self.timeout - self.time_running - TIME_BUFFER), 1)
 
     # ---- Basic checker functionality ---- #
     def run(self, method=None):
@@ -403,14 +429,16 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         :param timeout: timeout on connection (defaults to self.timeout)
         :return: A connected Telnet instance
         """
+        timeout_fun = lambda: timeout
         if timeout is None:
-            timeout = self.timeout
+            timeout = self.time_remaining
+            timeout_fun = lambda: self.time_remaining
         if port is None:
             port = self.port
         if host is None:
             host = self.address
         self.debug("Opening socket to {}:{} (timeout {} secs).".format(host, port, timeout))
-        return SimpleSocket(host, port, timeout=timeout, logger=self.logger)
+        return SimpleSocket(host, port, timeout=timeout, logger=self.logger, timeout_fun=timeout_fun)
 
     @property
     def http_useragent(self):
@@ -493,7 +521,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         """
         url = self._sanitize_url(route, port, scheme)
         if timeout is None:
-            timeout = self.timeout
+            timeout = self.time_remaining
         self.debug("Request: {} {} with params: {} and {} secs timeout.".format(method, url, params, timeout))
         resp = self.http_session.request(method, url, params=params, timeout=timeout, **kwargs)
         if raise_http_errors:
