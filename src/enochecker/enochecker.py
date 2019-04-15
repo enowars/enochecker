@@ -174,7 +174,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         """
         Sets up a logger usable from inside a checker using
         self.debug, self.info, self.warning, self.error or self.logger
-        A logger can have additional args as well as exc_info=True to log an exception, stack_info=True to log trace.
+        A logger can have additional args as well as exc_info=ex to log an exception, stack_info=True to log trace.
         """
         self.logger = logging.Logger(type(self).__name__)  # type: logging.Logger
         self.logger.setLevel(logging.DEBUG)
@@ -253,10 +253,10 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             return Result.OK
 
         except EnoException as eno:
-            self.info("Checker[{}] result: {}({})".format(eno.result, self.method, eno), exc_info=True)
+            self.info("Checker[{}] result: {}({})".format(eno.result, self.method, eno), exc_info=eno)
             return Result(eno.result)
         except requests.HTTPError as ex:
-            self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=True)
+            self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
             return Result.ENOFLAG
         except (
                 requests.ConnectionError,  # requests
@@ -264,13 +264,14 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 TimeoutError,
                 socket.timeout,
                 ConnectionError,
+                socket.error,
                 # ConnectionAbortedError,  # not in py2, already handled by ConnectionError.
                 # ConnectionRefusedError
         ) as ex:
-            self.info("Error in connection to service occurred: {}".format(ex), exc_info=True)
+            self.info("Error in connection to service occurred: {}".format(ex), exc_info=ex)
             return Result.OFFLINE
         except Exception as ex:
-            self.error("Unhandled checker error occurred: {}".format(ex), exc_info=1)
+            self.error("Unhandled checker error occurred: {}".format(ex), exc_info=ex)
             return Result.INTERNAL_ERROR
         finally:
             for db in self._active_dbs.values():
