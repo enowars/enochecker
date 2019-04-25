@@ -33,7 +33,7 @@ def assert_in(o1, o2, message=None):
     """
     if message is None:
         message = "{} is not in {}".format(o1, o2)
-    if not o2 or not o2 or o1 not in o2:
+    if not o2 or o1 not in o2:
         raise BrokenServiceException(message)
 
 
