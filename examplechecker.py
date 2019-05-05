@@ -101,7 +101,7 @@ class ExampleChecker(BaseChecker):
                 The preferred way to report Errors in the service is by raising an appropriate EnoException
         """
         self.info("I wanted to inform you: I'm  running <3")
-        self.http_get("/")  # This will probably fail fail, depending on what params you give the script. :)
+        self.http_get("/")  # This will probably fail, depending on what params you give the script. :)
 
 
 app = ExampleChecker.service  # This can be used for uswgi.
