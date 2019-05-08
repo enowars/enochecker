@@ -312,7 +312,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         # type: () -> Optional[Result]
         """
         This method stores noise in the service. The noise should later be recoverable.
-        The difference between noise and flag is, tht noise does not have to remain secret for other teams.
+        The difference between noise and flag is that noise does not have to remain secret for other teams.
         This method can be called many times per round. Check how often using self.flag_idx.
         On error, raise an EnoException.
         :raises EnoException on error
