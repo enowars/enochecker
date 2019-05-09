@@ -49,20 +49,40 @@ spec = [
 tiny_poster = """
 <script>
 // To make testing/posting a bit easier, we can do it from the browser here.
+i = 0
+pending_requests = 0
+results = []
+
 function post(str) {
     var xhr = new XMLHttpRequest()
     xhr.open("POST", "/")
     xhr.setRequestHeader("Content-Type", "application/json")
     xhr.onerror = console.error
     xhr.onload = xhr.onerror = function () {
+    	results = [Request " + i.toString() + " resulted in:\n" + xhr.responseText + "\n"].concat(results)
         console.log(xhr.responseText)
-        document.getElementById("out").innerText = "<plaintext>\\n\\n" + xhr.responseText
+        document.getElementById("out").innerText = "<plaintext>\\n\\n" + results.join("\n")
+        i++
+        pending_requests--
+        update_pending()
     }
     xhr.send(str)
+    pending_requests++
+    update_pending()
 }
+
+function update_pending(){
+	if (pending_requests === 0) {
+    	document.getElementById("pending_para").textContent = ""
+    } else {
+    	document.getElementById("pending_para").textContent = pending_requests.toString() + "Requests pending"
+    }	
+}
+
 </script>
 <div>
 <button onclick=post(document.getElementById("jsonTextbox").value)>Post</button></div>
+<p id="pending_para"><p> 
 """
 
 
