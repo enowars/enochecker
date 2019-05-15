@@ -1,4 +1,4 @@
-import logging
+import logging  
 
 import pytest
 import sys
@@ -20,22 +20,22 @@ class CheckerExampleImpl(BaseChecker):
         """
         super(CheckerExampleImpl, self).__init__(method=method, address=address, team=team_name,
                                                  round=round, flag=flag, flag_idx=call_idx, timeout=max_time)
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.DEBUG) 
 
-    def store_flag(self):
+    def putflag(self):
         self.team_db["flag"] = self.flag
 
-    def retrieve_flag(self):
+    def getflag(self):
         try:
             if not self.team_db["flag"] == self.flag:
                 raise BrokenServiceException("Flag not found!")
         except KeyError:
             raise BrokenServiceException("Flag not correct!")
 
-    def store_noise(self):
+    def putnoise(self):
         self.team_db["noise"] = self.noise
 
-    def retrieve_noise(self):
+    def getnoise(self):
         try:
             if not self.team_db["noise"] == self.noise:
                 raise BrokenServiceException("Noise not correct!")
@@ -114,31 +114,35 @@ def test_args():
     argv = [
         "run",
         CHECKER_METHODS[0],
-        "localhost",
-        "TestTeam",
-        "1",
-        "ENOFLAG",
-        "30",
-        "0",
-        "-p", "1337"
+        "-a", "localhost",
+        "-t", "TestTeam",
+        "-I", "1",
+        "-f", "ENOTESTFLAG",
+        "-x", "30", 
+        "-i", "0",
+        "-R", "500"
+        #"-p", "1337"
     ]
     args = parse_args(argv)
-    assert args.method == argv[0]
-    assert args.address == argv[1]
-    assert args.team_name == argv[2]
-    assert args.round == int(argv[3])
-    assert args.flag == argv[4]
-    assert args.max_time == int(argv[5])
-    assert args.call_idx == int(argv[6])
-    assert args.port == int(argv[8])
-
+    print(args)
+    assert args.method == argv[1]
+    assert args.address == argv[3]
+    assert args.team == argv[5]
+    assert args.round == int(argv[7])
+    assert args.flag == argv[9]
+    assert args.timeout == int(argv[11])
+    assert args.flag_idx == int(argv[13])
+    assert args.round_length == int(argv[15])
+    
+    #assert args.port == int(argv[15])
+    #port should be specified in the basechecker as a constant, so this test isn't neccesary
 
 def test_checker_connections():
     # TODO: Check timeouts?
     text = "ECHO :)"
     port = serve_once(text)
-    checker = CheckerExampleImpl(CHECKER_METHODS[0])
-    assert checker.http_get("/").text == text
+    checker = CheckerExampleImpl(CHECKER_METHODS[0])    #Conflict between logging and enochecker.logging because of wildcart import
+    assert checker.http_get("/").text == text           #Should probably rename it to enologger to avoid further conflicts
 
     # Give server time to shut down
     time.sleep(0.2)

@@ -2,7 +2,7 @@ import collections
 import logging
 import sys
 from typing import TYPE_CHECKING, Callable, Type, Any, List, Union, Dict, Tuple
-from elasticapm.contrib.flask import ElasticAPM
+#from elasticapm.contrib.flask import ElasticAPM
 
 from flask import Flask, Response
 from flask import jsonify
@@ -19,7 +19,7 @@ logger = logging.Logger(__name__)
 logger.setLevel(logging.DEBUG)
 
 # ElasticSearch performance monitoring
-apm = ElasticAPM()
+#apm = ElasticAPM()
 
 Optional = collections.namedtuple("Optional", "key type default")
 Required = collections.namedtuple("Required", "key type")
@@ -49,20 +49,40 @@ spec = [
 tiny_poster = """
 <script>
 // To make testing/posting a bit easier, we can do it from the browser here.
+var checker_request_count = 0
+var checker_pending_requests = 0
+var checker_results = []
+
 function post(str) {
     var xhr = new XMLHttpRequest()
     xhr.open("POST", "/")
     xhr.setRequestHeader("Content-Type", "application/json")
     xhr.onerror = console.error
     xhr.onload = xhr.onerror = function () {
+    	checker_results = ["Request " + checker_request_count.toString() + " resulted in:\\n" + xhr.responseText + "\\n"].concat(checker_results)
         console.log(xhr.responseText)
-        document.getElementById("out").innerText = "<plaintext>\\n\\n" + xhr.responseText
+        document.getElementById("out").innerText = "<plaintext>\\n\\n" + checker_results.join("\\n")
+        checker_request_count++
+        checker_pending_requests--
+        update_pending()
     }
     xhr.send(str)
+    checker_pending_requests++
+    update_pending()
 }
+
+function update_pending(){
+    if (checker_pending_requests === 0) {
+    	document.getElementById("pending_para").textContent = ""
+    } else {
+    	document.getElementById("pending_para").textContent = checker_pending_requests.toString() + "Requests pending"
+    }	
+}
+
 </script>
 <div>
 <button onclick=post(document.getElementById("jsonTextbox").value)>Post</button></div>
+<p id="pending_para"></p> 
 """
 
 
@@ -210,6 +230,7 @@ def init_service(checker):
 
     if "run" not in sys.argv:
         # ElasticSearch Performance Monitoring (disabled on commandline)
-        apm.init_app(app, service_name=checker.__name__.split("Checker")[0])  # secret_token=SECRET)
-
+        #apm.init_app(app, service_name=checker.__name__.split("Checker")[0])  # secret_token=SECRET)
+        pass
+        
     return app  # Start service using service.run(host="0.0.0.0")

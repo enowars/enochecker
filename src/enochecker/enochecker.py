@@ -541,7 +541,7 @@ def run(checker_cls, args=None):
     """
     parsed = parse_args(args)
     if parsed.runmode == "listen":
-        checker_cls.service.run(host="0.0.0.0", debug=True, port=parsed.listen_port)
+        checker_cls.service.run(host="::", debug=True, port=parsed.listen_port)
     else:
         checker_args = vars(parsed)
         del checker_args["runmode"]  # will always be 'run' at this point
