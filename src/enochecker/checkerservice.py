@@ -72,14 +72,7 @@ function post(str) {
 }
 
 function update_pending(){
-        if (checker_pending_requests === 0) {  "runId": (int ?? 0),
-  "team": (str ?? FakeTeam),
-  "round": (int ?? 0),
-  "roundLength": (int ?? 300),
-  "flag": (str ?? ENOTESTFLAG),
-  "flagIndex": (int ?? 0),
-  "timeout": (int ?? 30),
-  "logEndpoint": (str ?? None)
+    if (checker_pending_requests === 0) {
     	document.getElementById("pending_para").textContent = ""
     } else {
     	document.getElementById("pending_para").textContent = checker_pending_requests.toString() + "Requests pending"

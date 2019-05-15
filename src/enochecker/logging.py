@@ -8,7 +8,6 @@ import requests
 if TYPE_CHECKING:
     from .enochecker import BaseChecker
 
-
 class ELKFormatter(logging.Formatter):
     """
     %(name)s            Name of the logger (logging channel)
