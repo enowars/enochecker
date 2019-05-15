@@ -2,7 +2,7 @@ import collections
 import logging
 import sys
 from typing import TYPE_CHECKING, Callable, Type, Any, List, Union, Dict, Tuple
-from elasticapm.contrib.flask import ElasticAPM
+#from elasticapm.contrib.flask import ElasticAPM
 
 from flask import Flask, Response
 from flask import jsonify
@@ -19,7 +19,7 @@ logger = logging.Logger(__name__)
 logger.setLevel(logging.DEBUG)
 
 # ElasticSearch performance monitoring
-apm = ElasticAPM()
+#apm = ElasticAPM()
 
 Optional = collections.namedtuple("Optional", "key type default")
 Required = collections.namedtuple("Required", "key type")
@@ -230,6 +230,7 @@ def init_service(checker):
 
     if "run" not in sys.argv:
         # ElasticSearch Performance Monitoring (disabled on commandline)
-        apm.init_app(app, service_name=checker.__name__.split("Checker")[0])  # secret_token=SECRET)
-
+        #apm.init_app(app, service_name=checker.__name__.split("Checker")[0])  # secret_token=SECRET)
+        pass
+        
     return app  # Start service using service.run(host="0.0.0.0")
