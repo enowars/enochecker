@@ -89,4 +89,6 @@ optional arguments:
 Many nice features for CTF Checker writing, obviously.
 Also, under-the-hood changes on the Engine can be made without any problems.
 
+For further instructions on how to write a checker with this Framework look at [docs/usage.md](docs/usage.md).
+
 Now, code away :).

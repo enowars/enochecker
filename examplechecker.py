@@ -40,7 +40,7 @@ class ExampleChecker(BaseChecker):
             self.global_db["{}_{}".format(self.address, self.flag)] = "Different place for different flag_idx"
         else:
             raise ValueError("Call_Idx {} exceeds the amount of flags. Not supported.".format(self.flag_idx))
-
+        
     def getflag(self):  # type: () -> None
         """
         This method retrieves a flag from the service.
