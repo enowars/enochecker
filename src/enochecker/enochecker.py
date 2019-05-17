@@ -93,7 +93,7 @@ def parse_args(argv=None):
     runparser.add_argument("-j", "--json_logging", dest="json_logging", action='store_true',
                            help="If set, logging will be in ELK/Kibana friendly JSON format.")
 
-    return parser.parse_args(args=argv)  # type: argparse.Namespace
+    return parser.parse_args(args=argv) # (return is of type argparse.Namespace)
 
 
 class _CheckerMeta(ABCMeta):
@@ -249,15 +249,17 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             if ret is not None:
                 self.error("Illegal return value from {}: {}".format(self.method, ret), )
                 return Result.INTERNAL_ERROR
+            
+            # Returned Normally
             self.info("Checker [{}] executed successfully!".format(self.method))
-            return Result.OK
+            return Result.OK 
 
         except EnoException as eno:
             self.info("Checker[{}] result: {}({})".format(eno.result, self.method, eno), exc_info=eno)
             return Result(eno.result)
         except requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
-            return Result.ENOFLAG
+            return Result.ENOWORKS #For now
         except (
                 requests.ConnectionError,  # requests
                 requests.ConnectTimeout,  # requests

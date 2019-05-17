@@ -1,4 +1,4 @@
-from aenum import IntEnum
+from enum import IntEnum
 
 
 class Result(IntEnum):
