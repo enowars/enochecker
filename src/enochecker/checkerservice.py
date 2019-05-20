@@ -38,7 +38,9 @@ spec = [
     Required("address", str),  # address to check
     Optional("runId", int, 0),  # internal ID of this run inside our db
     Optional("team", str, "FakeTeam"),  # the team name
+    Optional("teamId", int, 1),         # team ID
     Optional("round", int, 0),  # which tick we are in
+    Optional("relatedRoundId", int, 0), #Flag-Related
     Optional("roundLength", int, 300),  # the default tick time
     Optional("flag", str, "ENOTESTFLAG"),  # the flag or noise to drop or get
     Optional("flagIndex", int, 0),  # the index of this flag in a given round (starts at 0)

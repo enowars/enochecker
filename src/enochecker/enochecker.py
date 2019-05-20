@@ -123,8 +123,8 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
     Magic.
     """
 
-    def __init__(self, run_id=None, method=None, address=None, team=None, round=None, round_length=300, flag=None,
-                 flag_idx=None,
+    def __init__(self, run_id=None, method=None, address=None, team=None, team_id=None, round=None, related_round_id=None,
+                round_length=300, flag=None, flag_idx=None,
                  timeout=None, storage_dir=DB_DEFAULT_DIR, log_endpoint=None, use_db_cache=True, json_logging=True):
         # type: (Optional[int], Optional[str], Optional[str], Optional[str], Optional[int], Optional[int], Optional[str], Optional[int], Optional[int], str, Optional[str], bool, bool) -> None
         """
@@ -141,6 +141,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         self.address = address  # type: str
         self.team = team  # type: str
         self.round = round  # type: int
+        self.flag_round = related_round_id # type: int
         self.round_length = round_length  # type: int
         self.flag = flag  # type: str
         self.timeout = timeout  # type: int
