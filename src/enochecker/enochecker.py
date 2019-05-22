@@ -253,7 +253,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 self.info("Checker [{}] resulted in {}".format(self.method, ret.name))
                 return ret
             if ret is not None:
-                self.error("Illegal return value from {}: {}".format(self.method, ret), )
+                self.error("Illegal return value from {}: {}".format(self.method, ret), stack_info=True)
                 return Result.INTERNAL_ERROR
             
             # Returned Normally
@@ -279,7 +279,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             self.info("Error in connection to service occurred: {}".format(ex), exc_info=ex)
             return Result.OFFLINE
         except Exception as ex:
-            self.error("Unhandled checker error occurred: {}".format(ex), exc_info=ex)
+            self.error("Unhandled checker error occurred: {}".format(ex), exc_info=ex, stack_info=True)
             return Result.INTERNAL_ERROR
         finally:
             for db in self._active_dbs.values():

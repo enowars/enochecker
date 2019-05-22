@@ -234,7 +234,7 @@ def serve_once(html, start_port=5000, autoincrement_port=True, content_type='tex
         except socket.error as ex:
             if not autoincrement_port:
                 logger.info("Serve once was not set to automatically increment port {} but faced socket exception{}".
-                            format(start_port, ex), exc_info=True)
+                            format(start_port, ex), exc_info=True, stack_info=True)
                 break
 
     raise socket.error(
