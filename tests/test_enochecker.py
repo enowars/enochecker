@@ -1,5 +1,5 @@
 import logging  
-
+from logging import DEBUG, WARNING, CRITICAL, FATAL, INFO
 import pytest
 import sys
 import time
@@ -11,16 +11,16 @@ from enochecker import *
 class CheckerExampleImpl(BaseChecker):
     port = 9999
 
-    def __init__(self, method=CHECKER_METHODS[0], address="localhost", team_name="Testteam",
+    def __init__(self, method=CHECKER_METHODS[0], address="localhost", team_name="Testteam", team_id=1,
                  round=1, flag="ENOFLAG", call_idx=0, max_time=30):
         """
         An mocked implementation of a checker for testing purposes
         :param method: The method the checker uses
         :param fail: If and how
         """
-        super(CheckerExampleImpl, self).__init__(method=method, address=address, team=team_name,
+        super(CheckerExampleImpl, self).__init__(method=method, address=address, team=team_name, team_id=1,
                                                  round=round, flag=flag, flag_idx=call_idx, timeout=max_time)
-        self.logger.setLevel(logging.DEBUG) 
+        self.logger.setLevel(DEBUG) 
 
     def putflag(self):
         self.team_db["flag"] = self.flag
@@ -44,7 +44,7 @@ class CheckerExampleImpl(BaseChecker):
 
     def havoc(self):
         raise OfflineException("Could not connect to team {} at {}:{} because this is not a real checker script."
-                               .format(self.team_name, self.address, self.port))
+                               .format(self.team, self.address, self.port))
 
 
 def test_assert_equals():
@@ -120,7 +120,9 @@ def test_args():
         "-f", "ENOTESTFLAG",
         "-x", "30", 
         "-i", "0",
-        "-R", "500"
+        "-R", "500",
+        "-F", "299", 
+        "-T", "19"
         #"-p", "1337"
     ]
     args = parse_args(argv)
@@ -133,6 +135,8 @@ def test_args():
     assert args.timeout == int(argv[11])
     assert args.flag_idx == int(argv[13])
     assert args.round_length == int(argv[15])
+    assert args.flag_round == int(argv[17])
+    assert args.team_id == int(argv[19])
     
     #assert args.port == int(argv[15])
     #port should be specified in the basechecker as a constant, so this test isn't neccesary
@@ -140,14 +144,14 @@ def test_args():
 def test_checker_connections():
     # TODO: Check timeouts?
     text = "ECHO :)"
-    port = serve_once(text)
+    port = serve_once(text, 9999)
     checker = CheckerExampleImpl(CHECKER_METHODS[0])    #Conflict between logging and enochecker.logging because of wildcart import
     assert checker.http_get("/").text == text           #Should probably rename it to enologger to avoid further conflicts
 
     # Give server time to shut down
     time.sleep(0.2)
 
-    port = serve_once(text)
+    port = serve_once(text, 9999)
     checker = CheckerExampleImpl(CHECKER_METHODS[0])
     t = checker.connect()
     t.write(b"GET / HTTP/1.0\r\n\r\n")

@@ -32,7 +32,7 @@ if "TimeoutError" not in globals():  # Python2
 
 TIME_BUFFER = 3  # type: int # time in seconds we try to finish earlier
 
-VALID_ARGS = ["method", "address", "team", "round", "flag", "timeout", "flag_idx", "json_logging", "log_endpoint",
+VALID_ARGS = ["method", "address", "team", "team_id", "round", "flag_round", "flag", "timeout", "flag_idx", "json_logging", "log_endpoint",
               "round_length"]
 
 #  Global cache for all stored dicts.  TODO: Prune this at some point?
@@ -74,6 +74,8 @@ def parse_args(argv=None):
                            help="The ip or address of the remote team to check")
     runparser.add_argument("-t", '--team', type=str, default="team",
                            help="The name of the target team to check")
+    runparser.add_argument("-T", '--team_id', type=int, default=1,
+                           help="The Team_id belonging to the specified Team")
     runparser.add_argument("-I", "--run_id", type=int, default=1,
                            help="An id for this run. Used to find it in the DB later.")
     runparser.add_argument("-r", '--round', type=int, default=1,
@@ -82,6 +84,8 @@ def parse_args(argv=None):
                            help="The round length in seconds (default 300)")
     runparser.add_argument("-f", '--flag', type=str, default="ENOFLAGENOFLAG=",
                            help="The Flag, a Fake flag or a Unique ID, depending on the mode")
+    runparser.add_argument("-F", '--flag_round', type=int, default=1,
+                           help="The Round the Flag belongs to (was placed)")
     runparser.add_argument("-x", '--timeout', type=int, default=30,
                            help="The maximum amount of time the script has to execute in seconds")
     runparser.add_argument("-i", '--flag_idx', type=int, default=0,
@@ -123,7 +127,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
     Magic.
     """
 
-    def __init__(self, run_id=None, method=None, address=None, team=None, team_id=None, round=None, related_round_id=None,
+    def __init__(self, run_id=None, method=None, address=None, team=None, team_id=None, round=None, flag_round=None,
                 round_length=300, flag=None, flag_idx=None,
                  timeout=None, storage_dir=DB_DEFAULT_DIR, log_endpoint=None, use_db_cache=True, json_logging=True):
         # type: (Optional[int], Optional[str], Optional[str], Optional[str], Optional[int], Optional[int], Optional[str], Optional[int], Optional[int], str, Optional[str], bool, bool) -> None
@@ -140,8 +144,9 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         self.method = method  # type: str
         self.address = address  # type: str
         self.team = team  # type: str
+        self.team_id = team_id
         self.round = round  # type: int
-        self.flag_round = related_round_id # type: int
+        self.flag_round = flag_round # type: int
         self.round_length = round_length  # type: int
         self.flag = flag  # type: str
         self.timeout = timeout  # type: int

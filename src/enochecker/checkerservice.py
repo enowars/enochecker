@@ -150,6 +150,7 @@ def json_to_kwargs(json, spec):
     def key_to_name(key):
         # type: (str)->str
         key = key.replace("Index", "Idx")  # -> flagIndex -> flag_idx
+        key = key.replace("relatedRoundId", "flagRound")
         return snake_caseify(key)
 
     for entry in spec:
