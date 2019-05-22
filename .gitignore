@@ -4,6 +4,7 @@ __pycache__
 .data
 .idea
 venv
+tmp
 .env
 .venv
 .vscode
