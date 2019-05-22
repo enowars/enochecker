@@ -36,7 +36,7 @@ class ELKFormatter(logging.Formatter):
                         the record is emitted
     """
 
-    def __init__(self, checker, fmt=None, datefmt=None, style='%'):
+    def __init__(self, checker, fmt=None, datefmt="%Y-%m-%dT%H:%M:%S%z", style='%'):
         # type: (BaseChecker, str, str, str) -> None
         super().__init__(fmt, datefmt, style)
         self.checker = checker  # type: BaseChecker
