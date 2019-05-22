@@ -208,7 +208,7 @@ def checker_routes(checker_cls):
             return jsonify({"result": res})
         except Exception as ex:
             print(ex)
-            logger.error("Returning Internal Error {}.".format(ex), exc_info=ex)
+            logger.error("Returning Internal Error {}.".format(ex), exc_info=ex, stack_info=True)
             return jsonify({
                 "result": Result.INTERNAL_ERROR.name,
                 "message": str(ex)
