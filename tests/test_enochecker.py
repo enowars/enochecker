@@ -28,7 +28,7 @@ class CheckerExampleImpl(BaseChecker):
         self.team_db["flag"] = self.flag
         if self.flag_idx==2:
             self.info("RAN IDX 2")
-            raise ChildProcessError()
+            raise Exception()
 
     def getflag(self):
         try:

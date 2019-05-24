@@ -49,6 +49,7 @@ class ELKFormatter(logging.Formatter):
 
         stacktrace = ""
         if record.exc_info:
+            print("\n\n\n\n\nlog exc_info:", record.exc_info)
             stacktrace = traceback.format_exc(record.exc_info)
         elif record.stack_info:
             stacktrace = record.stack_info
