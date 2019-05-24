@@ -10,6 +10,7 @@ from flask import jsonify
 from flask import request
 
 from .enochecker import Result
+from .logging import exception_to_string
 from .utils import snake_caseify
 
 if TYPE_CHECKING:
@@ -216,11 +217,11 @@ def checker_routes(checker_cls):
             return jsonify({"result": res})
         except Exception as ex:
             print(ex)
-            logger.error("Returning Internal Error {}.".format(ex), exc_info=ex, stack_info=True)
+            logger.error("Returning Internal Error {}.\nTraceback:\n{}".format(ex, exception_to_string(ex)), exc_info=ex, stack_info=True)
             return jsonify({
                 "result": Result.INTERNAL_ERROR.name,
                 "message": str(ex),
-                "traceback": ex.__traceback__
+                "traceback": exception_to_string(ex)
             })
 
     return index, serve_checker

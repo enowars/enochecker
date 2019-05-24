@@ -9,6 +9,11 @@ import requests
 if TYPE_CHECKING:
     from .enochecker import BaseChecker
 
+def exception_to_string(excp):
+   stack = traceback.extract_stack()[:-3] + traceback.extract_tb(excp.__traceback__)  # add limit=?? 
+   pretty = traceback.format_list(stack)
+   return ''.join(pretty) + '\n  {} {}'.format(excp.__class__,excp)
+
 class ELKFormatter(logging.Formatter):
     """
     %(name)s            Name of the logger (logging channel)
