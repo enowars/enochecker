@@ -65,6 +65,7 @@ class ELKFormatter(logging.Formatter):
             "function": record.funcName,
             "timestamp": record.asctime,
             "round": self.checker.round,
+            "relatedRoundId" : self.checker.flag_round,
             "flagIndex": self.checker.flag_idx,
             "message": record.getMessage(),
             "exception": record.exc_text,
