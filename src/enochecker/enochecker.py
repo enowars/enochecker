@@ -276,10 +276,10 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 # ConnectionAbortedError,  # not in py2, already handled by ConnectionError.
                 # ConnectionRefusedError
         ) as ex:
-            self.info("Error in connection to service occurred: {}".format(ex), exc_info=ex)
+            self.info("Error in connection to service occurred: {}\nTraceback:\n{}".format(ex, ex.__traceback__), exc_info=ex)
             return Result.OFFLINE#, ex.message
         except Exception as ex:
-            self.error("Unhandled checker error occurred: {}".format(ex), exc_info=ex)
+            self.error("Unhandled checker error occurred: {}\nTraceback:\n{}.".format(ex, ex.__traceback__), exc_info=ex)
             return Result.INTERNAL_ERROR#, ex.message
         finally:
             for db in self._active_dbs.values():
