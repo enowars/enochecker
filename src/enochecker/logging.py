@@ -47,12 +47,12 @@ class ELKFormatter(logging.Formatter):
         record.stack = self.formatStack(record.stack_info)
         record.asctime = self.formatTime(record, self.datefmt)
 
-        stacktrace = ""
-        if record.exc_info:
-            print("\n\n\n\n\nlog exc_info:", record.exc_info)
-            stacktrace = traceback.format_exc(record.exc_info)
-        elif record.stack_info:
-            stacktrace = record.stack_info
+        # stacktrace = ""
+        # if record.exc_info:
+        #     print("\n\n\n\n\nlog exc_info:", record.exc_info)
+        #     stacktrace = traceback.format_exc(record.exc_info)
+        # elif record.stack_info:
+        #     stacktrace = record.stack_info
             
         log_output = {
             "module": record.module,
@@ -68,7 +68,7 @@ class ELKFormatter(logging.Formatter):
             "flagIndex": self.checker.flag_idx,
             "message": record.getMessage(),
             "exception": record.exc_text,
-            "stacktrace": stacktrace,
+            "stacktrace": record.stack_info,
             "serviceName": self.checker.service_name
         }
         return json.dumps(log_output)
