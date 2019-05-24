@@ -204,15 +204,14 @@ def checker_routes(checker_cls):
 
             checker = checker_cls(**kwargs)
 
-            checker.logger.info(request.json)
+            checker.logger.info(request.json, stack_info=True)
             res = checker.run().name
 
             req_json["result"] = res
-            checker.logger.info(type(req_json))
             req_json = json.dumps(req_json)
 
-            checker.logger.info("Run resulted in {}: {}".format(res, request.json))
-            checker.logger.info("{}".format(req_json))
+            checker.logger.info("Run resulted in {}: {}".format(res, request.json), stack_info=True)
+            checker.logger.info("{}".format(req_json), stack_info=True)
 
             return jsonify({"result": res})
         except Exception as ex:
