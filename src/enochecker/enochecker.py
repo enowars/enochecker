@@ -250,21 +250,21 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 ret = getattr(self, snake_caseify(method))()
             if Result.is_valid(ret):
                 ret = Result(ret)  # Better wrap this, in case somebody returns raw ints (?)
-                self.info("Checker [{}] resulted in {}".format(self.method, ret.name))
+                self.info("Checker [{}] resulted in {}".format(self.method, ret.name), stack_info=True)
                 return ret
             if ret is not None:
                 self.error("Illegal return value from {}: {}".format(self.method, ret), stack_info=True)
                 return Result.INTERNAL_ERROR#, "Illegal return value from {}: {}".format(self.method, ret)
             
             # Returned Normally
-            self.info("Checker [{}] executed successfully!".format(self.method))
+            self.info("Checker [{}] executed successfully!".format(self.method), stack_info=True)
             return Result.OK
 
         except EnoException as eno:
-            self.info("Checker[{}] result: {}({})".format(eno.result, self.method, eno), exc_info=eno)
+            self.info("Checker[{}] result: {}({})".format(eno.result, self.method, eno), exc_info=eno, stack_info=True)
             return Result(eno.result)#, eno.message
         except requests.HTTPError as ex:
-            self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
+            self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex, stack_info=True)
             return Result.ENOWORKS#, "HTTP Error" #For now
         except (
                 requests.ConnectionError,  # requests
@@ -276,10 +276,10 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 # ConnectionAbortedError,  # not in py2, already handled by ConnectionError.
                 # ConnectionRefusedError
         ) as ex:
-            self.info("Error in connection to service occurred: {}\nTraceback:\n{}".format(ex, ex.__traceback__), exc_info=ex)
+            self.info("Error in connection to service occurred: {}\nTraceback:\n{}".format(ex, ex.__traceback__), exc_info=ex, stack_info=True)
             return Result.OFFLINE#, ex.message
         except Exception as ex:
-            self.error("Unhandled checker error occurred: {}\nTraceback:\n{}.".format(ex, ex.__traceback__), exc_info=ex)
+            self.error("Unhandled checker error occurred: {}\nTraceback:\n{}.".format(ex, ex.__traceback__), exc_info=ex, stack_info=True)
             return Result.INTERNAL_ERROR#, ex.message
         finally:
             for db in self._active_dbs.values():
@@ -446,7 +446,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             port = self.port
         if host is None:
             host = self.address
-        self.debug("Opening socket to {}:{} (timeout {} secs).".format(host, port, timeout))
+        self.debug("Opening socket to {}:{} (timeout {} secs).".format(host, port, timeout), stack_info=True)
         return SimpleSocket(host, port, timeout=timeout, logger=self.logger, timeout_fun=timeout_fun)
 
     @property
