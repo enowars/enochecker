@@ -191,6 +191,7 @@ def test_useragents():
 def test_exceptionHandling(capsys):
     #CheckerExampleImpl(method="putflag", call_idx=2).run()
     run(CheckerExampleImpl, args=["run" ,"putflag", "-i", "2"])
+    
     a = capsys.readouterr()
     with capsys.disabled():
         print(a.out)
