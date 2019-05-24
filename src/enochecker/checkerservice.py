@@ -1,6 +1,7 @@
 import collections
 import logging
 import sys
+import json
 from typing import TYPE_CHECKING, Callable, Type, Any, List, Union, Dict, Tuple
 #from elasticapm.contrib.flask import ElasticAPM
 
@@ -197,14 +198,19 @@ def checker_routes(checker_cls):
         """
         try:
             logger.info(request.json)
-            json = request.get_json(force=True)
+            req_json = request.get_json(force=True)
 
-            kwargs = json_to_kwargs(json, spec)
+            kwargs = json_to_kwargs(req_json, spec)
 
             checker = checker_cls(**kwargs)
             checker.logger.info(request.json)
             res = checker.run().name
+
+            tmp = json.loads(req_json)
+            tmp["result"] = res
+            req_json = json.dumps("")
             checker.logger.info("Run resulted in {}: {}".format(res, request.json))
+            checker.logger.info("{}".format(req_json))
             return jsonify({"result": res})
         except Exception as ex:
             print(ex)
