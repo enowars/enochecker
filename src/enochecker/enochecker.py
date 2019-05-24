@@ -24,7 +24,7 @@ from .storeddict import StoredDict, DB_DEFAULT_DIR
 from .useragents import random_useragent
 from .results import Result, EnoException
 from .checkerservice import init_service, CHECKER_METHODS
-from .logging import RestLogHandler, ELKFormatter
+from .logging import RestLogHandler, ELKFormatter, exception_to_string
 
 if "TimeoutError" not in globals():  # Python2
     # noinspection PyShadowingBuiltins
@@ -276,10 +276,10 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 # ConnectionAbortedError,  # not in py2, already handled by ConnectionError.
                 # ConnectionRefusedError
         ) as ex:
-            self.info("Error in connection to service occurred: {}\nTraceback:\n{}".format(ex, ex.__traceback__), exc_info=ex, stack_info=True)
+            self.info("Error in connection to service occurred: {}\nTraceback:\n{}".format(ex, exception_to_string(ex)), exc_info=ex, stack_info=True)
             return Result.OFFLINE#, ex.message
         except Exception as ex:
-            self.error("Unhandled checker error occurred: {}\nTraceback:\n{}.".format(ex, ex.__traceback__), exc_info=ex, stack_info=True)
+            self.error("Unhandled checker error occurred: {}\nTraceback:\n{}.".format(ex, exception_to_string(ex)), exc_info=ex, stack_info=True)
             return Result.INTERNAL_ERROR#, ex.message
         finally:
             for db in self._active_dbs.values():
