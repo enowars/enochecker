@@ -254,18 +254,18 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 return ret
             if ret is not None:
                 self.error("Illegal return value from {}: {}".format(self.method, ret), stack_info=True)
-                return Result.INTERNAL_ERROR
+                return Result.INTERNAL_ERROR#, "Illegal return value from {}: {}".format(self.method, ret)
             
             # Returned Normally
             self.info("Checker [{}] executed successfully!".format(self.method))
-            return Result.OK 
+            return Result.OK
 
         except EnoException as eno:
             self.info("Checker[{}] result: {}({})".format(eno.result, self.method, eno), exc_info=eno)
-            return Result(eno.result)
+            return Result(eno.result)#, eno.message
         except requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
-            return Result.ENOWORKS #For now
+            return Result.ENOWORKS#, "HTTP Error" #For now
         except (
                 requests.ConnectionError,  # requests
                 requests.ConnectTimeout,  # requests
@@ -277,10 +277,10 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 # ConnectionRefusedError
         ) as ex:
             self.info("Error in connection to service occurred: {}".format(ex), exc_info=ex)
-            return Result.OFFLINE
+            return Result.OFFLINE#, ex.message
         except Exception as ex:
-            self.error("Unhandled checker error occurred: {}".format(ex), exc_info=ex, stack_info=True)
-            return Result.INTERNAL_ERROR
+            self.error("Unhandled checker error occurred: {}".format(ex), exc_info=ex)
+            return Result.INTERNAL_ERROR#, ex.message
         finally:
             for db in self._active_dbs.values():
                 # A bit of cleanup :)
@@ -555,4 +555,4 @@ def run(checker_cls, args=None):
         del checker_args["runmode"]  # will always be 'run' at this point
         result = checker_cls(**vars(parsed)).run()
         print("Checker run resulted in Result.{}".format(result.name))
-        exit(result)
+        return result

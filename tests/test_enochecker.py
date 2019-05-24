@@ -11,19 +11,24 @@ from enochecker import *
 class CheckerExampleImpl(BaseChecker):
     port = 9999
 
-    def __init__(self, method=CHECKER_METHODS[0], address="localhost", team_name="Testteam", team_id=1,
-                 round=1, flag="ENOFLAG", call_idx=0, max_time=30):
+    def __init__(self, method=CHECKER_METHODS[0], run_id=0, address="localhost", team="Testteam", team_id=1, flag_round=None,
+                round_length=300, flag_idx=None, storage_dir=".data", log_endpoint=None, use_db_cache=True, json_logging=True,
+                round=1, flag="ENOFLAG", timeout=30):
         """
         An mocked implementation of a checker for testing purposes
         :param method: The method the checker uses
         :param fail: If and how
         """
-        super(CheckerExampleImpl, self).__init__(method=method, address=address, team=team_name, team_id=1,
-                                                 round=round, flag=flag, flag_idx=call_idx, timeout=max_time)
+        super(CheckerExampleImpl, self).__init__(method=method, run_id=run_id, address=address, team=team, team_id=team_id, flag_round=flag_round,
+                round_length=round_length, flag_idx=flag_idx, storage_dir=storage_dir, log_endpoint=log_endpoint, use_db_cache=use_db_cache, json_logging=json_logging,
+                round=round, flag=flag, timeout=timeout)
         self.logger.setLevel(DEBUG) 
 
     def putflag(self):
         self.team_db["flag"] = self.flag
+        if self.flag_idx==2:
+            self.info("RAN IDX 2")
+            raise ChildProcessError()
 
     def getflag(self):
         try:
@@ -183,6 +188,12 @@ def test_useragents():
     assert checker.http_useragent == new_agent
     assert last_agent != checker.http_useragent
 
+def test_exceptionHandling(capsys):
+    #CheckerExampleImpl(method="putflag", call_idx=2).run()
+    run(CheckerExampleImpl, args=["run" ,"putflag", "-i", "2"])
+    a = capsys.readouterr()
+    with capsys.disabled():
+        print(a.out)
 
 def main():
     pytest.main(sys.argv)
