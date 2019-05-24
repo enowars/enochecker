@@ -199,25 +199,29 @@ def checker_routes(checker_cls):
         try:
             logger.info(request.json)
             req_json = request.get_json(force=True)
-
+            
             kwargs = json_to_kwargs(req_json, spec)
 
             checker = checker_cls(**kwargs)
+
             checker.logger.info(request.json)
             res = checker.run().name
 
-            tmp = json.loads(req_json)
-            tmp["result"] = res
-            req_json = json.dumps("")
+            req_json["result"] = res
+            checker.logger.info(type(req_json))
+            req_json = json.dumps(req_json)
+
             checker.logger.info("Run resulted in {}: {}".format(res, request.json))
             checker.logger.info("{}".format(req_json))
+
             return jsonify({"result": res})
         except Exception as ex:
             print(ex)
             logger.error("Returning Internal Error {}.".format(ex), exc_info=ex, stack_info=True)
             return jsonify({
                 "result": Result.INTERNAL_ERROR.name,
-                "message": str(ex)
+                "message": str(ex),
+                "traceback": ex.__traceback__
             })
 
     return index, serve_checker
