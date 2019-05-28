@@ -98,3 +98,35 @@ The two other results are *`Mumble`* and *`Offline`* which are respectively rais
 When using the wrapper defined by the checkerlib, most exceptions should be caught and redirected to those two already, although there could be stuffed we missed.
 
 
+## other general Checker knowledge
+
+### Dns resolution
+Be aware that the Game-engine gets only one IP address from the DNS unless it's specifically taken care of.
+If the service has more than one IP address (for example because the service contains two docker containers) the its needed to manually change the IP address.
+for example:
+```python
+  def getflag(self):
+	with self.connect(host = 'fd00:1337:{}:abcd::2'.format(self.team_id) ) as telnet:
+      if not self.flag == telnet.read_until(b'\n')
+		raise BrokenServiceException("Wrong Flag!")
+```
+
+### multiple getflag() on the same flag
+Keep in mind that on the same flag getflag can be called multiple times.
+Especially if the checker has to register a user or similar it might be a good idea to only do it the first time a flag get getflag'ed.
+One can accomplish that for example through:
+```python
+	def putflag(self):
+    	# do the putflag stuff
+    	# ...
+        
+        self.team_db[self.flag]['registered'] = False
+        
+	def getflag(self):
+    	if not self.team_db[self.flag]['registered']:
+        	# register
+            # ...
+            self.team_db[self.flag]['registered'] = True
+		# do the standart getflag
+        # ...
+```
