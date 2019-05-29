@@ -103,6 +103,16 @@ class ExampleChecker(BaseChecker):
         self.info("I wanted to inform you: I'm  running <3")
         self.http_get("/")  # This will probably fail, depending on what params you give the script. :)
 
+    def exploit(self):
+        """
+        This method was added for CI purposes for exploits to be tested.
+        Will (hopefully) not be called during actual CTF.
+        :raises EnoException on Error
+        :return This function can return a result if it wants
+                If nothing is returned, the service status is considered okay.
+                The preferred way to report Errors in the service is by raising an appropriate EnoException
+        """
+        pass
 
 app = ExampleChecker.service  # This can be used for uswgi.
 if __name__ == "__main__":
