@@ -31,7 +31,8 @@ CHECKER_METHODS = [
     "getflag",
     "putnoise",
     "getnoise",
-    "havoc"
+    "havoc",
+    "exploit"
 ]  # type: List[str]
 
 # The json spec a checker request follows.
@@ -204,7 +205,7 @@ def checker_routes(checker_cls):
             kwargs = json_to_kwargs(req_json, spec)
 
             checker = checker_cls(**kwargs)
-
+    
             checker.logger.info(request.json)
             res = checker.run().name
 
