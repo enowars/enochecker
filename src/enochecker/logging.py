@@ -1,5 +1,6 @@
 import json
 import logging
+import traceback
 from logging import LogRecord
 from typing import TYPE_CHECKING
 
@@ -7,6 +8,11 @@ import requests
 
 if TYPE_CHECKING:
     from .enochecker import BaseChecker
+
+def exception_to_string(excp):
+   stack = traceback.extract_stack()[:-3] + traceback.extract_tb(excp.__traceback__)  # add limit=?? 
+   pretty = traceback.format_list(stack)
+   return ''.join(pretty) + '\n  {} {}'.format(excp.__class__,excp)
 
 class ELKFormatter(logging.Formatter):
     """
@@ -45,6 +51,14 @@ class ELKFormatter(logging.Formatter):
         # type: (LogRecord) -> str
         record.stack = self.formatStack(record.stack_info)
         record.asctime = self.formatTime(record, self.datefmt)
+
+        # stacktrace = ""
+        # if record.exc_info:
+        #     print("\n\n\n\n\nlog exc_info:", record.exc_info)
+        #     stacktrace = traceback.format_exc(record.exc_info)
+        # elif record.stack_info:
+        #     stacktrace = record.stack_info
+            
         log_output = {
             "module": record.module,
             "severity": record.levelname,
@@ -56,10 +70,11 @@ class ELKFormatter(logging.Formatter):
             "function": record.funcName,
             "timestamp": record.asctime,
             "round": self.checker.round,
+            "relatedRoundId" : self.checker.flag_round,
             "flagIndex": self.checker.flag_idx,
             "message": record.getMessage(),
             "exception": record.exc_text,
-            "stacktrace": record.stack,
+            "stacktrace": record.stack_info,
             "serviceName": self.checker.service_name
         }
         return json.dumps(log_output)

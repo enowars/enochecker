@@ -24,7 +24,7 @@ from .storeddict import StoredDict, DB_DEFAULT_DIR
 from .useragents import random_useragent
 from .results import Result, EnoException
 from .checkerservice import init_service, CHECKER_METHODS
-from .logging import RestLogHandler, ELKFormatter
+from .logging import RestLogHandler, ELKFormatter, exception_to_string
 
 if "TimeoutError" not in globals():  # Python2
     # noinspection PyShadowingBuiltins
@@ -253,19 +253,19 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 self.info("Checker [{}] resulted in {}".format(self.method, ret.name))
                 return ret
             if ret is not None:
-                self.error("Illegal return value from {}: {}".format(self.method, ret), )
-                return Result.INTERNAL_ERROR
+                self.error("Illegal return value from {}: {}".format(self.method, ret))
+                return Result.INTERNAL_ERROR#, "Illegal return value from {}: {}".format(self.method, ret)
             
             # Returned Normally
             self.info("Checker [{}] executed successfully!".format(self.method))
-            return Result.OK 
+            return Result.OK
 
         except EnoException as eno:
             self.info("Checker[{}] result: {}({})".format(eno.result, self.method, eno), exc_info=eno)
-            return Result(eno.result)
+            return Result(eno.result)#, eno.message
         except requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
-            return Result.ENOWORKS #For now
+            return Result.MUMBLE#, "HTTP Error" #For now
         except (
                 requests.ConnectionError,  # requests
                 requests.ConnectTimeout,  # requests
@@ -276,11 +276,11 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 # ConnectionAbortedError,  # not in py2, already handled by ConnectionError.
                 # ConnectionRefusedError
         ) as ex:
-            self.info("Error in connection to service occurred: {}".format(ex), exc_info=ex)
-            return Result.OFFLINE
+            self.info("Error in connection to service occurred: {}\nTraceback:\n{}".format(ex, exception_to_string(ex)), exc_info=ex)
+            return Result.OFFLINE#, ex.message
         except Exception as ex:
-            self.error("Unhandled checker error occurred: {}".format(ex), exc_info=ex)
-            return Result.INTERNAL_ERROR
+            self.error("Unhandled checker error occurred: {}\nTraceback:\n{}.".format(ex, exception_to_string(ex)), exc_info=ex)
+            return Result.INTERNAL_ERROR#, ex.message
         finally:
             for db in self._active_dbs.values():
                 # A bit of cleanup :)
@@ -352,6 +352,18 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         """
         This method unleashes havoc on the app -> Do whatever you must to prove the service still works. Or not.
         On error, raise an EnoException.
+        :raises EnoException on Error
+        :return This function can return a result if it wants
+                If nothing is returned, the service status is considered okay.
+                The preferred way to report Errors in the service is by raising an appropriate EnoException
+        """
+        pass
+
+    @abstractmethod
+    def exploit(self):
+        # type: () -> Optional[Result]
+        """
+        This method is strictly for testing purposes and will hopefully not be called during the actual CTF.
         :raises EnoException on Error
         :return This function can return a result if it wants
                 If nothing is returned, the service status is considered okay.
@@ -446,7 +458,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             port = self.port
         if host is None:
             host = self.address
-        self.debug("Opening socket to {}:{} (timeout {} secs).".format(host, port, timeout))
+        self.debug("Opening socket to {}:{} (timeout {} secs).".format(host, port, timeout), stack_info=True)
         return SimpleSocket(host, port, timeout=timeout, logger=self.logger, timeout_fun=timeout_fun)
 
     @property
@@ -555,4 +567,4 @@ def run(checker_cls, args=None):
         del checker_args["runmode"]  # will always be 'run' at this point
         result = checker_cls(**vars(parsed)).run()
         print("Checker run resulted in Result.{}".format(result.name))
-        exit(result)
+        return result

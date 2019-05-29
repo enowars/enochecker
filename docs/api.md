@@ -376,7 +376,7 @@ Result(self, *args, **kwds)
 
 Result Values to be returned from a Checker
 
-### ENOWORKS
+### MUMBLE
 
 Result Values to be returned from a Checker
 

@@ -7,7 +7,7 @@ class Result(IntEnum):
     """
     INTERNAL_ERROR = -1  # The checker crashed
     OK = 0  # Everything is alright
-    ENOWORKS = 1  # (ENOFLAG/mumble)
+    MUMBLE = 1  # (ENOFLAG/mumble)
     OFFLINE = 2  # It's dead, jim
 
     # noinspection PyTypeChecker
@@ -33,7 +33,7 @@ class BrokenServiceException(EnoException):
     """
     Indicates a broken Service
     """
-    result = Result.ENOWORKS  # type: int
+    result = Result.MUMBLE  # type: int
 
 
 class OfflineException(EnoException):
