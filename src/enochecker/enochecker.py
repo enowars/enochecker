@@ -265,7 +265,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             return Result(eno.result)#, eno.message
         except requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
-            return Result.ENOWORKS#, "HTTP Error" #For now
+            return Result.MUMBLE#, "HTTP Error" #For now
         except (
                 requests.ConnectionError,  # requests
                 requests.ConnectTimeout,  # requests
@@ -352,6 +352,18 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         """
         This method unleashes havoc on the app -> Do whatever you must to prove the service still works. Or not.
         On error, raise an EnoException.
+        :raises EnoException on Error
+        :return This function can return a result if it wants
+                If nothing is returned, the service status is considered okay.
+                The preferred way to report Errors in the service is by raising an appropriate EnoException
+        """
+        pass
+
+    @abstractmethod
+    def exploit(self):
+        # type: () -> Optional[Result]
+        """
+        This method is strictly for testing purposes and will hopefully not be called during the actual CTF.
         :raises EnoException on Error
         :return This function can return a result if it wants
                 If nothing is returned, the service status is considered okay.
