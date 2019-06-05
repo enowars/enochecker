@@ -9,6 +9,9 @@ from pymongo import MongoClient
 #dictlogger = logging.Logger(__name__)
 #dictlogger.setLevel(logging.DEBUG)
 
+# DIR
+DB_DEFAULT_DIR = "REMOTE"
+
 # DB DEFAULT PARAMS
 DB_DEFAULT_USER = 'root'
 DB_DEFAULT_PASS = 'example'
@@ -16,7 +19,7 @@ DB_DEFAULT_HOST = '172.20.0.3'
 DB_DEFAULT_PORT = 2701
 
 
-class NoSqlStoredDict(collections.MutableMapping):
+class StoredDict(collections.MutableMapping):
     """
     A dictionary that is MongoDb backed.
     """
