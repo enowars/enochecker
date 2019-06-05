@@ -35,7 +35,6 @@ class NoSqlStoredDict(collections.MutableMapping):
             return result['value']
         return None ## raise Exception ?
 
-
     def __delitem__(self, key):
         self.db.delete_one({"key" : key})
     
