@@ -2,18 +2,18 @@
 import collections
 #import logging
 from pymongo import MongoClient
-from urllib.parse import quote_plus
+#from urllib.parse import quote_plus
 
 # LOGGING SETUP
 #logging.basicConfig(level=logging.DEBUG)
 #dictlogger = logging.Logger(__name__)
 #dictlogger.setLevel(logging.DEBUG)
 
-# DB Host JUST TESTING
-db_user = 'root'
-db_passw = 'example'
-db_host = '172.20.0.3'
-db_port = 2701
+# DB DEFAULT PARAMS
+DB_DEFAULT_USER = 'root'
+DB_DEFAULT_PASS = 'example'
+DB_DEFAULT_HOST = '172.20.0.3'
+DB_DEFAULT_PORT = 2701
 
 
 class NoSqlStoredDict(collections.MutableMapping):
@@ -21,25 +21,59 @@ class NoSqlStoredDict(collections.MutableMapping):
     A dictionary that is MongoDb backed.
     """
 
-    def __init__(self):
-        self.client = MongoClient(host = db_host, username = db_user, password = db_passw)
-        self.db = self.client.checkerdata.collection
+    def __init__(self, checker_name="BaseChecker", dict_name="default",
+                 host=DB_DEFAULT_HOST, port=DB_DEFAULT_PORT, 
+                 username=DB_DEFAULT_USER, password=DB_DEFAULT_PASS):
+
+        self.client = MongoClient(
+            host=host,
+            port=port,
+            username=username,
+            password=password)
+
+        self.db = self.client.checkerdata['checker_name']
+        # ADD CACHING MECHANISM?
 
     def __setitem__(self, key, value):
-        to_insert = {"key" : key, "value":value}
+
+        to_insert = {
+            "key":      key,
+            "checker":  self.dict_name,
+            "name":     self.name,
+            "value":    value
+            }
+
         self.db.insert_one(to_insert)
     
     def __getitem__(self, key):
-        result = self.db.find_one({"key":key})
+
+        to_extract = {
+            "key":      key,
+            "checker":  self.dict_name,
+            "name":     self.name
+            }
+
+        result = self.db.find_one(to_extract)
+
         if result:
             return result['value']
-        return None ## raise Exception ?
+        raise KeyError()
 
     def __delitem__(self, key):
-        self.db.delete_one({"key" : key})
-    
+        to_extract = {
+            "key":      key,
+            "checker":  self.dict_name,
+            "name":     self.name
+            }
+        self.db.delete_one(to_extract)
+
     def __len__(self):
         return self.db.count_documentd({})
-    
+
     def __iter__(self):
-        return None
+        iterdict = {
+            "checker":  self.dict_name,
+            "name":     self.name
+        }
+        results = self.db.find(iterdict)
+        return results
