@@ -20,7 +20,7 @@ from future.utils import with_metaclass
 from concurrent.futures import TimeoutError
 
 from .utils import snake_caseify, SimpleSocket
-from .storeddict import StoredDict, DB_DEFAULT_DIR
+from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
 from .useragents import random_useragent
 from .results import Result, EnoException
 from .checkerservice import init_service, CHECKER_METHODS
@@ -129,7 +129,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
     def __init__(self, run_id=None, method=None, address=None, team=None, team_id=None, round=None, flag_round=None,
                 round_length=300, flag=None, flag_idx=None,
-                 timeout=None, storage_dir=DB_DEFAULT_DIR, log_endpoint=None, use_db_cache=True, json_logging=True):
+                 timeout=None, storage_dir=DB_DEFAULT_DIR, log_endpoint=None, use_db_cache=DB_GLOBAL_CACHE_SETTING, json_logging=True):
         # type: (Optional[int], Optional[str], Optional[str], Optional[str], Optional[int], Optional[int], Optional[str], Optional[int], Optional[int], str, Optional[str], bool, bool) -> None
         """
         Inits the Checker, filling the params, according to:
@@ -383,16 +383,26 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 Manual locking ist still possible.
         :return: A dict that will be self storing. Alternatively,
         """
-        try:
-            db = self._active_dbs[name]
-            # TODO: Setting a new Logger backend may throw logs in the wrong direction in a multithreaded environment!
-            db.logger = self.logger
-            return db
-        except KeyError:
-            self.debug("DB {} was not cached.".format(name))
-            ret = StoredDict(base_path=self.storage_dir, name=name, ignore_locks=ignore_locks, logger=self.logger)
-            self._active_dbs[name] = ret
-            return ret
+        if self.storage_dir is None:
+            try:
+                db = self._active_dbs[name]
+                return db
+            except KeyError:
+                self.debug("Remote DB {} was not cached.".format(name))
+                ret = StoredDict(base_path=self.storage_dir, name=name, ignore_locks=ignore_locks, logger=self.logger)
+                self._active_dbs[name] = ret
+                return ret
+        else:
+            try:
+                db = self._active_dbs[name]
+                # TODO: Setting a new Logger backend may throw logs in the wrong direction in a multithreaded environment!
+                db.logger = self.logger
+                return db
+            except KeyError:
+                self.debug("DB {} was not cached.".format(name))
+                ret = StoredDict(base_path=self.storage_dir, name=name, ignore_locks=ignore_locks, logger=self.logger)
+                self._active_dbs[name] = ret
+                return ret
 
     @property
     def global_db(self):

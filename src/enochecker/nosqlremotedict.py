@@ -10,7 +10,8 @@ from pymongo import MongoClient
 #dictlogger.setLevel(logging.DEBUG)
 
 # DIR
-DB_DEFAULT_DIR = "REMOTE"
+DB_DEFAULT_DIR = None
+DB_GLOBAL_CACHE_SETTING = False
 
 # DB DEFAULT PARAMS
 DB_DEFAULT_USER = 'root'
@@ -80,3 +81,6 @@ class StoredDict(collections.MutableMapping):
         }
         results = self.db.find(iterdict)
         return results
+
+    def persist(self):
+        pass

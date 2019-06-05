@@ -31,7 +31,7 @@ DB_LOCK_RETRYCOUNT = 6  # 2**6 / 10 seconds are 6.4 secs. -> That's how long the
 DB_PREFIX = "_store_"  # Prefix all db files will get
 DB_EXTENSION = ".json"  # Extension all db files will get
 DB_LOCK_EXTENSION = ".lock"  # Extension all lock folders will get
-
+DB_GLOBAL_CACHE_SETTING = True
 
 def makedirs(path, exist_ok=True):
     # type: (str, bool) -> None
