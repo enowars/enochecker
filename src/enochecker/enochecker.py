@@ -40,12 +40,24 @@ VALID_ARGS = ["method", "address", "team", "team_id", "round", "flag_round", "fl
 config = configparser.ConfigParser()
 config.read("db.ini")
 if "DATABASE" in config:
-  if "REMOTE" in config:
-    from .nosqlremotedict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
-    
-  if "LOCAL" in config:
-    from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
-	
+    if 'REMOTE' in config['DATABASE']:
+        from .nosqlremotedict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING,
+        							  DB_DEFAULT_HOST, DB_DEFAULT_PORT, DB_DEFAULT_USER, DB_DEFAULT_PASS
+        if 'HOST' in config['DATABASE']['REMOTE']:
+            DB_DEFAULT_HOST = config['DATABASE']['REMOTE']['HOST']
+        if 'PORT' in config['DATABASE']['REMOTE']:
+            DB_DEFAULT_PORT = int(config['DATABASE']['REMOTE']['PORT'])
+    	if 'USER' in config['DATABASE']['REMOTE']:
+      		DB_DEFAULT_USER = config['DATABASE']['REMOTE']['USER']
+    	if 'PASSWORD' in config['DATABASE']['REMOTE']:
+      		DB_DEFAULT_PASS = config['DATABASE']['REMOTE']['PASSWORD']
+
+  	elif "LOCAL" in config:
+    	from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
+  	else:
+    	from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
+else:
+	from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
     
     
     
