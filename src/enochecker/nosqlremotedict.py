@@ -36,7 +36,7 @@ class StoredDict(collections.MutableMapping):
             password=password)
 							#Table by checker
         self.db = self.client[checker_name][dict_name]
-        								#Dict by team/global
+        								#Collection by team/global
           
         # Add DB index
         try:
