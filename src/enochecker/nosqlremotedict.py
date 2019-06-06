@@ -34,20 +34,33 @@ class StoredDict(collections.MutableMapping):
             port=port,
             username=username,
             password=password)
-
-        self.db = self.client.checkerdata['checker_name']
+							#Table by checker
+        self.db = self.client[checker_name][dict_name]
+        								#Dict by team/global
+          
+        # Add DB index
+        try:
+          db.index_information()['checker_key']
+        except KeyError:
+          db.create_index([(key, HASHED), ("checker":  HASHED), ("name": HASHED)], unique=True, background=True)
+        
         # ADD CACHING MECHANISM?
 
     def __setitem__(self, key, value):
-
+		query_dict = {
+            "key":      key,
+            "checker":  self.dict_name,
+            "name":     self.checker_name
+            }
+        
         to_insert = {
             "key":      key,
             "checker":  self.dict_name,
-            "name":     self.name,
+            "name":     self.checker_name,
             "value":    value
             }
 
-        self.db.insert_one(to_insert)
+        self.db.replace_one(query_dict, to_insert, upsert=True)
     
     def __getitem__(self, key):
 
