@@ -39,9 +39,11 @@ class StoredDict(collections.MutableMapping):
         self.name = checker_name
 
         self.db = self.client.checkerdata['checker_name']
-        # ADD CACHING MECHANISM?
+        self.cache = dict()
 
     def __setitem__(self, key, value):
+
+        self.cache[key] = value
 
         to_insert = {
             "key":      key,
@@ -54,6 +56,10 @@ class StoredDict(collections.MutableMapping):
     
     def __getitem__(self, key):
 
+        if key in self.cache:
+            return self.cache[key]
+
+        print('DB CALL')
         to_extract = {
             "key":      key,
             "checker":  self.dict_name,
@@ -63,10 +69,15 @@ class StoredDict(collections.MutableMapping):
         result = self.db.find_one(to_extract)
 
         if result:
+            self.cache[key] = result['value']
             return result['value']
         raise KeyError()
 
     def __delitem__(self, key):
+        
+        if key in self.cache:
+            del self.cache[key]
+
         to_extract = {
             "key":      key,
             "checker":  self.dict_name,
@@ -86,4 +97,4 @@ class StoredDict(collections.MutableMapping):
         return results
 
     def persist(self):
-        pass
+        self.cache = dict()
