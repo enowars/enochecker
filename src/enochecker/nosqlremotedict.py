@@ -17,7 +17,7 @@ DB_GLOBAL_CACHE_SETTING = False
 DB_DEFAULT_USER = 'root'
 DB_DEFAULT_PASS = 'example'
 DB_DEFAULT_HOST = '172.20.0.3'
-DB_DEFAULT_PORT = 2701
+DB_DEFAULT_PORT = 27017
 
 
 class StoredDict(collections.MutableMapping):
