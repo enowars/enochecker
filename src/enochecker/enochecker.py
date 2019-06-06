@@ -310,10 +310,10 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 # ConnectionAbortedError,  # not in py2, already handled by ConnectionError.
                 # ConnectionRefusedError
         ) as ex:
-            self.info("Error in connection to service occurred: {}\nTraceback:\n{}".format(ex, exception_to_string(ex)), exc_info=ex)
+            self.info("Error in connection to service occurred: {}\n".format(ex), exc_info=ex)
             return Result.OFFLINE#, ex.message
         except Exception as ex:
-            self.error("Unhandled checker error occurred: {}\nTraceback:\n{}.".format(ex, exception_to_string(ex)), exc_info=ex)
+            self.error("Unhandled checker error occurred: {}\n".format(ex), exc_info=ex)
             return Result.INTERNAL_ERROR#, ex.message
         finally:
             for db in self._active_dbs.values():
@@ -417,15 +417,19 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 Manual locking ist still possible.
         :return: A dict that will be self storing. Alternatively,
         """
+        print("DB_ACCESS\n\n\n\n\n")
         if self.storage_dir is None:
             try:
                 db = self._active_dbs[name]
                 return db
             except KeyError:
-                self.debug("Remote DB {} was not cached.".format(name))
-                ret = StoredDict(base_path=self.storage_dir, name=name, ignore_locks=ignore_locks, logger=self.logger)
-                self._active_dbs[name] = ret
-                return ret
+                try:
+                    self.debug("Remote DB {} was not cached.".format(name))
+                    ret = StoredDict(checker_name=type(self).__name__, dict_name=name)#, logger=self.logger)
+                    self._active_dbs[name] = ret
+                    return ret
+                except Exception as ex:
+                    self.error("RemoteDict Error", exc_info=ex)
         else:
             try:
                 db = self._active_dbs[name]

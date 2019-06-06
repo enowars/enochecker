@@ -58,7 +58,21 @@ class ELKFormatter(logging.Formatter):
         #     stacktrace = traceback.format_exc(record.exc_info)
         # elif record.stack_info:
         #     stacktrace = record.stack_info
-            
+        # if record.exc_info is not None:
+        #     print("\n\n\n\n\n\n\n", type(record.exc_info), type(record.stack_info))
+        #     print("msg: ", record.exc_info[0], "traceback_info :", record.exc_info[1], "traceback_info :" record.stack_info)
+
+        #     import sys
+        #     sys.exit(1)
+        if record.exc_info is not None:
+            exception_info = {
+                "type": record.exc_info[0].__name__,
+                "message": str(record.exc_info[1]),
+                "traceback": traceback.format_tb(record.exc_info[2], 20)
+                }
+        else:
+            exception_info = None
+
         log_output = {
             "module": record.module,
             "severity": record.levelname,
@@ -70,13 +84,14 @@ class ELKFormatter(logging.Formatter):
             "function": record.funcName,
             "timestamp": record.asctime,
             "round": self.checker.round,
-            "relatedRoundId" : self.checker.flag_round,
+            "relatedRoundId": self.checker.flag_round,
             "flagIndex": self.checker.flag_idx,
             "message": record.getMessage(),
-            "exception": record.exc_text,
+            "exception": exception_info,
             "stacktrace": record.stack_info,
             "serviceName": self.checker.service_name
         }
+
         return json.dumps(log_output)
 
 
