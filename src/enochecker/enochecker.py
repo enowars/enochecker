@@ -7,6 +7,7 @@ from future.standard_library import install_aliases
 install_aliases()
 
 import argparse
+import configparser
 import json
 import logging
 import sys
@@ -20,7 +21,6 @@ from future.utils import with_metaclass
 from concurrent.futures import TimeoutError
 
 from .utils import snake_caseify, SimpleSocket
-from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
 from .useragents import random_useragent
 from .results import Result, EnoException
 from .checkerservice import init_service, CHECKER_METHODS
@@ -35,6 +35,20 @@ TIME_BUFFER = 3  # type: int # time in seconds we try to finish earlier
 VALID_ARGS = ["method", "address", "team", "team_id", "round", "flag_round", "flag", "timeout", "flag_idx", "json_logging", "log_endpoint",
               "round_length"]
 
+
+# DATABASE_INIT
+config = configparser.ConfigParser()
+config.read("db.ini")
+if "DATABASE" in config:
+  if "REMOTE" in config:
+    from .nosqlremotedict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
+    
+  if "LOCAL" in config:
+    from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
+	
+    
+    
+    
 #  Global cache for all stored dicts.  TODO: Prune this at some point?
 global_db_cache = {}  # type: Dict[str, StoredDict]
 
