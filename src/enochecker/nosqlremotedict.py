@@ -36,6 +36,7 @@ class StoredDict(collections.MutableMapping):
             password=password)
 
         self.dict_name = dict_name
+        self.name = checker_name
 
         self.db = self.client.checkerdata['checker_name']
         # ADD CACHING MECHANISM?
