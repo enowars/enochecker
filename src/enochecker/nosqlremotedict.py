@@ -42,7 +42,7 @@ class StoredDict(collections.MutableMapping):
         try:
           db.index_information()['checker_key']
         except KeyError:
-          db.create_index([(key, HASHED), ("checker":  HASHED), ("name": HASHED)], unique=True, background=True)
+          db.create_index([("key", HASHED), ("checker":  HASHED), ("name": HASHED)], name="checker_key", unique=True, background=True)
         
         # ADD CACHING MECHANISM?
 
