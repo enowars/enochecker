@@ -51,15 +51,17 @@ if "DATABASE" in config:
     if 'REMOTE' in config['DATABASE']:
         if bool(int(config['DATABASE']['REMOTE'])):
             print("INIT REMOTE DB")
-            from .nosqlremotedict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING, DB_DEFAULT_HOST, DB_DEFAULT_PORT, DB_DEFAULT_USER, DB_DEFAULT_PASS
+            import enochecker.nosqlremotedict
+            from .nosqlremotedict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
+            
             if 'HOST' in config['DATABASE']:
-                DB_DEFAULT_HOST = config['DATABASE']['HOST']
+                enochecker.nosqlremotedict.DB_DEFAULT_HOST = config['DATABASE']['HOST']
             if 'PORT' in config['DATABASE']:
-                DB_DEFAULT_PORT = int(config['DATABASE']['PORT'])
+                enochecker.nosqlremotedict.DB_DEFAULT_PORT = int(config['DATABASE']['PORT'])
             if 'USER' in config['DATABASE']:
-                DB_DEFAULT_USER = config['DATABASE']['USER']
+                enochecker.nosqlremotedict.DB_DEFAULT_USER = config['DATABASE']['USER']
             if 'PASSWORD' in config['DATABASE']:
-                DB_DEFAULT_PASS = config['DATABASE']['PASSWORD']
+                enochecker.nosqlremotedict.DB_DEFAULT_PASS = config['DATABASE']['PASSWORD']
         else:
             from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
     elif "LOCAL" in config:
@@ -506,7 +508,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             port = self.port
         if host is None:
             host = self.address
-        self.debug("Opening socket to {}:{} (timeout {} secs).".format(host, port, timeout), stack_info=True)
+        self.debug("Opening socket to {}:{} (timeout {} secs).".format(host, port, timeout))
         return SimpleSocket(host, port, timeout=timeout, logger=self.logger, timeout_fun=timeout_fun)
 
     @property

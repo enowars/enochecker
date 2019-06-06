@@ -47,7 +47,7 @@ class StoredDict(collections.MutableMapping):
             self.db.index_information()['checker_key']
         except KeyError:
             self.db.create_index(
-                [("key", HASHED), ("checker", HASHED), ("name", HASHED)],
+                [("key", HASHED), ("checker", 1), ("name", 1)],
                 name="checker_key", unique=True, background=True
                 )
         
