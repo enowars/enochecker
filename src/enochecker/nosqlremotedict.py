@@ -1,7 +1,7 @@
 
 import collections
 #import logging
-from pymongo import MongoClient
+from pymongo import MongoClient, HASHED
 #from urllib.parse import quote_plus
 
 # LOGGING SETUP
@@ -17,7 +17,7 @@ DB_GLOBAL_CACHE_SETTING = False
 DB_DEFAULT_USER = 'root'
 DB_DEFAULT_PASS = 'example'
 DB_DEFAULT_HOST = '172.20.0.3'
-DB_DEFAULT_PORT = 2701
+DB_DEFAULT_PORT = 27017
 
 
 class StoredDict(collections.MutableMapping):
@@ -34,25 +34,35 @@ class StoredDict(collections.MutableMapping):
             port=port,
             username=username,
             password=password)
-							#Table by checker
+
+        self.dict_name = dict_name
+        self.name = checker_name
+                            # Table by checker
         self.db = self.client[checker_name][dict_name]
-        								#Collection by team/global
-          
+                                        # Collection by team/global
+        self.cache = dict()
+
         # Add DB index
         try:
-          db.index_information()['checker_key']
+            self.db.index_information()['checker_key']
         except KeyError:
-          db.create_index([("key", HASHED), ("checker":  HASHED), ("name": HASHED)], name="checker_key", unique=True, background=True)
+            self.db.create_index(
+                [("key", HASHED), ("checker", HASHED), ("name", HASHED)],
+                name="checker_key", unique=True, background=True
+                )
         
         # ADD CACHING MECHANISM?
 
     def __setitem__(self, key, value):
-		query_dict = {
+
+        self.cache[key] = value
+
+        query_dict = {
             "key":      key,
             "checker":  self.dict_name,
             "name":     self.checker_name
             }
-        
+
         to_insert = {
             "key":      key,
             "checker":  self.dict_name,
@@ -64,6 +74,10 @@ class StoredDict(collections.MutableMapping):
     
     def __getitem__(self, key):
 
+        if key in self.cache:
+            return self.cache[key]
+
+        print('DB CALL')
         to_extract = {
             "key":      key,
             "checker":  self.dict_name,
@@ -73,10 +87,15 @@ class StoredDict(collections.MutableMapping):
         result = self.db.find_one(to_extract)
 
         if result:
+            self.cache[key] = result['value']
             return result['value']
         raise KeyError()
 
     def __delitem__(self, key):
+        
+        if key in self.cache:
+            del self.cache[key]
+
         to_extract = {
             "key":      key,
             "checker":  self.dict_name,
@@ -96,4 +115,4 @@ class StoredDict(collections.MutableMapping):
         return results
 
     def persist(self):
-        pass
+        self.cache = dict()
