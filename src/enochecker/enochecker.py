@@ -49,27 +49,27 @@ if "DATABASE" in config:
     print("INIT DB")
     print(config['DATABASE'])
     if 'REMOTE' in config['DATABASE']:
-        print("INIT REMOTE DB")
-        from .nosqlremotedict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING, DB_DEFAULT_HOST, DB_DEFAULT_PORT, DB_DEFAULT_USER, DB_DEFAULT_PASS
-        if 'HOST' in config['DATABASE']['REMOTE']:
-            DB_DEFAULT_HOST = config['DATABASE']['REMOTE']['HOST']
-        if 'PORT' in config['DATABASE']['REMOTE']:
-            DB_DEFAULT_PORT = int(config['DATABASE']['REMOTE']['PORT'])
-        if 'USER' in config['DATABASE']['REMOTE']:
-            DB_DEFAULT_USER = config['DATABASE']['REMOTE']['USER']
-        if 'PASSWORD' in config['DATABASE']['REMOTE']:
-            DB_DEFAULT_PASS = config['DATABASE']['REMOTE']['PASSWORD']
-
+        if bool(int(config['DATABASE']['REMOTE'])):
+            print("INIT REMOTE DB")
+            from .nosqlremotedict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING, DB_DEFAULT_HOST, DB_DEFAULT_PORT, DB_DEFAULT_USER, DB_DEFAULT_PASS
+            if 'HOST' in config['DATABASE']:
+                DB_DEFAULT_HOST = config['DATABASE']['HOST']
+            if 'PORT' in config['DATABASE']:
+                DB_DEFAULT_PORT = int(config['DATABASE']['PORT'])
+            if 'USER' in config['DATABASE']:
+                DB_DEFAULT_USER = config['DATABASE']['USER']
+            if 'PASSWORD' in config['DATABASE']:
+                DB_DEFAULT_PASS = config['DATABASE']['PASSWORD']
+        else:
+            from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
     elif "LOCAL" in config:
         from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
     else:
         from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
 else:
-	from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
+    from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
     
-    
-    
-#  Global cache for all stored dicts.  TODO: Prune this at some point?
+# Global cache for all stored dicts.  TODO: Prune this at some point?
 global_db_cache = {}  # type: Dict[str, StoredDict]
 
 
