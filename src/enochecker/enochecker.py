@@ -7,6 +7,7 @@ from future.standard_library import install_aliases
 install_aliases()
 
 import argparse
+import configparser
 import json
 import logging
 import sys
@@ -20,11 +21,10 @@ from future.utils import with_metaclass
 from concurrent.futures import TimeoutError
 
 from .utils import snake_caseify, SimpleSocket
-from .storeddict import StoredDict, DB_DEFAULT_DIR
 from .useragents import random_useragent
 from .results import Result, EnoException
 from .checkerservice import init_service, CHECKER_METHODS
-from .logging import RestLogHandler, ELKFormatter
+from .logging import RestLogHandler, ELKFormatter, exception_to_string
 
 if "TimeoutError" not in globals():  # Python2
     # noinspection PyShadowingBuiltins
@@ -35,7 +35,34 @@ TIME_BUFFER = 3  # type: int # time in seconds we try to finish earlier
 VALID_ARGS = ["method", "address", "team", "team_id", "round", "flag_round", "flag", "timeout", "flag_idx", "json_logging", "log_endpoint",
               "round_length"]
 
-#  Global cache for all stored dicts.  TODO: Prune this at some point?
+
+# DATABASE_INIT
+print("READING INIT")
+config = configparser.ConfigParser()
+config.read("db.ini")
+config.read("DB.ini")
+config.read("database.ini")
+config.read("Database.ini")
+config.read("DATABASE.ini")
+print(list(config.items()))
+if "DATABASE" in config:
+    print("INIT DB")
+    print(config['DATABASE'])
+    if 'REMOTE' in config['DATABASE']:
+        if bool(int(config['DATABASE']['REMOTE'])):
+            print("INIT REMOTE DB")
+            from .nosqlremotedict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
+            
+        else:
+            from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
+    elif "LOCAL" in config['DATABASE']:
+        from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
+    else:
+        from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
+else:
+    from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
+    
+# Global cache for all stored dicts.  TODO: Prune this at some point?
 global_db_cache = {}  # type: Dict[str, StoredDict]
 
 
@@ -129,7 +156,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
     def __init__(self, run_id=None, method=None, address=None, team=None, team_id=None, round=None, flag_round=None,
                 round_length=300, flag=None, flag_idx=None,
-                 timeout=None, storage_dir=DB_DEFAULT_DIR, log_endpoint=None, use_db_cache=True, json_logging=True):
+                 timeout=None, storage_dir=DB_DEFAULT_DIR, log_endpoint=None, use_db_cache=DB_GLOBAL_CACHE_SETTING, json_logging=True):
         # type: (Optional[int], Optional[str], Optional[str], Optional[str], Optional[int], Optional[int], Optional[str], Optional[int], Optional[int], str, Optional[str], bool, bool) -> None
         """
         Inits the Checker, filling the params, according to:
@@ -253,19 +280,19 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 self.info("Checker [{}] resulted in {}".format(self.method, ret.name))
                 return ret
             if ret is not None:
-                self.error("Illegal return value from {}: {}".format(self.method, ret), )
-                return Result.INTERNAL_ERROR
+                self.error("Illegal return value from {}: {}".format(self.method, ret))
+                return Result.INTERNAL_ERROR#, "Illegal return value from {}: {}".format(self.method, ret)
             
             # Returned Normally
             self.info("Checker [{}] executed successfully!".format(self.method))
-            return Result.OK 
+            return Result.OK
 
         except EnoException as eno:
             self.info("Checker[{}] result: {}({})".format(eno.result, self.method, eno), exc_info=eno)
-            return Result(eno.result)
+            return Result(eno.result)#, eno.message
         except requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
-            return Result.ENOWORKS #For now
+            return Result.MUMBLE#, "HTTP Error" #For now
         except (
                 requests.ConnectionError,  # requests
                 requests.ConnectTimeout,  # requests
@@ -276,11 +303,11 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 # ConnectionAbortedError,  # not in py2, already handled by ConnectionError.
                 # ConnectionRefusedError
         ) as ex:
-            self.info("Error in connection to service occurred: {}".format(ex), exc_info=ex)
-            return Result.OFFLINE
+            self.info("Error in connection to service occurred: {}\n".format(ex), exc_info=ex)
+            return Result.OFFLINE#, ex.message
         except Exception as ex:
-            self.error("Unhandled checker error occurred: {}".format(ex), exc_info=ex)
-            return Result.INTERNAL_ERROR
+            self.error("Unhandled checker error occurred: {}\n".format(ex), exc_info=ex)
+            return Result.INTERNAL_ERROR#, ex.message
         finally:
             for db in self._active_dbs.values():
                 # A bit of cleanup :)
@@ -359,6 +386,18 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         """
         pass
 
+    @abstractmethod
+    def exploit(self):
+        # type: () -> Optional[Result]
+        """
+        This method is strictly for testing purposes and will hopefully not be called during the actual CTF.
+        :raises EnoException on Error
+        :return This function can return a result if it wants
+                If nothing is returned, the service status is considered okay.
+                The preferred way to report Errors in the service is by raising an appropriate EnoException
+        """
+        pass
+
     # ---- DB specific methods ---- #
     def db(self, name, ignore_locks=False):
         # type: (str, bool) -> StoredDict
@@ -371,16 +410,30 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 Manual locking ist still possible.
         :return: A dict that will be self storing. Alternatively,
         """
-        try:
-            db = self._active_dbs[name]
-            # TODO: Setting a new Logger backend may throw logs in the wrong direction in a multithreaded environment!
-            db.logger = self.logger
-            return db
-        except KeyError:
-            self.debug("DB {} was not cached.".format(name))
-            ret = StoredDict(base_path=self.storage_dir, name=name, ignore_locks=ignore_locks, logger=self.logger)
-            self._active_dbs[name] = ret
-            return ret
+        print("DB_ACCESS\n\n\n\n\n")
+        if self.storage_dir is None:
+            try:
+                db = self._active_dbs[name]
+                return db
+            except KeyError:
+                try:
+                    self.debug("Remote DB {} was not cached.".format(name))
+                    ret = StoredDict(checker_name=type(self).__name__, dict_name=name)#, logger=self.logger)
+                    self._active_dbs[name] = ret
+                    return ret
+                except Exception as ex:
+                    self.error("RemoteDict Error", exc_info=ex)
+        else:
+            try:
+                db = self._active_dbs[name]
+                # TODO: Setting a new Logger backend may throw logs in the wrong direction in a multithreaded environment!
+                db.logger = self.logger
+                return db
+            except KeyError:
+                self.debug("DB {} was not cached.".format(name))
+                ret = StoredDict(base_path=self.storage_dir, name=name, ignore_locks=ignore_locks, logger=self.logger)
+                self._active_dbs[name] = ret
+                return ret
 
     @property
     def global_db(self):
@@ -555,4 +608,4 @@ def run(checker_cls, args=None):
         del checker_args["runmode"]  # will always be 'run' at this point
         result = checker_cls(**vars(parsed)).run()
         print("Checker run resulted in Result.{}".format(result.name))
-        exit(result)
+        return result

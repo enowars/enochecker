@@ -1,5 +1,6 @@
 import json
 import logging
+import traceback
 from logging import LogRecord
 from typing import TYPE_CHECKING
 
@@ -7,6 +8,11 @@ import requests
 
 if TYPE_CHECKING:
     from .enochecker import BaseChecker
+
+def exception_to_string(excp):
+    stack = traceback.extract_stack()[:-3] + traceback.extract_tb(excp.__traceback__)  # add limit=?? 
+    pretty = traceback.format_list(stack)
+    return ''.join(pretty) + '\n  {} {}'.format(excp.__class__,excp)
 
 class ELKFormatter(logging.Formatter):
     """
@@ -36,7 +42,7 @@ class ELKFormatter(logging.Formatter):
                         the record is emitted
     """
 
-    def __init__(self, checker, fmt=None, datefmt=None, style='%'):
+    def __init__(self, checker, fmt=None, datefmt="%Y-%m-%dT%H:%M:%S%z", style='%'):
         # type: (BaseChecker, str, str, str) -> None
         super().__init__(fmt, datefmt, style)
         self.checker = checker  # type: BaseChecker
@@ -45,6 +51,28 @@ class ELKFormatter(logging.Formatter):
         # type: (LogRecord) -> str
         record.stack = self.formatStack(record.stack_info)
         record.asctime = self.formatTime(record, self.datefmt)
+
+        # stacktrace = ""
+        # if record.exc_info:
+        #     print("\n\n\n\n\nlog exc_info:", record.exc_info)
+        #     stacktrace = traceback.format_exc(record.exc_info)
+        # elif record.stack_info:
+        #     stacktrace = record.stack_info
+        # if record.exc_info is not None:
+        #     print("\n\n\n\n\n\n\n", type(record.exc_info), type(record.stack_info))
+        #     print("msg: ", record.exc_info[0], "traceback_info :", record.exc_info[1], "traceback_info :" record.stack_info)
+
+        #     import sys
+        #     sys.exit(1)
+        if record.exc_info is not None:
+            exception_info = {
+                "type": record.exc_info[0].__name__,
+                "message": str(record.exc_info[1]),
+                "traceback": traceback.format_tb(record.exc_info[2], 20)
+                }
+        else:
+            exception_info = None
+
         log_output = {
             "module": record.module,
             "severity": record.levelname,
@@ -56,12 +84,14 @@ class ELKFormatter(logging.Formatter):
             "function": record.funcName,
             "timestamp": record.asctime,
             "round": self.checker.round,
+            "relatedRoundId": self.checker.flag_round,
             "flagIndex": self.checker.flag_idx,
             "message": record.getMessage(),
-            "exception": record.exc_text,
-            "stacktrace": record.stack,
+            "exception": exception_info,
+            "stacktrace": record.stack_info,
             "serviceName": self.checker.service_name
         }
+
         return json.dumps(log_output)
 
 

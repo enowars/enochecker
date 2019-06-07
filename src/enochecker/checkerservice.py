@@ -1,6 +1,7 @@
 import collections
 import logging
 import sys
+import json
 from typing import TYPE_CHECKING, Callable, Type, Any, List, Union, Dict, Tuple
 #from elasticapm.contrib.flask import ElasticAPM
 
@@ -9,6 +10,7 @@ from flask import jsonify
 from flask import request
 
 from .enochecker import Result
+from .logging import exception_to_string
 from .utils import snake_caseify
 
 if TYPE_CHECKING:
@@ -29,7 +31,8 @@ CHECKER_METHODS = [
     "getflag",
     "putnoise",
     "getnoise",
-    "havoc"
+    "havoc",
+    "exploit"
 ]  # type: List[str]
 
 # The json spec a checker request follows.
@@ -197,21 +200,29 @@ def checker_routes(checker_cls):
         """
         try:
             logger.info(request.json)
-            json = request.get_json(force=True)
-
-            kwargs = json_to_kwargs(json, spec)
+            req_json = request.get_json(force=True)
+            
+            kwargs = json_to_kwargs(req_json, spec)
 
             checker = checker_cls(**kwargs)
+    
             checker.logger.info(request.json)
             res = checker.run().name
+
+            req_json["result"] = res
+            req_json = json.dumps(req_json)
+
             checker.logger.info("Run resulted in {}: {}".format(res, request.json))
+            #checker.logger.info("{}".format(req_json), stack_info=True)
+
             return jsonify({"result": res})
         except Exception as ex:
             print(ex)
-            logger.error("Returning Internal Error {}.".format(ex), exc_info=ex)
+            logger.error("Returning Internal Error {}.\nTraceback:\n{}".format(ex, exception_to_string(ex)), exc_info=ex, stack_info=True)
             return jsonify({
                 "result": Result.INTERNAL_ERROR.name,
-                "message": str(ex)
+                "message": str(ex),
+                "traceback": exception_to_string(ex)
             })
 
     return index, serve_checker
