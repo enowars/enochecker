@@ -51,20 +51,11 @@ if "DATABASE" in config:
     if 'REMOTE' in config['DATABASE']:
         if bool(int(config['DATABASE']['REMOTE'])):
             print("INIT REMOTE DB")
-            import enochecker.nosqlremotedict
             from .nosqlremotedict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
             
-            if 'HOST' in config['DATABASE']:
-                enochecker.nosqlremotedict.DB_DEFAULT_HOST = config['DATABASE']['HOST']
-            if 'PORT' in config['DATABASE']:
-                enochecker.nosqlremotedict.DB_DEFAULT_PORT = int(config['DATABASE']['PORT'])
-            if 'USER' in config['DATABASE']:
-                enochecker.nosqlremotedict.DB_DEFAULT_USER = config['DATABASE']['USER']
-            if 'PASSWORD' in config['DATABASE']:
-                enochecker.nosqlremotedict.DB_DEFAULT_PASS = config['DATABASE']['PASSWORD']
         else:
             from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
-    elif "LOCAL" in config:
+    elif "LOCAL" in config['DATABASE']:
         from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
     else:
         from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
