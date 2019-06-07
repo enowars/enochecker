@@ -2,6 +2,7 @@ requests
 websocket-client
 requests
 pytest
+pymongo
 flask
 typing
 future
