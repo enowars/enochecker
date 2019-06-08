@@ -173,6 +173,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         self.team = team  # type: str
         self.team_id = team_id
         self.round = round  # type: int
+        self.current_round = round 
         self.flag_round = flag_round # type: int
         self.round_length = round_length  # type: int
         self.flag = flag  # type: str
@@ -410,7 +411,6 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 Manual locking ist still possible.
         :return: A dict that will be self storing. Alternatively,
         """
-        print("DB_ACCESS\n\n\n\n\n")
         if self.storage_dir is None:
             try:
                 db = self._active_dbs[name]
@@ -418,7 +418,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             except KeyError:
                 try:
                     self.debug("Remote DB {} was not cached.".format(name))
-                    ret = StoredDict(checker_name=type(self).__name__, dict_name=name)#, logger=self.logger)
+                    ret = StoredDict(checker_name=type(self).__name__, dict_name=name) # , logger=self.logger)
                     self._active_dbs[name] = ret
                     return ret
                 except Exception as ex:
@@ -473,7 +473,11 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             port = self.port
         if port is None:
             raise ValueError("Port for service not set. Cannot Request.")
-        netloc = "{}:{}".format(self.address, port)
+        
+        if ":" in self.address:
+            netloc = "[{}]:{}".format(self.address, port)
+        else:
+            netloc = "{}:{}".format(self.address, port)
         if scheme is None:
             url = urlparse(route)
         else:
