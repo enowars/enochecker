@@ -1,6 +1,3 @@
-from future.standard_library import install_aliases
-
-install_aliases()
 
 from .utils import assert_equals, assert_in, \
     base64ify, debase64ify, sha256ify, \
