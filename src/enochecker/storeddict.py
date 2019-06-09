@@ -146,7 +146,7 @@ class StoredDict(collections.MutableMapping):
     def _dir(self, key):
         # type: (str) -> str
         """The path for the this key"""
-        return os.path.join(self.path, DB_PREFIX + base64ify(key))
+        return os.path.join(self.path, DB_PREFIX + base64ify(key, "+-"))
 
     def _dir_jsonname(self, key):
         # type: (str) -> str
@@ -318,7 +318,7 @@ class StoredDict(collections.MutableMapping):
         :return: An iterator containing all keys to a dict.
         """
         self.persist()
-        keys = [debase64ify(x[len(DB_PREFIX):-len(DB_EXTENSION)]) for x in os.listdir(self.path) if
+        keys = [debase64ify(x[len(DB_PREFIX):-len(DB_EXTENSION)], "+-") for x in os.listdir(self.path) if
                 x.startswith(DB_PREFIX) and x.endswith(DB_EXTENSION)]
         for key in keys:
             yield key

@@ -118,7 +118,7 @@ def sha256ify(s):
     return hashlib.sha256(s).hexdigest()
 
 
-def base64ify(s):
+def base64ify(s, altchars=None):
     # type: (Union[str, bytes]) -> str
     """
     Calculate the base64 representation of a value
@@ -126,10 +126,12 @@ def base64ify(s):
     :return: base64 representation
     """
     s = ensure_bytes(s)
-    return base64.b64encode(s).decode("utf-8")
+    if altchars != None:
+        return base64.b64encode(s, altchars).decode("utf-8")
+    else:
+        return base64.b64encode(s).decode("utf-8")
 
-
-def debase64ify(s):
+def debase64ify(s, altchars=None):
     # type: (Union[str, bytes]) -> str
     """
     Return a string out of a base64
@@ -137,7 +139,10 @@ def debase64ify(s):
     :return: the original value
     """
     s = ensure_bytes(s)
-    return base64.b64decode(s).decode("utf-8")
+    if altchars != None:
+        return base64.b64encode(s, altchars).decode("utf-8")
+    else:
+        return base64.b64encode(s).decode("utf-8")
 
 
 def readline_expect(telnet, expected, read_until=b"\n", timeout=30):
