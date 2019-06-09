@@ -280,7 +280,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                     method = self.method
                 if method not in CHECKER_METHODS:
                     raise ValueError("Method {} not supported! Supported: {}".format(method, CHECKER_METHODS))
-                ret = getattr(self, snake_caseify(method))()
+                ret = await getattr(self, snake_caseify(method))()
             if Result.is_valid(ret):
                 ret = Result(ret)  # Better wrap this, in case somebody returns raw ints (?)
                 self.info("Checker [{}] resulted in {}".format(self.method, ret.name))
