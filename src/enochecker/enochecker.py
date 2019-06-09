@@ -206,6 +206,10 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
         self.debug("Initialized checker for flag {} with in {} seconds".format(
             json.dumps(self.config), datetime.datetime.now() - self.time_started_at))
+        
+        if self.method == "havok":
+            self.method = "havoc"
+            self.warning("Ignoring method 'havok', calling 'havoc' instead")
 
     def _setup_logger(self):
         # type: () -> None
