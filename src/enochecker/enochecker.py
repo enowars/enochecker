@@ -2,9 +2,6 @@ import datetime
 import socket
 
 from quart import Quart
-from future.standard_library import install_aliases
-
-install_aliases()
 
 import argparse
 import configparser
