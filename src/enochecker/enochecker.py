@@ -272,6 +272,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         :return: the Result code as int, as per the Result enum.
         """
         try:
+            self.info("Type : " + str(type(method)))
             if callable(method):
                 ret = await method()
             else:
@@ -615,5 +616,5 @@ def run(checker_cls, args=None):
         checker_args = vars(parsed)
         del checker_args["runmode"]  # will always be 'run' at this point
         result = checker_cls(**vars(parsed)).run()
-        print("Checker run resulted in Result.{}".format(result.name), exc_info = 1)
+        print("Checker run resulted in Result.{}".format(result.name))
         return result

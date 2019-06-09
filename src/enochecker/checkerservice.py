@@ -151,7 +151,7 @@ def json_to_kwargs(json, spec):
     :return: kwargs dict.
     """
     ret = {}
-
+    print(json)
     def key_to_name(key):
         # type: (str)->str
         key = key.replace("Index", "Idx")  # -> flagIndex -> flag_idx
@@ -204,19 +204,20 @@ def init_service(template_checker):
         :return: jsonified result of the checker.
         """
         try:
-            logger.info(request.json)
+            logger.info(await request.json)
             req_json = await request.get_json(force=True)
             
             kwargs = json_to_kwargs(req_json, spec)
 
             checker = template_checker(**kwargs)
-            checker.logger.info(request.json)
-            res = (await checker.run()).name
+            checker.logger.info(await request.json)
+            res = await checker.run()
+            res = res.name
 
             req_json["result"] = res
             req_json = json.dumps(req_json)
 
-            checker.logger.info("Run resulted in {}: {}".format(res, request.json), exc_info=1)
+            checker.logger.info("Run resulted in {}: {}".format(res, req_json))
             return jsonify({"result": res})
             
         except Exception as ex:
