@@ -1,4 +1,3 @@
-
 from .utils import assert_equals, assert_in, \
     base64ify, debase64ify, sha256ify, \
     ensure_bytes, ensure_unicode, ensure_valid_filename, snake_caseify, \
