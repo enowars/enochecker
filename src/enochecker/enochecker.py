@@ -1,7 +1,7 @@
 import datetime
 import socket
 
-from quart import Quart
+from flask import Flask
 from future.standard_library import install_aliases
 
 install_aliases()
