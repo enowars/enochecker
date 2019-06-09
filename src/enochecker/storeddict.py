@@ -1,7 +1,3 @@
-from future.standard_library import install_aliases
-
-install_aliases()
-
 import atexit
 import collections
 import json

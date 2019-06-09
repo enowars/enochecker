@@ -15,7 +15,6 @@ from typing import Optional, Callable, Any, Dict, List, Union, Type
 from urllib.parse import urlparse
 
 import requests
-from future.utils import with_metaclass
 
 from concurrent.futures import TimeoutError
 
@@ -148,7 +147,7 @@ class _CheckerMeta(ABCMeta):
         super(_CheckerMeta, cls).__init__(name, bases, clsdict)
 
 
-class BaseChecker(with_metaclass(_CheckerMeta, object)):
+class BaseChecker(metaclass=_CheckerMeta):
     """
     All you base are belong to us. Also all your flags. And checker scripts.
     Override the methods given here, then simply init and .run().
