@@ -1,6 +1,7 @@
 
 import collections
 import configparser
+import os
 # import logging
 from pymongo import MongoClient
 # from urllib.parse import quote_plus
@@ -14,10 +15,10 @@ from pymongo import MongoClient
 DB_DEFAULT_DIR = None
 DB_GLOBAL_CACHE_SETTING = False
 
-# DB DEFAULT PARAMS
+# DB DEFAULT PARAMS7
 DB_DEFAULT_USER = 'root'
 DB_DEFAULT_PASS = 'example'
-DB_DEFAULT_HOST = '172.20.0.3'
+DB_DEFAULT_HOST = 'localhost'
 DB_DEFAULT_PORT = 27017
 
 # INIT OVERRIDE
@@ -37,6 +38,16 @@ if 'USER' in config['DATABASE']:
     DB_DEFAULT_USER = config['DATABASE']['USER']
 if 'PASSWORD' in config['DATABASE']:
     DB_DEFAULT_PASS = config['DATABASE']['PASSWORD']
+
+
+if 'MONGO_HOST' in os.environ:
+    DB_DEFAULT_HOST = os.environ['MONGO_HOST']
+if 'MONGO_PORT' in os.environ:
+    DB_DEFAULT_PORT = int(os.environ['MONGO_PORT'])
+if 'MONGO_USER' in os.environ:
+    DB_DEFAULT_USER = os.environ['MONGO_USER']
+if 'MONGO_PASSWORD' in os.environ:
+    DB_DEFAULT_PASS = os.environ['MONGO_PASSWORD']
 
 
 class StoredDict(collections.MutableMapping):

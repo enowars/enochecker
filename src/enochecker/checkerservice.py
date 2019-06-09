@@ -209,7 +209,7 @@ def init_service(template_checker):
             
             kwargs = json_to_kwargs(req_json, spec)
 
-            checker = checker(**kwargs)
+            checker = template_checker(**kwargs)
             checker.logger.info(request.json)
             res = await checker.run().name
 
@@ -217,8 +217,6 @@ def init_service(template_checker):
             req_json = json.dumps(req_json)
 
             checker.logger.info("Run resulted in {}: {}".format(res, request.json))
-            #checker.logger.info("{}".format(req_json), stack_info=True)
-
             return jsonify({"result": res})
             
         except Exception as ex:
