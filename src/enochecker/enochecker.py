@@ -10,7 +10,9 @@ import argparse
 import configparser
 import json
 import logging
+import os
 import sys
+
 from abc import ABCMeta, abstractmethod
 from typing import Optional, Callable, Any, Dict, List, Union, Type
 from urllib.parse import urlparse
@@ -45,7 +47,9 @@ config.read("database.ini")
 config.read("Database.ini")
 config.read("DATABASE.ini")
 print(list(config.items()))
-if "DATABASE" in config:
+if "MONGO_ENABLED" in os.environ:
+    from .nosqlremotedict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
+elif "DATABASE" in config:
     print("INIT DB")
     print(config['DATABASE'])
     if 'REMOTE' in config['DATABASE']:

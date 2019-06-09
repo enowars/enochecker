@@ -39,6 +39,15 @@ if 'USER' in config['DATABASE']:
 if 'PASSWORD' in config['DATABASE']:
     DB_DEFAULT_PASS = config['DATABASE']['PASSWORD']
 
+if 'MONGO_HOST' in os.environ:
+    DB_DEFAULT_HOST = os.environ['MONGO_HOST']
+if 'MONGO_PORT' in os.environ:
+    DB_DEFAULT_PORT = int(os.environ['MONGO_PORT'])
+if 'MONGO_USER' in os.environ:
+    DB_DEFAULT_USER = os.environ['MONGO_USER']
+if 'MONGO_PASSWORD' in os.environ:
+    DB_DEFAULT_PASS = os.environ['MONGO_PASSWORD']
+
 
 if 'MONGO_HOST' in os.environ:
     DB_DEFAULT_HOST = os.environ['MONGO_HOST']
