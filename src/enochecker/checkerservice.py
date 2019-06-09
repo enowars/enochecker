@@ -164,10 +164,10 @@ def json_to_kwargs(json, spec):
                 raise ValueError("Required parameter {} is missing.".format(stringify_spec_entry(entry)))
         else:
 
+            val = json[entry.key]
             if entry.key == "method" and val == "havok":
                 logger.warning("Ignoring Havok -- calling Havoc instead")
                 val = "havoc"
-            val = json[entry.key]
             check_type(entry.key, val, entry.type)
             ret[key_to_name(entry.key)] = val
     return ret
