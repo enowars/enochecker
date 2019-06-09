@@ -2,12 +2,14 @@ import collections
 import logging
 import sys
 import json
+import asyncio
+
 from typing import TYPE_CHECKING, Callable, Type, Any, List, Union, Dict, Tuple
 #from elasticapm.contrib.flask import ElasticAPM
 
-from flask import Flask, Response
-from flask import jsonify
-from flask import request
+from quart import Quart, Response
+from quart import jsonify
+from quart import request
 
 from .enochecker import Result
 from .logging import exception_to_string
@@ -169,16 +171,18 @@ def json_to_kwargs(json, spec):
     return ret
 
 
-def checker_routes(checker_cls):
-    # type: (Type[BaseChecker]) -> Tuple[Callable[[],Response], Callable[[], Response]]
+def init_service(template_checker):
+    # type: (Type[BaseChecker]) -> Flask
     """
-    Creates a flask app for the given checker class.
-    :param checker_cls: The checker class to use
-    :return: A flask app that can be passed to a uWSGI server or run using .run().
+    Initializes a flask app that can be used for WSGI or listen directly.
+    The Engine may Communicate with it over socket.
+    :param checker: the checker class to use for check requests.
+    :return: a flask app with post and get routes set, ready for checking.
     """
-
-    def index():
-        # type: () -> Response
+    app = Quart(__name__)
+    
+    @app.route('/', methods=["GET"])
+    async def index():
         """
         Some info about this service
         :return: Printable fun..
@@ -188,9 +192,10 @@ def checker_routes(checker_cls):
         return Response('<h1>Welcome to {} :)</h1>'
                         '<p>Expecting POST with a JSON:</p><div><textarea id="jsonTextbox" rows={} cols="80">{}</textarea>{}</div>'
                         '<a href="https://www.youtube.com/watch?v=SBClImpnfAg"><br>check it out now</a><div id="out">'.format(
-                checker_cls.__name__, len(spec) + 3, serialize_spec(spec), tiny_poster))
+                            template_checker.__name__, len(spec) + 3, serialize_spec(spec), tiny_poster))
 
-    def serve_checker():
+    @app.route('/', methods=['POST'])
+    async def serve_checker():
         # type: () -> Response
         """
         Serves a single checker request.
@@ -204,10 +209,9 @@ def checker_routes(checker_cls):
             
             kwargs = json_to_kwargs(req_json, spec)
 
-            checker = checker_cls(**kwargs)
-    
+            checker = checker(**kwargs)
             checker.logger.info(request.json)
-            res = checker.run().name
+            res = await checker.run().name
 
             req_json["result"] = res
             req_json = json.dumps(req_json)
@@ -216,6 +220,7 @@ def checker_routes(checker_cls):
             #checker.logger.info("{}".format(req_json), stack_info=True)
 
             return jsonify({"result": res})
+            
         except Exception as ex:
             print(ex)
             logger.error("Returning Internal Error {}.\nTraceback:\n{}".format(ex, exception_to_string(ex)), exc_info=ex, stack_info=True)
@@ -224,27 +229,6 @@ def checker_routes(checker_cls):
                 "message": str(ex),
                 "traceback": exception_to_string(ex)
             })
-
-    return index, serve_checker
-
-
-def init_service(checker):
-    # type: (Type[BaseChecker]) -> Flask
-    """
-    Initializes a flask app that can be used for WSGI or listen directly.
-    The Engine may Communicate with it over socket.
-    :param checker: the checker class to use for check requests.
-    :return: a flask app with post and get routes set, ready for checking.
-    """
-    app = Flask(__name__)
-    index, checker_route = checker_routes(checker)
-
-    app.route("/", methods=["GET"])(index)
-    app.route('/', methods=['POST'])(checker_route)
-
-    if "run" not in sys.argv:
-        # ElasticSearch Performance Monitoring (disabled on commandline)
-        #apm.init_app(app, service_name=checker.__name__.split("Checker")[0])  # secret_token=SECRET)
         pass
         
     return app  # Start service using service.run(host="0.0.0.0")
