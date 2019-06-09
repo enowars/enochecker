@@ -216,7 +216,7 @@ def init_service(template_checker):
             req_json["result"] = res
             req_json = json.dumps(req_json)
 
-            checker.logger.info("Run resulted in {}: {}".format(res, request.json))
+            checker.logger.info("Run resulted in {}: {}".format(res, request.json), exc_info=1)
             return jsonify({"result": res})
             
         except Exception as ex:
