@@ -114,6 +114,7 @@ class ExampleChecker(BaseChecker):
         """
         pass
 
+
 app = ExampleChecker.service  # This can be used for uswgi.
 if __name__ == "__main__":
     run(ExampleChecker)

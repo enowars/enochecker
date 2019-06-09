@@ -205,13 +205,13 @@ def init_service(template_checker):
         """
         try:
             logger.info(request.json)
-            req_json = request.get_json(force=True)
+            req_json = await request.get_json(force=True)
             
             kwargs = json_to_kwargs(req_json, spec)
 
             checker = template_checker(**kwargs)
             checker.logger.info(request.json)
-            res = await checker.run().name
+            res = (await checker.run()).name
 
             req_json["result"] = res
             req_json = json.dumps(req_json)

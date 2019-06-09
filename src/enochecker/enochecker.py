@@ -263,7 +263,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         return max(int(self.timeout - self.time_running - TIME_BUFFER), 1)
 
     # ---- Basic checker functionality ---- #
-    def run(self, method=None):
+    async def run(self, method=None):
         # type: (Optional[str, Callable]) -> Result
         """
         Executes the checker and catches errors along the way.
@@ -273,7 +273,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         """
         try:
             if callable(method):
-                ret = method()
+                ret = await method()
             else:
                 if method is None:
                     method = self.method
@@ -319,7 +319,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 db.persist()
 
     @abstractmethod
-    def putflag(self):
+    async def putflag(self):
         # type: () -> Optional[Result]
         """
         This method stores a flag in the service.
@@ -334,7 +334,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         pass
 
     @abstractmethod
-    def getflag(self):
+    async def getflag(self):
         # type: () -> Optional[Result]
         """
         This method retrieves a flag from the service.
@@ -348,7 +348,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         pass
 
     @abstractmethod
-    def putnoise(self):
+    async def putnoise(self):
         # type: () -> Optional[Result]
         """
         This method stores noise in the service. The noise should later be recoverable.
@@ -363,7 +363,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         pass
 
     @abstractmethod
-    def getnoise(self):
+    async def getnoise(self):
         # type: () -> Optional[Result]
         """
         This method retrieves noise in the service.
@@ -379,7 +379,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         pass
 
     @abstractmethod
-    def havoc(self):
+    async def havoc(self):
         # type: () -> Optional[Result]
         """
         This method unleashes havoc on the app -> Do whatever you must to prove the service still works. Or not.
@@ -392,7 +392,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         pass
 
     @abstractmethod
-    def exploit(self):
+    async def exploit(self):
         # type: () -> Optional[Result]
         """
         This method is strictly for testing purposes and will hopefully not be called during the actual CTF.
@@ -404,7 +404,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         pass
 
     # ---- DB specific methods ---- #
-    def db(self, name, ignore_locks=False):
+    async def db(self, name, ignore_locks=False):
         # type: (str, bool) -> StoredDict
         """
         Get a (global) db by name
@@ -440,7 +440,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 return ret
 
     @property
-    def global_db(self):
+    async def global_db(self):
         # type: () -> StoredDict
         """
         A global storage shared between all teams and rounds.
@@ -451,7 +451,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         return self.db("global")
 
     @property
-    def team_db(self):
+    async def team_db(self):
         # type: () -> StoredDict
         """
         The database for the current team
@@ -459,7 +459,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         """
         return self.get_team_db()
 
-    def get_team_db(self, team=None):
+    async def get_team_db(self, team=None):
         # type: (Optional[str]) -> StoredDict
         """
         Returns the database for a specific team.
@@ -615,5 +615,5 @@ def run(checker_cls, args=None):
         checker_args = vars(parsed)
         del checker_args["runmode"]  # will always be 'run' at this point
         result = checker_cls(**vars(parsed)).run()
-        print("Checker run resulted in Result.{}".format(result.name))
+        print("Checker run resulted in Result.{}".format(result.name), exc_info = 1)
         return result
