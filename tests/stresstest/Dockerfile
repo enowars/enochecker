@@ -12,4 +12,4 @@ RUN python3 -m pip install -r requirements.txt
 COPY . .
 
 #ENTRYPOINT ["tail", "-f", "/dev/null"]
-ENTRYPOINT ["hypercorn", "-b", ":::3031", "-w", "100", "testchecker:app" ]
+ENTRYPOINT ["hypercorn", "-b", ":::3031", "-w", "4", "testchecker:app" ]

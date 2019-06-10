@@ -2,17 +2,23 @@ version: '3'
 services:
   test-checker:
     build: .
-    ports:
-      - 3031:3031
+    depends_on:
+      - mongo
+    # networks: 
+    #   - checkernet
+    # deploy:
+    #   replicas: 4
 
-  # test-checker-nginx:
-  #   image: nginx
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-  #   depends_on:
-  #     - test-checker
-  #   ports:
-  #     - 3031:80
+  test-checker-nginx:
+    image: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - test-checker
+    ports:
+      - 3031:80
+    # networks: 
+    #   - checkernet
 
   mongo:
     image: mongo
@@ -22,6 +28,9 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
+
+# networks: 
+#   - checkernet
 
   # mongo-express:
   #   image: mongo-express
