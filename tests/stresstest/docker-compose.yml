@@ -1,7 +1,9 @@
 version: '3'
 services:
   test-checker:
-    build: .
+    build: 
+      context: .
+      dockerfile: uvicorn.Dockerfile
     depends_on:
       - mongo
     # networks: 
