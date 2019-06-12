@@ -294,7 +294,7 @@ def init_service(checker):
     
     app.route("/", methods=["GET"])(index)
     app.route('/', methods=['POST'])(checker_route)
-    app.route('/service', methods=["GET"])(service_info)
+    app.route('/service', methods=["GET"])(get_service_info)
 
     service_info()
 
