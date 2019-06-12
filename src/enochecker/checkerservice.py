@@ -86,6 +86,8 @@ function update_pending(){
 
 </script>
 <div>
+<p>Only select one method from the given list.<p>
+<p>Values in brackets are optional, so you can delete those lines if you don't want to specify them.<\p>
 <button onclick=post(document.getElementById("jsonTextbox").value)>Post</button></div>
 <p id="pending_para"></p> 
 """
@@ -229,7 +231,49 @@ def checker_routes(checker_cls):
                 "traceback": exception_to_string(ex)
             })
 
-    return index, serve_checker
+    def service_info():
+        # type: () -> Response
+        """
+        Serves a single checker request.
+        The spec needs to be formed according to the spec above.
+        :param method: the method to run in a checker.
+        :return: jsonified result of the checker.
+        """
+        try:
+
+            if not hasattr(checker_cls, "service_name"):
+                service_name = checker_cls.__name__.split("Checker")[0],
+            else:
+                service_name = checker_cls.service_name
+
+            info_dict = {
+                'serviceName': service_name,
+                'flagCount':   checker_cls.flag_count,
+                'havocCount':  checker_cls.havoc_count,
+                'noiseCount':  checker_cls.noise_count  
+            }
+
+            assert isinstance(info_dict['serviceName'], str)
+            assert isinstance(info_dict['flagCount'],   int)
+            assert isinstance(info_dict['havocCount'],  int)
+            assert isinstance(info_dict['noiseCount'],  int)
+
+        except Exception:
+            print("SERVICE INFO NOT SPECIFIED!!!11ELF!")
+            print("add service_name, flag_count, havoc_count and noise_count as \
+                static fields to your CHECKER\n")
+            print("""
+Example:
+class ExampleChecker(BaseChecker):
+    flag_count  = 1
+    noise_count = 1
+    havoc_count = 1
+""")        
+            raise AttributeError("REQUIRED SERVICE INFO FIELDS NOT SPECIFIED!")
+        
+        return jsonify(info_dict)
+
+    return index, serve_checker, service_info
 
 
 def init_service(checker):
@@ -241,10 +285,13 @@ def init_service(checker):
     :return: a flask app with post and get routes set, ready for checking.
     """
     app = Flask(__name__)
-    index, checker_route = checker_routes(checker)
-
+    index, checker_route, service_info = checker_routes(checker)
+    
     app.route("/", methods=["GET"])(index)
     app.route('/', methods=['POST'])(checker_route)
+    app.route('/service', methods=["GET"])(service_info)
+
+    service_info()
 
     if "run" not in sys.argv:
         # ElasticSearch Performance Monitoring (disabled on commandline)
