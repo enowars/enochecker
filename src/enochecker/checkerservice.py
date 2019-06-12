@@ -253,8 +253,6 @@ def checker_routes(checker_cls):
                 'noiseCount':  checker_cls.noise_count  
             }
 
-            print(isinstance(service_name, str))
-
             assert isinstance(info_dict['serviceName'], str)
             assert isinstance(info_dict['flagCount'],   int)
             assert isinstance(info_dict['havocCount'],  int)
