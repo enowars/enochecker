@@ -242,7 +242,7 @@ def checker_routes(checker_cls):
         try:
 
             if not hasattr(checker_cls, "service_name"):
-                service_name = checker_cls.__name__.split("Checker")[0],
+                service_name = checker_cls.__name__.split("Checker")[0]
             else:
                 service_name = checker_cls.service_name
 
@@ -253,6 +253,8 @@ def checker_routes(checker_cls):
                 'noiseCount':  checker_cls.noise_count  
             }
 
+            print(isinstance(service_name, str))
+
             assert isinstance(info_dict['serviceName'], str)
             assert isinstance(info_dict['flagCount'],   int)
             assert isinstance(info_dict['havocCount'],  int)
@@ -261,7 +263,7 @@ def checker_routes(checker_cls):
         except Exception:
             print("SERVICE INFO NOT SPECIFIED!!!11ELF!")
             print("add service_name, flag_count, havoc_count and noise_count as \
-                static fields to your CHECKER\n")
+static fields to your CHECKER\n")
             print("""
 Example:
 class ExampleChecker(BaseChecker):
@@ -271,9 +273,12 @@ class ExampleChecker(BaseChecker):
 """)        
             raise AttributeError("REQUIRED SERVICE INFO FIELDS NOT SPECIFIED!")
         
-        return jsonify(info_dict)
+        return info_dict
 
-    return index, serve_checker, service_info
+    def get_service_info():
+        return jsonify(service_info())
+
+    return index, serve_checker, service_info, get_service_info
 
 
 def init_service(checker):
@@ -285,7 +290,7 @@ def init_service(checker):
     :return: a flask app with post and get routes set, ready for checking.
     """
     app = Flask(__name__)
-    index, checker_route, service_info = checker_routes(checker)
+    index, checker_route, service_info, get_service_info = checker_routes(checker)
     
     app.route("/", methods=["GET"])(index)
     app.route('/', methods=['POST'])(checker_route)
