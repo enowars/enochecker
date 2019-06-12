@@ -86,7 +86,7 @@ function update_pending(){
 
 </script>
 <div>
-<p>Only select one method from the given list.<p>
+<p>Only select one method from the given list.<\p>
 <p>Values in brackets are optional, so you can delete those lines if you don't want to specify them.<\p>
 <button onclick=post(document.getElementById("jsonTextbox").value)>Post</button></div>
 <p id="pending_para"></p> 
@@ -253,8 +253,6 @@ def checker_routes(checker_cls):
                 'noiseCount':  checker_cls.noise_count  
             }
 
-            print(isinstance(service_name, str))
-
             assert isinstance(info_dict['serviceName'], str)
             assert isinstance(info_dict['flagCount'],   int)
             assert isinstance(info_dict['havocCount'],  int)
@@ -296,7 +294,7 @@ def init_service(checker):
     app.route('/', methods=['POST'])(checker_route)
     app.route('/service', methods=["GET"])(get_service_info)
 
-    service_info()
+    print(service_info())
 
     if "run" not in sys.argv:
         # ElasticSearch Performance Monitoring (disabled on commandline)
