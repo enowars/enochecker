@@ -30,14 +30,15 @@ config.read("database.ini")
 config.read("Database.ini")
 config.read("DATABASE.ini")
 
-if 'HOST' in config['DATABASE']:
-    DB_DEFAULT_HOST = config['DATABASE']['HOST']
-if 'PORT' in config['DATABASE']:
-    DB_DEFAULT_PORT = int(config['DATABASE']['PORT'])
-if 'USER' in config['DATABASE']:
-    DB_DEFAULT_USER = config['DATABASE']['USER']
-if 'PASSWORD' in config['DATABASE']:
-    DB_DEFAULT_PASS = config['DATABASE']['PASSWORD']
+if 'DATABASE' in config:
+    if 'HOST' in config['DATABASE']:
+        DB_DEFAULT_HOST = config['DATABASE']['HOST']
+    if 'PORT' in config['DATABASE']:
+        DB_DEFAULT_PORT = int(config['DATABASE']['PORT'])
+    if 'USER' in config['DATABASE']:
+        DB_DEFAULT_USER = config['DATABASE']['USER']
+    if 'PASSWORD' in config['DATABASE']:
+        DB_DEFAULT_PASS = config['DATABASE']['PASSWORD']
 
 if 'MONGO_HOST' in os.environ:
     DB_DEFAULT_HOST = os.environ['MONGO_HOST']
@@ -139,7 +140,11 @@ class StoredDict(collections.MutableMapping):
         self.db.delete_one(to_extract)
 
     def __len__(self):
-        return self.db.count_documentd({})
+        return self.db.count_documentd(
+            {
+                "checker":  self.checker_name,
+                "name":     self.dict_name}
+            )
 
     def __iter__(self):
         iterdict = {

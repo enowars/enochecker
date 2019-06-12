@@ -49,6 +49,7 @@ config.read("DATABASE.ini")
 print(list(config.items()))
 if "MONGO_ENABLED" in os.environ:
     from .nosqlremotedict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
+    
 elif "DATABASE" in config:
     print("INIT DB")
     print(config['DATABASE'])
