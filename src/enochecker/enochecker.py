@@ -267,7 +267,11 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         """
         return max(int(self.timeout - self.time_running - TIME_BUFFER), 1)
 
+    # def __format_internal_db_entry(name):
+    #     return f"__Checker-Internals:{name}__"
+
     # ---- Basic checker functionality ---- #
+
     def run(self, method=None):
         # type: (Optional[str, Callable]) -> Result
         """
@@ -276,6 +280,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                         using this optional param.
         :return: the Result code as int, as per the Result enum.
         """
+
         try:
             if callable(method):
                 ret = method()
@@ -284,10 +289,38 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                     method = self.method
                 if method not in CHECKER_METHODS:
                     raise ValueError("Method {} not supported! Supported: {}".format(method, CHECKER_METHODS))
+                
+                ignore_run = False
+                if method == "getflag":
+                    try:
+                        ignore_run = not ("OK" == self.team_db[
+                            f"__Checker-internals-RESULT:putflag,{self.flag_round},{self.flag_idx}__"
+                            ])
+
+                    except KeyError as ex:
+                        self.info(f"original putflag did not return successfully -- ignoring getflag for flag_round:{self.flag_round}, index: {self.flag_idx}", exc_info=ex)
+                        ignore_run = True
+                
+                if method == "getnoise":
+                    try:
+                        
+                        ignore_run = not ("OK" == self.team_db[
+                            f"__Checker-internals-RESULT:putnoise,{self.flag_round},{self.flag_idx}__"
+                            ])
+
+                    except KeyError as ex:
+                        self.info(f"original putnoise did not return successfully -- ignoring getnoise for flag_round:{self.flag_round}, index: {self.flag_idx}", exc_info=ex)
+                        ignore_run = Result.OK
+
+                if ignore_run:
+                    self.debug("Run_ignored -- preemptively returned OK")
+                    return Result.OK
+
                 ret = getattr(self, snake_caseify(method))()
             if Result.is_valid(ret):
                 ret = Result(ret)  # Better wrap this, in case somebody returns raw ints (?)
                 self.info("Checker [{}] resulted in {}".format(self.method, ret.name))
+                self.team_db[f"__Checker-internals-RESULT:{str(method)},{self.flag_round},{self.flag_idx}__"] = ret.name
                 return ret
             if ret is not None:
                 self.error("Illegal return value from {}: {}".format(self.method, ret))
@@ -295,6 +328,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             
             # Returned Normally
             self.info("Checker [{}] executed successfully!".format(self.method))
+            self.team_db[f"__Checker-internals-RESULT:{str(method)},{self.flag_round},{self.flag_idx}__"] = "OK"
             return Result.OK
 
         except EnoException as eno:

@@ -1,5 +1,6 @@
-from enum import IntEnum
 
+from abc import ABC
+from enum import IntEnum
 
 class Result(IntEnum):
     """
@@ -22,7 +23,7 @@ class Result(IntEnum):
         return any(value == item.value for item in cls)
 
 
-class EnoException(Exception):
+class EnoException(Exception, ABC):
     """
     Base error including the Result. Raise a subclass of me once we know what to do.
     """
@@ -41,3 +42,11 @@ class OfflineException(EnoException):
     Service was not reachable (at least once) during our checks
     """
     result = Result.OFFLINE  # type: int
+
+
+class CheckerBrokenException(EnoException):
+    """
+    Shouldn't be raised ever since we catch all abstract Errors
+    Used internally if something goes horribly wrong
+    """
+    result = Result.INTERNAL_ERROR  # type: int
