@@ -194,3 +194,4 @@ class StoredDict(collections.MutableMapping):
 
         except Exception as ex:
             raise CheckerBrokenException from ex
+    

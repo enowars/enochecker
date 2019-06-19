@@ -140,7 +140,7 @@ def serialize_spec(spec):
     return ret + "\n}"
 
 
-def json_to_kwargs(json, spec):
+def assert_types(json, spec):
     # type: (Dict[str, Any], List[Union[Optional, Required]]) -> Dict[str, Any]
     """
     Generates a kwargs dict from a json.
@@ -165,6 +165,9 @@ def json_to_kwargs(json, spec):
             else:
                 raise ValueError("Required parameter {} is missing.".format(stringify_spec_entry(entry)))
         else:
+
+            if json[entry.key] is None and isinstance(entry, Optional):
+                ret[key_to_name(entry.key)] = entry.default
 
             val = json[entry.key]
             if entry.key == "method" and val == "havok":
@@ -208,7 +211,7 @@ def checker_routes(checker_cls):
             logger.info(request.json)
             req_json = request.get_json(force=True)
             
-            kwargs = json_to_kwargs(req_json, spec)
+            kwargs = assert_types(req_json, spec)
 
             checker = checker_cls(**kwargs)
     
