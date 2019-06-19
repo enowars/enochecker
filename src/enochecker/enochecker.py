@@ -311,7 +311,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
                     except KeyError as ex:
                         self.info(f"original putnoise did not return successfully -- ignoring getnoise for flag_round:{self.flag_round}, index: {self.flag_idx}", exc_info=ex)
-                        ignore_run = Result.OK
+                        ignore_run = True
 
                 if ignore_run:
                     self.debug("run ignored -- preemptively returned OK")
