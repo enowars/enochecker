@@ -594,7 +594,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         :param timeout: How long we'll try to connect
         :return: The response
         """
-        kwargs.setdefault('allow_redirects', True)
+        kwargs.setdefault('allow_redirects', False)
         return self.http("post", route, params, port, scheme, raise_http_errors, timeout, **kwargs)
 
     def http_get(self, route="/", params=None, port=None, scheme="http", raise_http_errors=False, timeout=None,
@@ -611,7 +611,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         :param timeout: How long we'll try to connect
         :return: The response
         """
-        kwargs.setdefault('allow_redirects', True)
+        kwargs.setdefault('allow_redirects', False)
         return self.http("get", route, params, port, scheme, raise_http_errors, timeout, **kwargs)
 
     def http(self, method, route="/", params=None, port=None, scheme="http", raise_http_errors=False, timeout=None,
@@ -629,6 +629,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         :param timeout: How long we'll try to connect (default: self.timeout)
         :return: The response
         """
+        kwargs.setdefault('allow_redirects', False)
         url = self._sanitize_url(route, port, scheme)
         if timeout is None:
             timeout = self.time_remaining
