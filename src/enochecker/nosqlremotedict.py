@@ -2,6 +2,7 @@
 import collections
 import configparser
 import os
+from pymongo.errors import PyMongoError
 # import logging
 from pymongo import MongoClient
 from .results import CheckerBrokenException
@@ -86,7 +87,7 @@ class StoredDict(collections.MutableMapping):
                     [("key", 1)],
                     name="checker_key", unique=True, background=True
                 )
-        except Exception as ex:
+        except PyMongoError as ex:
             raise CheckerBrokenException from ex
 
     def __setitem__(self, key, value):
@@ -109,7 +110,7 @@ class StoredDict(collections.MutableMapping):
 
             self.db.replace_one(query_dict, to_insert, upsert=True)
 
-        except Exception as ex:
+        except PyMongoError as ex:
             raise CheckerBrokenException from ex
 
     def __getitem__(self, key):
@@ -132,7 +133,8 @@ class StoredDict(collections.MutableMapping):
                 self.cache[key] = result['value']
                 return result['value']
             raise KeyError()
-        except Exception as ex:
+
+        except PyMongoError as ex:
             raise CheckerBrokenException from ex
 
     def __delitem__(self, key):
@@ -149,7 +151,7 @@ class StoredDict(collections.MutableMapping):
                 }
             self.db.delete_one(to_extract)
 
-        except Exception as ex:
+        except PyMongoError as ex:
             raise CheckerBrokenException from ex
 
     def __len__(self):
@@ -162,7 +164,7 @@ class StoredDict(collections.MutableMapping):
                     "name":     self.dict_name}
                 )
         
-        except Exception as ex:
+        except PyMongoError as ex:
             raise CheckerBrokenException from ex
 
     def __iter__(self):
@@ -175,7 +177,7 @@ class StoredDict(collections.MutableMapping):
             results = self.db.find(iterdict)
             return results
 
-        except Exception as ex:
+        except PyMongoError as ex:
             raise CheckerBrokenException from ex
 
     def persist(self):
@@ -183,7 +185,7 @@ class StoredDict(collections.MutableMapping):
         try:
             self.cache = dict()
 
-        except Exception as ex:
+        except PyMongoError as ex:
             raise CheckerBrokenException from ex
 
     def __del__(self):
@@ -192,6 +194,6 @@ class StoredDict(collections.MutableMapping):
             self.persist()
             self.client.close()
 
-        except Exception as ex:
+        except PyMongoError as ex:
             raise CheckerBrokenException from ex
     
