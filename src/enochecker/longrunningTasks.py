@@ -19,7 +19,6 @@ class LR_Action(ABC):
         pass
 
 
-
 class LRConnHandler(Starlette):
     def __init__(self, lr_callables, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -34,7 +33,7 @@ class LRConnHandler(Starlette):
 
     async def _callwrapper(lr_call=None):
         kwargs = await request.json()
-        
+
         # initial Call
         (ret_dict, stuff) = await lr_call.initial_call(kwargs)
 
