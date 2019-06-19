@@ -48,7 +48,8 @@ config.read("Database.ini")
 config.read("DATABASE.ini")
 print(list(config.items()))
 if "MONGO_ENABLED" in os.environ:
-    from .nosqlremotedict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
+    if os.environ["MONGO_ENABLED"] == "1":
+        from .nosqlremotedict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
     
 elif "DATABASE" in config:
     print("INIT DB")
@@ -313,7 +314,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                         ignore_run = Result.OK
 
                 if ignore_run:
-                    self.debug("Run_ignored -- preemptively returned OK")
+                    self.debug("run ignored -- preemptively returned OK")
                     return Result.OK
 
                 ret = getattr(self, snake_caseify(method))()
