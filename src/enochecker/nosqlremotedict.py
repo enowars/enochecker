@@ -52,6 +52,12 @@ if 'MONGO_USER' in os.environ:
 if 'MONGO_PASSWORD' in os.environ:
     DB_DEFAULT_PASS = os.environ['MONGO_PASSWORD']
 
+CLIENT = MongoClient(
+                host=DB_DEFAULT_HOST,
+                port=DB_DEFAULT_PORT,
+                username=DB_DEFAULT_USER,
+                password=DB_DEFAULT_PASS)
+
 
 class StoredDict(collections.MutableMapping):
     """
@@ -67,16 +73,12 @@ class StoredDict(collections.MutableMapping):
             print("username = ", DB_DEFAULT_USER)
             print("password = ", DB_DEFAULT_PASS)
 
-            self.client = MongoClient(
-                host=host,
-                port=port,
-                username=username,
-                password=password)
+            # self.client = 
 
             self.dict_name = dict_name
             self.checker_name = checker_name
             #                   Table by checker
-            self.db = self.client[checker_name][dict_name]
+            self.db = CLIENT[checker_name][dict_name]
             #                           Collection by team/global
             self.cache = dict()
 
@@ -200,7 +202,7 @@ class StoredDict(collections.MutableMapping):
 
         try:
             self.persist()
-            self.client.close()
+            # self.client.close()
 
         except PyMongoError as ex:
             dictlogger.error("noSQLdict_Error", exc_info=ex)
