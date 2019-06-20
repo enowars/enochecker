@@ -160,7 +160,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
     Magic.
     """
 
-    def __init__(self, run_id=None, method=None, address=None, team=None, team_id=None, round=None, flag_round=None,
+    def __init__(self, request_kwargs=None, run_id=None, method=None, address=None, team=None, team_id=None, round=None, flag_round=None,
                 round_length=300, flag=None, flag_idx=None,
                  timeout=None, storage_dir=DB_DEFAULT_DIR, log_endpoint=None, use_db_cache=DB_GLOBAL_CACHE_SETTING, json_logging=True):
         # type: (Optional[int], Optional[str], Optional[str], Optional[str], Optional[int], Optional[int], Optional[str], Optional[int], Optional[int], str, Optional[str], bool, bool) -> None
@@ -204,6 +204,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             self.warning("No default port defined.")
             self.port = -1
 
+        self.request_kwargs = request_kwargs  # kinda duplicate
         self.config = {x: getattr(self, x) for x in VALID_ARGS}
 
         self.debug("Initialized checker for flag {} with in {} seconds".format(

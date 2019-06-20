@@ -213,7 +213,7 @@ def checker_routes(checker_cls):
             
             kwargs = assert_types(req_json, spec)
 
-            checker = checker_cls(**kwargs)
+            checker = checker_cls(request_params=kwargs, **kwargs)
     
             checker.logger.info(request.json)
             res = checker.run().name
