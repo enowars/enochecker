@@ -13,7 +13,7 @@ from .results import CheckerBrokenException
 logging.basicConfig(level=logging.DEBUG)
 dictlogger = logging.Logger(__name__)
 dictlogger.setLevel(logging.DEBUG)
-dictlogger.err
+
 # DIR
 DB_DEFAULT_DIR = None
 DB_GLOBAL_CACHE_SETTING = False
