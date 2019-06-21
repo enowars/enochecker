@@ -54,7 +54,7 @@ if 'MONGO_USER' in os.environ:
 if 'MONGO_PASSWORD' in os.environ:
     DB_DEFAULT_PASS = os.environ['MONGO_PASSWORD']
 
-CLIENT
+global CLIENT
 
 
 @postfork
