@@ -3,6 +3,8 @@ import collections
 import configparser
 import os
 import logging
+
+from uwsgidecorators import postfork
 from pymongo.errors import PyMongoError
 # import logging
 from pymongo import MongoClient
@@ -52,11 +54,17 @@ if 'MONGO_USER' in os.environ:
 if 'MONGO_PASSWORD' in os.environ:
     DB_DEFAULT_PASS = os.environ['MONGO_PASSWORD']
 
-CLIENT = MongoClient(
-                host=DB_DEFAULT_HOST,
-                port=DB_DEFAULT_PORT,
-                username=DB_DEFAULT_USER,
-                password=DB_DEFAULT_PASS)
+CLIENT
+
+
+@postfork
+def initialize_connection():
+    global CLIENT 
+    CLIENT = MongoClient(
+                    host=DB_DEFAULT_HOST,
+                    port=DB_DEFAULT_PORT,
+                    username=DB_DEFAULT_USER,
+                    password=DB_DEFAULT_PASS)
 
 
 class StoredDict(collections.MutableMapping):
