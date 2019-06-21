@@ -6,7 +6,7 @@ import logging
 from pymongo.errors import PyMongoError
 # import logging
 from pymongo import MongoClient
-from .results import CheckerBrokenException
+from .results import BrokenCheckerException
 # from urllib.parse import quote_plus
 
 # LOGGING SETUP
@@ -92,7 +92,7 @@ class StoredDict(collections.MutableMapping):
                 )
         except PyMongoError as ex:
             dictlogger.error("noSQLdict_Error", exc_info=ex)
-            raise CheckerBrokenException from ex
+            raise BrokenCheckerException from ex
 
     def __setitem__(self, key, value):
 
@@ -116,7 +116,7 @@ class StoredDict(collections.MutableMapping):
 
         except PyMongoError as ex:
             dictlogger.error("noSQLdict_Error", exc_info=ex)
-            raise CheckerBrokenException from ex
+            raise BrokenCheckerException from ex
 
     def __getitem__(self, key):
 
@@ -141,7 +141,7 @@ class StoredDict(collections.MutableMapping):
 
         except PyMongoError as ex:
             dictlogger.error("noSQLdict_Error", exc_info=ex)
-            raise CheckerBrokenException from ex
+            raise BrokenCheckerException from ex
 
     def __delitem__(self, key):
 
@@ -159,7 +159,7 @@ class StoredDict(collections.MutableMapping):
 
         except PyMongoError as ex:
             dictlogger.error("noSQLdict_Error", exc_info=ex)
-            raise CheckerBrokenException from ex
+            raise BrokenCheckerException from ex
 
     def __len__(self):
 
@@ -173,7 +173,7 @@ class StoredDict(collections.MutableMapping):
         
         except PyMongoError as ex:
             dictlogger.error("noSQLdict_Error", exc_info=ex)
-            raise CheckerBrokenException from ex
+            raise BrokenCheckerException from ex
 
     def __iter__(self):
         
@@ -187,7 +187,7 @@ class StoredDict(collections.MutableMapping):
 
         except PyMongoError as ex:
             dictlogger.error("noSQLdict_Error", exc_info=ex)
-            raise CheckerBrokenException from ex
+            raise BrokenCheckerException from ex
 
     def persist(self):
 
@@ -196,7 +196,7 @@ class StoredDict(collections.MutableMapping):
 
         except PyMongoError as ex:
             dictlogger.error("noSQLdict_Error", exc_info=ex)
-            raise CheckerBrokenException from ex
+            raise BrokenCheckerException from ex
 
     def __del__(self):
 
@@ -206,5 +206,5 @@ class StoredDict(collections.MutableMapping):
 
         except PyMongoError as ex:
             dictlogger.error("noSQLdict_Error", exc_info=ex)
-            raise CheckerBrokenException from ex
+            raise BrokenCheckerException from ex
     

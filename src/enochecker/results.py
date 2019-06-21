@@ -44,7 +44,7 @@ class OfflineException(EnoException):
     result = Result.OFFLINE  # type: int
 
 
-class CheckerBrokenException(EnoException):
+class BrokenCheckerException(EnoException):
     """
     Shouldn't be raised ever since we catch all abstract Errors
     Used internally if something goes horribly wrong
