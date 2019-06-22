@@ -11,6 +11,7 @@ from .results import BrokenCheckerException
 # from urllib.parse import quote_plus
 
 try:
+    import uwsgi
     from uwsgidecorators import postfork
 except ImportError:
     def postfork(func):
