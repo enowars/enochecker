@@ -82,7 +82,18 @@ class LR_Handler(Starlette):
                       })
 
             finally:
-                await lr_action.cleanup()
+                try:
+                    await lr_action.cleanup()
+                except Exception:
+                    exc_inf = exc_info()
+                    print({
+                      "status": "cleanup failed",
+                      "exception": {
+                        "type":    str(exc_inf[0]),
+                        "message": str(exc_inf[1]),
+                        "trace ":  format_tb(exc_inf[2])
+                        }
+                      })
                 del lr_action
 
         print(lr_callable)
@@ -99,23 +110,49 @@ class LR_Handler(Starlette):
         # lr_action = None
         try:
             # initial Call
-            ret_dict = await wait_for(lr_action.initial_call(), 10)
-            
+            continue_with_bg, ret_dict = await wait_for(lr_action.initial_call(), 10)
+            print("initial call succeded")
             # Background Task
-            task = BackgroundTask(bg_task, 50)
+            
+            if continue_with_bg:
+                task = BackgroundTask(bg_task, 50)
+            else:
+                task = None
 
         except Exception:
-            await lr_action.cleanup()
+            print("got Exception")
+            cleanup_failed = None
             exc_inf = exc_info()
+            try:
+                await lr_action.cleanup()
+            except Exception:
+                cleanup_failed = exc_info()
+
             # print(await lr_action.reader.read(20000))
-            return await JSONResponse({
-                "status": "aborted",
-                "exception": {
-                    "type":    str(exc_inf[0]),
-                    "message": str(exc_inf[1]),
-                    "trace ":  format_tb(exc_inf[2])
-                }
-                })(scope, recieve, send)
+            if cleanup_failed is None:
+                return await JSONResponse({
+                    "status": "aborted",
+                    "exception": {
+                        "type":    str(exc_inf[0]),
+                        "message": str(exc_inf[1]),
+                        "trace ":  format_tb(exc_inf[2])
+                        },
+                    "cleanup failed": None
+                    })(scope, recieve, send)
+            else:
+                return await JSONResponse({
+                    "status": "aborted",
+                    "exception": {
+                        "type":    str(exc_inf[0]),
+                        "message": str(exc_inf[1]),
+                        "trace ":  format_tb(exc_inf[2])
+                        },
+                    "cleanup failed": {
+                        "type":    str(cleanup_failed[0]),
+                        "message": str(cleanup_failed[1]),
+                        "trace ":  format_tb(cleanup_failed[2])
+                        }
+                    })(scope, recieve, send)
         
         return await JSONResponse(
                         ret_dict,
