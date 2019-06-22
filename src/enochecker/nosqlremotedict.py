@@ -4,12 +4,17 @@ import configparser
 import os
 import logging
 
-from uwsgidecorators import postfork
 from pymongo.errors import PyMongoError
 # import logging
 from pymongo import MongoClient
 from .results import BrokenCheckerException
 # from urllib.parse import quote_plus
+
+try:
+    from uwsgidecorators import postfork
+except ImportError:
+    def postfork(func):
+        return func
 
 # LOGGING SETUP
 logging.basicConfig(level=logging.DEBUG)
