@@ -180,7 +180,7 @@ class StoredDict(collections.MutableMapping):
 
         try:
             
-            return self.db.count_documentd(
+            return self.db.count_documents(
                 {
                     "checker":  self.checker_name,
                     "name":     self.dict_name}
