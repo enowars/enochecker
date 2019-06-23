@@ -17,7 +17,7 @@ def rpc_call(target, action_name, runlength, logger=None, **kwargs):
         if logger is not None:
             logger.debug(kwargs)
             logger.debug(json.dumps(kwargs))
-        req = post("{}/{}".format(BACKEND, action_name), data=kwargs)
+        req = post("{}/{}".format(BACKEND, action_name), json=kwargs)
         
         if logger is not None:
             logger.debug(req.text)
