@@ -74,6 +74,10 @@ def initialize_connection():
                     password=DB_DEFAULT_PASS)
 
 
+def to_keyfmt(key):
+    return str(key) + type(key).__name__
+
+
 class StoredDict(collections.MutableMapping):
     """
     A dictionary that is MongoDb backed.
@@ -115,13 +119,13 @@ class StoredDict(collections.MutableMapping):
             self.cache[key] = value
 
             query_dict = {
-                "key":      key,
+                "key":      to_keyfmt(key),
                 "checker":  self.checker_name,
                 "name":     self.dict_name
                 }
 
             to_insert = {
-                "key":      key,
+                "key":      to_keyfmt(key),
                 "checker":  self.checker_name,
                 "name":     self.dict_name,
                 "value":    value
@@ -141,7 +145,7 @@ class StoredDict(collections.MutableMapping):
 
             print('DB CALL')
             to_extract = {
-                "key":      key,
+                "key":      to_keyfmt(key),
                 "checker":  self.checker_name,
                 "name":     self.dict_name
                 }
@@ -166,7 +170,7 @@ class StoredDict(collections.MutableMapping):
                 del self.cache[key]
 
             to_extract = {
-                "key":      key,
+                "key":      to_keyfmt(key),
                 "checker":  self.checker_name,
                 "name":     self.dict_name
                 }
