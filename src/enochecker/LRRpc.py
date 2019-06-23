@@ -4,11 +4,12 @@ from os import environ
 BACKEND = environ["CONNHANDLER_URL"]
 
 
-def Rpc_call(action_name, runlength, **kwargs):
+def rpc_call(target, action_name, runlength, **kwargs):
     try:
         if isinstance(action_name, type):
             action_name = type.__name__()
         
+        kwargs["address"] = target
         kwargs.setdefault("initial_timeout", 10)
         kwargs.setdefault("long_timeout", runlength)
 
@@ -17,3 +18,4 @@ def Rpc_call(action_name, runlength, **kwargs):
 
     except Exception:
         raise
+    return result

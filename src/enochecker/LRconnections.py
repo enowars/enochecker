@@ -50,7 +50,7 @@ class LR_Handler(Starlette):
          *args, **rkwargs
          ):
         
-        async def bg_task(timeout):  # lr_action: LR_Action, 
+        async def __bg_task(timeout):  # lr_action: LR_Action, 
             nonlocal lr_action
             try:
                 await wait_for(lr_action.background_call(), timeout)
@@ -110,12 +110,12 @@ class LR_Handler(Starlette):
         # lr_action = None
         try:
             # initial Call
-            continue_with_bg, ret_dict = await wait_for(lr_action.initial_call(), 10)
+            continue_with_bg, ret_dict = await wait_for(lr_action.initial_call(), kwargs['initial_timeout'])
             print("initial call succeded")
             # Background Task
             
             if continue_with_bg:
-                task = BackgroundTask(bg_task, 50)
+                task = BackgroundTask(__bg_task, kwargs['long_timeout'])
             else:
                 task = None
 
