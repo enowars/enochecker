@@ -62,6 +62,11 @@ if 'MONGO_PASSWORD' in os.environ:
     DB_DEFAULT_PASS = os.environ['MONGO_PASSWORD']
 
 global CLIENT
+CLIENT = MongoClient(
+                host=DB_DEFAULT_HOST,
+                port=DB_DEFAULT_PORT,
+                username=DB_DEFAULT_USER,
+                password=DB_DEFAULT_PASS)
 
 
 @postfork
@@ -72,6 +77,7 @@ def initialize_connection():
                     port=DB_DEFAULT_PORT,
                     username=DB_DEFAULT_USER,
                     password=DB_DEFAULT_PASS)
+    print("MONGO CLIENT INITIALIZED")
 
 
 def to_keyfmt(key):
@@ -86,6 +92,7 @@ class StoredDict(collections.MutableMapping):
     def __init__(self, checker_name="BaseChecker", dict_name="default",
                  host=DB_DEFAULT_HOST, port=DB_DEFAULT_PORT,
                  username=DB_DEFAULT_USER, password=DB_DEFAULT_PASS):
+        global CLIENT
         try:
             print("host = ", DB_DEFAULT_HOST)
             print("port = ", DB_DEFAULT_PORT)

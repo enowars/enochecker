@@ -166,10 +166,11 @@ def assert_types(json, spec):
                 raise ValueError("Required parameter {} is missing.".format(stringify_spec_entry(entry)))
         else:
 
-            if json[entry.key] is None and isinstance(entry, Optional):
-                ret[key_to_name(entry.key)] = entry.default
-
             val = json[entry.key]
+            if val is None and isinstance(entry, Optional):
+                print("Inserted default")
+                val = entry.default
+
             if entry.key == "method" and val == "havok":
                 logger.warning("Ignoring Havok -- calling Havoc instead")
                 val = "havoc"
@@ -227,7 +228,7 @@ def checker_routes(checker_cls):
             return jsonify({"result": res})
         except Exception as ex:
             print(ex)
-            logger.error("Returning Internal Error {}.\nTraceback:\n{}".format(ex, exception_to_string(ex)), exc_info=ex, stack_info=True)
+            logger.error("Returning Internal Error {}.\nTraceback:\n{}".format(ex, exception_to_string(ex)), exc_info=ex)
             return jsonify({
                 "result": Result.INTERNAL_ERROR.name,
                 "message": str(ex),
