@@ -334,7 +334,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             return Result.OK
 
         except EnoException as eno:
-            self.info("Checker[{}] result: {}({})".format(eno.result, self.method, eno), exc_info=eno)
+            self.info("Checker[{}] result: {}({})".format(self.method, eno.result.name , eno), exc_info=eno)
             return Result(eno.result)#, eno.message
         except requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)

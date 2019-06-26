@@ -61,6 +61,11 @@ if 'MONGO_USER' in os.environ:
 if 'MONGO_PASSWORD' in os.environ:
     DB_DEFAULT_PASS = os.environ['MONGO_PASSWORD']
 
+print("host = ", DB_DEFAULT_HOST)
+print("port = ", DB_DEFAULT_PORT)
+print("username = ", DB_DEFAULT_USER)
+print("password = ", DB_DEFAULT_PASS)
+
 global CLIENT
 CLIENT = MongoClient(
                 host=DB_DEFAULT_HOST,
@@ -94,13 +99,7 @@ class StoredDict(collections.MutableMapping):
                  username=DB_DEFAULT_USER, password=DB_DEFAULT_PASS):
         global CLIENT
         try:
-            print("host = ", DB_DEFAULT_HOST)
-            print("port = ", DB_DEFAULT_PORT)
-            print("username = ", DB_DEFAULT_USER)
-            print("password = ", DB_DEFAULT_PASS)
-
             # self.client = 
-
             self.dict_name = dict_name
             self.checker_name = checker_name
             #                   Table by checker
