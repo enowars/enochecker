@@ -542,8 +542,8 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         """
         timeout_fun = lambda: timeout
         if timeout is None:
-            timeout = self.time_remaining
-            timeout_fun = lambda: self.time_remaining
+            timeout = self.time_remaining/2
+            timeout_fun = lambda: self.time_remaining/2
         if port is None:
             port = self.port
         if host is None:
@@ -633,7 +633,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         kwargs.setdefault('allow_redirects', False)
         url = self._sanitize_url(route, port, scheme)
         if timeout is None:
-            timeout = self.time_remaining
+            timeout = self.time_remaining/2
         self.debug("Request: {} {} with params: {} and {} secs timeout.".format(method, url, params, timeout))
         resp = self.http_session.request(method, url, params=params, timeout=timeout, **kwargs)
         if raise_http_errors:
