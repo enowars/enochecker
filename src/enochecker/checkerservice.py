@@ -51,6 +51,10 @@ spec = [
     Optional("logEndpoint", str, None)  # endpoint to send runs to
 ]  # type: List[Union[Required, Optional]]
 
+UI_TEMPLATE = """
+
+"""
+
 tiny_poster = """
 <script>
 // To make testing/posting a bit easier, we can do it from the browser here.
@@ -108,6 +112,15 @@ def check_type(name, val, expected_type):
     elif not isinstance(val, expected_type):
         raise ValueError(
             "{} should be a '{}' but is of type '{}'.".format(name, expected_type.__name__, type(val).__name__))
+
+
+def generate_form(spec):
+    form = "<form class=\"json-form\">\n"
+    for entry in spec:
+        if isinstance(entry, Required):
+
+
+
 
 
 def stringify_spec_entry(entry):

@@ -32,7 +32,7 @@ if "TimeoutError" not in globals():  # Python2
     # noinspection PyShadowingBuiltins
     TimeoutError = socket.timeout
 
-TIME_BUFFER = 3  # type: int # time in seconds we try to finish earlier
+TIME_BUFFER = 5  # type: int # time in seconds we try to finish earlier
 
 VALID_ARGS = ["method", "address", "team", "team_id", "round", "flag_round", "flag", "timeout", "flag_idx", "json_logging", "log_endpoint",
               "round_length"]
