@@ -548,7 +548,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             port = self.port
         if host is None:
             host = self.address
-        self.debug("Opening socket to {}:{} (timeout {} secs).".format(host, port, timeout), stack_info=True)
+        self.debug("Opening socket to {}:{} (timeout {} secs).".format(host, port, timeout))
         return SimpleSocket(host, port, timeout=timeout, logger=self.logger, timeout_fun=timeout_fun)
 
     @property
