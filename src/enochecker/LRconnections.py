@@ -32,10 +32,8 @@ class LR_Action(ABC):
 
 class LR_Handler(Starlette):
     def __init__(self, lr_callables, *args, **kwargs):
-        print("ORIG")
         super().__init__(*args, **kwargs)
 
-        print("HALLO")
         for call in lr_callables:
 
             p_call = partial(self._callwrapper, call)
@@ -95,13 +93,6 @@ class LR_Handler(Starlette):
                         }
                       })
                 del lr_action
-
-        print(lr_callable)
-        print(scope)
-        print(recieve)
-        print(send)
-        print(args)
-        print(rkwargs)
 
         request = Request(scope, recieve)
         kwargs = await request.json()

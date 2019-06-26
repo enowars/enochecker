@@ -143,13 +143,12 @@ class StoredDict(collections.MutableMapping):
             dictlogger.error("noSQLdict_Error", exc_info=ex)
             raise BrokenCheckerException from ex
 
-    def __getitem__(self, key):
+    def __getitem__(self, key, print_result=False):
 
         try:
             if key in self.cache:
                 return self.cache[key]
 
-            print('DB CALL')
             to_extract = {
                 "key":      to_keyfmt(key),
                 "checker":  self.checker_name,
@@ -157,7 +156,9 @@ class StoredDict(collections.MutableMapping):
                 }
 
             result = self.db.find_one(to_extract)
-            print(result)
+
+            if print_result:
+                print(result)
 
             if result:
                 self.cache[key] = result['value']
