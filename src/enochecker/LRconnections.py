@@ -146,7 +146,7 @@ class LR_Handler(Starlette):
                     })(scope, recieve, send)
         
         return await JSONResponse(
-                        ret_dict,
+                        {"status": "OK", "result": ret_dict},
                         background=task
                         )(scope, recieve, send)
 
