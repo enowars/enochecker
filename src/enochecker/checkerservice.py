@@ -118,6 +118,7 @@ def generate_form(spec):
     form = "<form class=\"json-form\">\n"
     for entry in spec:
         if isinstance(entry, Required):
+          pass
 
 
 
