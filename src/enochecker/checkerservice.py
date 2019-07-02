@@ -69,7 +69,7 @@ function post(str) {
     xhr.setRequestHeader("Content-Type", "application/json")
     xhr.onerror = console.error
     xhr.onload = xhr.onerror = function () {
-        checker_results = ["Request " + checker_request_count.toString() + " resulted after " + started - Date.now() + " millis in:\\n" + xhr.responseText + "\\n"].concat(checker_results)
+        checker_results = ["Request " + checker_request_count.toString() + " resulted after " + ((Date.now() - started)/1000) + " s in:\\n" + xhr.responseText + "\\n"].concat(checker_results)
         console.log(xhr.responseText)
         document.getElementById("out").innerText = "<plaintext>\\n\\n" + checker_results.join("\\n")
         checker_request_count++
