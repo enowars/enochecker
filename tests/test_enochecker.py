@@ -10,7 +10,9 @@ from enochecker import *
 
 class CheckerExampleImpl(BaseChecker):
     port = 9999
-
+    flag_count  = 1
+    noise_count = 1
+    havoc_count = 1
     def __init__(self, method=CHECKER_METHODS[0], run_id=0, address="localhost", team="Testteam", team_id=1, flag_round=None,
                 round_length=300, flag_idx=None, storage_dir=".data", log_endpoint=None, use_db_cache=True, json_logging=True,
                 round=1, flag="ENOFLAG", timeout=30):
@@ -50,6 +52,9 @@ class CheckerExampleImpl(BaseChecker):
     def havoc(self):
         raise OfflineException("Could not connect to team {} at {}:{} because this is not a real checker script."
                                .format(self.team, self.address, self.port))
+
+    def exploit(self):
+        pass
 
 
 def test_assert_equals():

@@ -64,11 +64,12 @@ var checker_results = []
 
 function post(str) {
     var xhr = new XMLHttpRequest()
+    var started = Date.now()
     xhr.open("POST", "/")
     xhr.setRequestHeader("Content-Type", "application/json")
     xhr.onerror = console.error
     xhr.onload = xhr.onerror = function () {
-    	checker_results = ["Request " + checker_request_count.toString() + " resulted in:\\n" + xhr.responseText + "\\n"].concat(checker_results)
+        checker_results = ["Request " + checker_request_count.toString() + " resulted after " + started - Date.now() + " millis in:\\n" + xhr.responseText + "\\n"].concat(checker_results)
         console.log(xhr.responseText)
         document.getElementById("out").innerText = "<plaintext>\\n\\n" + checker_results.join("\\n")
         checker_request_count++
@@ -115,13 +116,14 @@ def check_type(name, val, expected_type):
 
 
 def generate_form(spec):
-    form = "<form class=\"json-form\">\n"
+    form = """
+<h4> Form-poster </h4>
+<form class=\"json-form\">"""
     for entry in spec:
         if isinstance(entry, Required):
-            pass
-
-
-
+            typefield = None
+            # TODO: Type -> input type function
+            form += f"<p>{Required.name}<input type=\"{typefield}\"></input>"
 
 
 def stringify_spec_entry(entry):
