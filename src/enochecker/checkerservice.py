@@ -231,7 +231,7 @@ def checker_routes(checker_cls):
             req_json["result"] = res
             req_json = json.dumps(req_json)
 
-            checker.logger.info("Run resulted in {}: {}".format(res, request.json))
+            #checker.logger.info("Run resulted in {}: {}".format(res, request.json))
             checker.logger.info("{}".format(req_json))
 
             return jsonify({"result": res})
