@@ -88,7 +88,7 @@ def initialize_connection():
 
 
 def to_keyfmt(key):
-    return str(key) + type(key).__name__
+    return str(key)  # + type(key).__name__
 
 
 def _try_n_times(func):
@@ -182,21 +182,15 @@ class StoredDict(collections.MutableMapping):
     @_try_n_times
     def __delitem__(self, key):
 
-        try:
+        if key in self.cache:
+            del self.cache[key]
 
-            if key in self.cache:
-                del self.cache[key]
-
-            to_extract = {
-                "key":      to_keyfmt(key),
-                "checker":  self.checker_name,
-                "name":     self.dict_name
-                }
-            self.db.delete_one(to_extract)
-
-        except PyMongoError as ex:
-            dictlogger.error("noSQLdict_Error", exc_info=ex)
-            raise BrokenCheckerException from ex
+        to_extract = {
+            "key":      to_keyfmt(key),
+            "checker":  self.checker_name,
+            "name":     self.dict_name
+            }
+        self.db.delete_one(to_extract)
 
     @_try_n_times
     def __len__(self):
@@ -215,7 +209,8 @@ class StoredDict(collections.MutableMapping):
             "name":     self.dict_name
         }
         results = self.db.find(iterdict)
-        return results
+        for key in map(lambda res: res['key'], results):
+            yield key
 
     @_try_n_times
     def persist(self):

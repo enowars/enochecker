@@ -91,7 +91,7 @@ def ensure_valid_filename(s, min_length=3):
     s = str(s).strip().replace(' ', '_')
     s = re.sub(r'(?u)[^-\w.]', '', s)
     if len(s) < min_length:
-        s = base64ify(orig)
+        s = base64ify(orig, "+-")
     return s
 
 
@@ -140,9 +140,9 @@ def debase64ify(s, altchars=None):
     """
     s = ensure_bytes(s)
     if altchars != None:
-        return base64.b64encode(s, altchars).decode("utf-8")
+        return base64.b64decode(s, altchars).decode("utf-8")
     else:
-        return base64.b64encode(s).decode("utf-8")
+        return base64.b64decode(s).decode("utf-8")
 
 
 def readline_expect(telnet, expected, read_until=b"\n", timeout=30):

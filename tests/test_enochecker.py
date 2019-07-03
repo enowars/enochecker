@@ -111,6 +111,7 @@ def test_dict():
     assert len(db) > 0
     keys = [x for x in db.keys()]
     for key in keys:
+        print(key)
         del db[key]
     db.persist()
     assert len(db) == 0
