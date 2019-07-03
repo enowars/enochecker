@@ -79,10 +79,11 @@ Another thing to remember is that you might not be able store complex kinds of d
 Despite being not encouraged you can also define global dictionarys outside the BaseChecker subclass, which then be Global Variables across all rounds in case you need it (for keeping track of subprocesses for example).
 
 ## RemoteDict(s)
-They work in the same way as regular StoredDicts, however they are hosted on a external Mongodb.
+They *kinda* work in the same way as regular StoredDicts, however they are hosted on a external Mongodb.
 For that add an Database.ini as seen in the [example database.ini](../database.ini).
 If either one of HOST, PORT, USER or PASS is not specified it is overloaded by a default value as seen in the `# database init` in  
 [nosqlremotedict.py](../src/enochecker/nosqlremotedict.py).
+
 ## Checker-Results
 The last Important thing a Checker has to do every round is to report back to the central GameServer about how his Run went. In the checkerlib the responses are taken care for you.
 This is done by raising Exeptions during runtime.
