@@ -4,6 +4,7 @@ import configparser
 import os
 import logging
 
+from functools import wraps
 from pymongo.errors import PyMongoError
 # import logging
 from pymongo import MongoClient
@@ -26,6 +27,7 @@ dictlogger.setLevel(logging.DEBUG)
 # DIR
 DB_DEFAULT_DIR = None
 DB_GLOBAL_CACHE_SETTING = False
+RETRY_COUNT = 4
 
 # DB DEFAULT PARAMS
 DB_DEFAULT_USER = 'root'
@@ -89,6 +91,21 @@ def to_keyfmt(key):
     return str(key) + type(key).__name__
 
 
+def _try_n_times(func):
+    
+    @wraps(func)
+    def try_n_times(*args, **kwargs):
+        for i in range(RETRY_COUNT):
+            try:
+                return func(*args, **kwargs)
+            except PyMongoError as ex:
+                dictlogger.error("noSQLdict_Error, Try {}".format(str(i)), exc_info=ex)
+                if i == RETRY_COUNT:
+                    raise
+    return try_n_times
+
+    
+
 class StoredDict(collections.MutableMapping):
     """
     A dictionary that is MongoDb backed.
@@ -98,77 +115,71 @@ class StoredDict(collections.MutableMapping):
                  host=DB_DEFAULT_HOST, port=DB_DEFAULT_PORT,
                  username=DB_DEFAULT_USER, password=DB_DEFAULT_PASS):
         global CLIENT
-        try:
-            # self.client = 
-            self.dict_name = dict_name
-            self.checker_name = checker_name
-            #                   Table by checker
-            self.db = CLIENT[checker_name][dict_name]
-            #                           Collection by team/global
-            self.cache = dict()
-
-            # Add DB index
+        for i in range(RETRY_COUNT):
             try:
-                self.db.index_information()['checker_key']
-            except KeyError:
-                self.db.create_index(
-                    [("key", 1)],
-                    name="checker_key", unique=True, background=True
-                )
-        except PyMongoError as ex:
-            dictlogger.error("noSQLdict_Error", exc_info=ex)
-            raise BrokenCheckerException from ex
+                # self.client = 
+                self.dict_name = dict_name
+                self.checker_name = checker_name
+                #                   Table by checker
+                self.db = CLIENT[checker_name][dict_name]
+                #                           Collection by team/global
+                self.cache = dict()
 
+                # Add DB index
+                try:
+                    self.db.index_information()['checker_key']
+                except KeyError:
+                    self.db.create_index(
+                        [("key", 1)],
+                        name="checker_key", unique=True, background=True
+                    )
+            except PyMongoError as ex:
+                dictlogger.error("noSQLdict_Error", exc_info=ex)
+                if i == RETRY_COUNT-1:
+                    raise BrokenCheckerException from ex
+
+    @_try_n_times
     def __setitem__(self, key, value):
+        self.cache[key] = value
 
-        try:
-            self.cache[key] = value
+        query_dict = {
+            "key":      to_keyfmt(key),
+            "checker":  self.checker_name,
+            "name":     self.dict_name
+            }
 
-            query_dict = {
-                "key":      to_keyfmt(key),
-                "checker":  self.checker_name,
-                "name":     self.dict_name
-                }
+        to_insert = {
+            "key":      to_keyfmt(key),
+            "checker":  self.checker_name,
+            "name":     self.dict_name,
+            "value":    value
+            }
 
-            to_insert = {
-                "key":      to_keyfmt(key),
-                "checker":  self.checker_name,
-                "name":     self.dict_name,
-                "value":    value
-                }
+        self.db.replace_one(query_dict, to_insert, upsert=True)
 
-            self.db.replace_one(query_dict, to_insert, upsert=True)
-
-        except PyMongoError as ex:
-            dictlogger.error("noSQLdict_Error", exc_info=ex)
-            raise BrokenCheckerException from ex
-
+    @_try_n_times
     def __getitem__(self, key, print_result=False):
 
-        try:
-            if key in self.cache:
-                return self.cache[key]
+        if key in self.cache:
+            return self.cache[key]
 
-            to_extract = {
-                "key":      to_keyfmt(key),
-                "checker":  self.checker_name,
-                "name":     self.dict_name
-                }
+        to_extract = {
+            "key":      to_keyfmt(key),
+            "checker":  self.checker_name,
+            "name":     self.dict_name
+            }
 
-            result = self.db.find_one(to_extract)
+        result = self.db.find_one(to_extract)
 
-            if print_result:
-                print(result)
+        if print_result:
+            print(result)
 
-            if result:
-                self.cache[key] = result['value']
-                return result['value']
-            raise KeyError()
+        if result:
+            self.cache[key] = result['value']
+            return result['value']
+        raise KeyError()
 
-        except PyMongoError as ex:
-            dictlogger.error("noSQLdict_Error", exc_info=ex)
-            raise BrokenCheckerException from ex
-
+    @_try_n_times
     def __delitem__(self, key):
 
         try:
@@ -187,50 +198,31 @@ class StoredDict(collections.MutableMapping):
             dictlogger.error("noSQLdict_Error", exc_info=ex)
             raise BrokenCheckerException from ex
 
+    @_try_n_times
     def __len__(self):
+ 
+        return self.db.count_documents(
+            {
+                "checker":  self.checker_name,
+                "name":     self.dict_name}
+            )
 
-        try:
-            
-            return self.db.count_documents(
-                {
-                    "checker":  self.checker_name,
-                    "name":     self.dict_name}
-                )
-        
-        except PyMongoError as ex:
-            dictlogger.error("noSQLdict_Error", exc_info=ex)
-            raise BrokenCheckerException from ex
-
+    @_try_n_times
     def __iter__(self):
         
-        try:
-            iterdict = {
-                "checker":  self.checker_name,
-                "name":     self.dict_name
-            }
-            results = self.db.find(iterdict)
-            return results
+        iterdict = {
+            "checker":  self.checker_name,
+            "name":     self.dict_name
+        }
+        results = self.db.find(iterdict)
+        return results
 
-        except PyMongoError as ex:
-            dictlogger.error("noSQLdict_Error", exc_info=ex)
-            raise BrokenCheckerException from ex
-
+    @_try_n_times
     def persist(self):
 
-        try:
-            self.cache = dict()
+        self.cache = dict()
 
-        except PyMongoError as ex:
-            dictlogger.error("noSQLdict_Error", exc_info=ex)
-            raise BrokenCheckerException from ex
-
+    @_try_n_times
     def __del__(self):
-
-        try:
-            self.persist()
-            # self.client.close()
-
-        except PyMongoError as ex:
-            dictlogger.error("noSQLdict_Error", exc_info=ex)
-            raise BrokenCheckerException from ex
+        self.persist()
     
