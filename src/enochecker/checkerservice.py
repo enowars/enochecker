@@ -114,24 +114,10 @@ def check_type(name, val, expected_type):
         raise ValueError(
             "{} should be a '{}' but is of type '{}'.".format(name, expected_type.__name__, type(val).__name__))
 
-<<<<<<< HEAD
-
-def generate_form(spec):
-    form = """
-<h4> Form-poster </h4>
-<form class=\"json-form\">"""
-    for entry in spec:
-        if isinstance(entry, Required):
-            typefield = None
-            # TODO: Type -> input type function
-            form += f"<p>{Required.name}<input type=\"{typefield}\"></input>"
-=======
 #def generate_form(spec):
 #    form = "<form class=\"json-form\">\n"
 #    for entry in spec:
 #        if isinstance(entry, Required):
->>>>>>> 7f89dde4edb4b6b04a29f05d8a28499344850b66
-
 
 def stringify_spec_entry(entry):
     # type: (Union[Optional, Required]) -> str
