@@ -62,7 +62,7 @@ class LR_Handler(Starlette):
                 print({
                       "status": "Timeout",
                       "exception": {
-                        "type":    str(exc_inf[0]),
+                        "type":    exc_inf[0].__name__,
                         "message": str(exc_inf[1]),
                         "trace ":  format_tb(exc_inf[2])
                         }
@@ -73,7 +73,7 @@ class LR_Handler(Starlette):
                 print({
                       "status": "Error",
                       "exception": {
-                        "type":    str(exc_inf[0]),
+                        "type":    exc_inf[0].__name__,
                         "message": str(exc_inf[1]),
                         "trace ":  format_tb(exc_inf[2])
                         }
@@ -87,7 +87,7 @@ class LR_Handler(Starlette):
                     print({
                       "status": "cleanup failed",
                       "exception": {
-                        "type":    str(exc_inf[0]),
+                        "type":    exc_inf[0].__name__,
                         "message": str(exc_inf[1]),
                         "trace ":  format_tb(exc_inf[2])
                         }
@@ -124,7 +124,7 @@ class LR_Handler(Starlette):
                 return await JSONResponse({
                     "status": "aborted",
                     "exception": {
-                        "type":    str(exc_inf[0]),
+                        "type":    exc_inf[0].__name__,
                         "message": str(exc_inf[1]),
                         "trace ":  format_tb(exc_inf[2])
                         },
@@ -134,12 +134,12 @@ class LR_Handler(Starlette):
                 return await JSONResponse({
                     "status": "aborted",
                     "exception": {
-                        "type":    str(exc_inf[0]),
+                        "type":    exc_inf[0].__name__,
                         "message": str(exc_inf[1]),
                         "trace ":  format_tb(exc_inf[2])
                         },
                     "cleanup failed": {
-                        "type":    str(cleanup_failed[0]),
+                        "type":    cleanup_failed[0].__name__,
                         "message": str(cleanup_failed[1]),
                         "trace ":  format_tb(cleanup_failed[2])
                         }
