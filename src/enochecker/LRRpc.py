@@ -1,8 +1,8 @@
-from .results import BrokenCheckerException
+from .results import BrokenCheckerException, BrokenServiceException, OfflineException
 from requests import post
 from os import environ
 import json
-
+from asyncio import TimeoutError
 BACKEND = environ["CONNHANDLER_URL"]
 
 
@@ -26,6 +26,19 @@ def rpc_call(target, action_name, runlength, logger=None, **kwargs):
 
         result = req.json()
     except Exception as ex:
-        logger.error("rpc Error", exc_info=ex)
+        logger.error("Internal RPC Error", exc_info=ex)
         raise BrokenCheckerException
+    if result['status'] == 'aborted':
+        message = result['exception']['message']
+        if logger is not None:
+            logger.error("RPC did not return successfully {}".format(result))
+        if result['exception']['type'] == BrokenServiceException.__name__:
+            raise BrokenServiceException(message)
+        if result['exception']['type'] == OfflineException.__name__:
+            raise OfflineException(message)
+        if 'Connection' in result['exception']['type']:
+            raise ConnectionError(message)
+        if result['exception']['type'] == TimeoutError.__name__:
+            raise OfflineException(message)
+
     return result
