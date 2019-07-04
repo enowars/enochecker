@@ -14,7 +14,7 @@ from .results import BrokenCheckerException
 try:
     import uwsgi
     from uwsgidecorators import postfork
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     def postfork(func):
         func()
         return func
