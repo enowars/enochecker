@@ -15,23 +15,26 @@ def rpc_call(target, action_name, runlength, logger=None, **kwargs):
         kwargs.setdefault("initial_timeout", 10)
         kwargs.setdefault("long_timeout", runlength)
 
-        if logger is not None:
-            logger.debug(kwargs)
-            logger.debug(json.dumps(kwargs))
+        # if logger is not None:
+        #     logger.debug(kwargs)
+        #     logger.debug(json.dumps(kwargs))
             
         req = post("{}/{}".format(BACKEND, action_name), json=kwargs)
         
         if logger is not None:
-            logger.debug(req.text)
+            logger.debug(f"RPC Result: {req.text}")
 
         result = req.json()
+
     except Exception as ex:
-        logger.error("Internal RPC Error", exc_info=ex)
+        if logger is not None:
+            logger.error("Internal RPC Error", exc_info=ex)
         raise BrokenCheckerException
+
     if result['status'] == 'aborted':
         message = result['exception']['message']
         if logger is not None:
-            logger.error("RPC did not return successfully {}".format(result))
+            logger.error("RPC {} {} did not return successfully {}".format(action_name, target, result))
         if result['exception']['type'] == BrokenServiceException.__name__:
             raise BrokenServiceException(message)
         if result['exception']['type'] == OfflineException.__name__:
