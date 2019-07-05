@@ -118,7 +118,7 @@ class StoredDict(collections.MutableMapping):
         for i in range(RETRY_COUNT):
             try:
                 # self.client = 
-                self.dict_name = base64ify(dict_name, altchars="-_")
+                self.dict_name = base64ify(dict_name, altchars=b"-_")
                 self.checker_name = checker_name
                 #                   Table by checker
                 self.db = CLIENT[checker_name][self.dict_name]
