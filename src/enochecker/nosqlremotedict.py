@@ -1,4 +1,3 @@
-
 import collections
 import configparser
 import os
@@ -9,6 +8,8 @@ from pymongo.errors import PyMongoError
 # import logging
 from pymongo import MongoClient
 from .results import BrokenCheckerException
+from .utils import base64ify
+
 # from urllib.parse import quote_plus
 
 try:
@@ -70,20 +71,20 @@ print("password = ", DB_DEFAULT_PASS)
 
 global CLIENT
 CLIENT = MongoClient(
-                host=DB_DEFAULT_HOST,
-                port=DB_DEFAULT_PORT,
-                username=DB_DEFAULT_USER,
-                password=DB_DEFAULT_PASS)
+    host=DB_DEFAULT_HOST,
+    port=DB_DEFAULT_PORT,
+    username=DB_DEFAULT_USER,
+    password=DB_DEFAULT_PASS)
 
 
 @postfork
 def initialize_connection():
-    global CLIENT 
+    global CLIENT
     CLIENT = MongoClient(
-                    host=DB_DEFAULT_HOST,
-                    port=DB_DEFAULT_PORT,
-                    username=DB_DEFAULT_USER,
-                    password=DB_DEFAULT_PASS)
+        host=DB_DEFAULT_HOST,
+        port=DB_DEFAULT_PORT,
+        username=DB_DEFAULT_USER,
+        password=DB_DEFAULT_PASS)
     print("MONGO CLIENT INITIALIZED")
 
 
@@ -92,7 +93,6 @@ def to_keyfmt(key):
 
 
 def _try_n_times(func):
-    
     @wraps(func)
     def try_n_times(*args, **kwargs):
         for i in range(RETRY_COUNT):
@@ -102,9 +102,9 @@ def _try_n_times(func):
                 dictlogger.error("noSQLdict_Error, Try {}".format(str(i)), exc_info=ex)
                 if i == RETRY_COUNT:
                     raise
+
     return try_n_times
 
-    
 
 class StoredDict(collections.MutableMapping):
     """
@@ -118,10 +118,10 @@ class StoredDict(collections.MutableMapping):
         for i in range(RETRY_COUNT):
             try:
                 # self.client = 
-                self.dict_name = dict_name
+                self.dict_name = base64ify(dict_name, altchars="-_")
                 self.checker_name = checker_name
                 #                   Table by checker
-                self.db = CLIENT[checker_name][dict_name]
+                self.db = CLIENT[checker_name][self.dict_name]
                 #                           Collection by team/global
                 self.cache = dict()
 
@@ -135,7 +135,7 @@ class StoredDict(collections.MutableMapping):
                     )
             except PyMongoError as ex:
                 dictlogger.error("noSQLdict_Error", exc_info=ex)
-                if i == RETRY_COUNT-1:
+                if i == RETRY_COUNT - 1:
                     raise BrokenCheckerException from ex
 
     @_try_n_times
@@ -143,17 +143,17 @@ class StoredDict(collections.MutableMapping):
         self.cache[key] = value
 
         query_dict = {
-            "key":      to_keyfmt(key),
-            "checker":  self.checker_name,
-            "name":     self.dict_name
-            }
+            "key": to_keyfmt(key),
+            "checker": self.checker_name,
+            "name": self.dict_name
+        }
 
         to_insert = {
-            "key":      to_keyfmt(key),
-            "checker":  self.checker_name,
-            "name":     self.dict_name,
-            "value":    value
-            }
+            "key": to_keyfmt(key),
+            "checker": self.checker_name,
+            "name": self.dict_name,
+            "value": value
+        }
 
         self.db.replace_one(query_dict, to_insert, upsert=True)
 
@@ -164,10 +164,10 @@ class StoredDict(collections.MutableMapping):
             return self.cache[key]
 
         to_extract = {
-            "key":      to_keyfmt(key),
-            "checker":  self.checker_name,
-            "name":     self.dict_name
-            }
+            "key": to_keyfmt(key),
+            "checker": self.checker_name,
+            "name": self.dict_name
+        }
 
         result = self.db.find_one(to_extract)
 
@@ -186,27 +186,27 @@ class StoredDict(collections.MutableMapping):
             del self.cache[key]
 
         to_extract = {
-            "key":      to_keyfmt(key),
-            "checker":  self.checker_name,
-            "name":     self.dict_name
-            }
+            "key": to_keyfmt(key),
+            "checker": self.checker_name,
+            "name": self.dict_name
+        }
         self.db.delete_one(to_extract)
 
     @_try_n_times
     def __len__(self):
- 
+
         return self.db.count_documents(
             {
-                "checker":  self.checker_name,
-                "name":     self.dict_name}
-            )
+                "checker": self.checker_name,
+                "name": self.dict_name}
+        )
 
     @_try_n_times
     def __iter__(self):
-        
+
         iterdict = {
-            "checker":  self.checker_name,
-            "name":     self.dict_name
+            "checker": self.checker_name,
+            "name": self.dict_name
         }
         results = self.db.find(iterdict)
         for key in map(lambda res: res['key'], results):
@@ -220,4 +220,3 @@ class StoredDict(collections.MutableMapping):
     @_try_n_times
     def __del__(self):
         self.persist()
-    
