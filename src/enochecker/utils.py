@@ -63,8 +63,8 @@ def ensure_bytes(obj):
     if isinstance(obj, bytes):
         return obj
     if isinstance(obj, str):
-        return obj.encode("ascii")
-    return str(obj).encode("ascii")
+        return obj.encode("utf-8")
+    return str(obj).encode("utf-8")
 
 
 def ensure_unicode(obj):
