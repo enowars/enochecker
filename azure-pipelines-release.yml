@@ -1,0 +1,16 @@
+trigger:
+  tags:
+    include:
+      - v*
+pr: none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- script: 'pip3 install twine wheel'
+- task: TwineAuthenticate@0
+  inputs:
+    externalFeeds: 'pypi_enowars'
+- script: python3 setup.py sdist bdist_wheel
+- script: 'python3 -m twine upload -r enowars_pypi --config-file $(PYPIRC_PATH) dist/*'
