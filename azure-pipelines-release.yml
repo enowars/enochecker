@@ -8,6 +8,9 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.7'
 - script: 'pip3 install twine wheel'
 - task: TwineAuthenticate@0
   inputs:
