@@ -14,6 +14,6 @@ steps:
 - script: 'pip3 install twine wheel'
 - task: TwineAuthenticate@0
   inputs:
-    externalFeeds: 'pypi_enochecker_async'
+    externalFeeds: 'pypi_enowars'
 - script: python3 setup.py sdist bdist_wheel
 - script: 'python3 -m twine upload -r pypi_enowars --config-file $(PYPIRC_PATH) dist/*'
