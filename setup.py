@@ -13,6 +13,7 @@ setuptools.setup(
     author_email="dmaier@sect.tu-berlin.de",
     description="Library to build checker scripts for EnoEngine A/D CTF Framework in Python",
     long_description=long_description,
+    long_description_content_type="text/markdown",
     url="https://github.com/ENOWARS/enochecker",
     packages=setuptools.find_packages("src"),
     package_dir={"": "src"},
