@@ -12,8 +12,12 @@ steps:
   inputs:
     versionSpec: '3.7'
 - script: 'pip3 install twine wheel'
-- task: TwineAuthenticate@0
+
+- task: TwineAuthenticate@1
   inputs:
-    externalFeeds: 'pypi_enowars'
+    pythonUploadServiceConnection: 'ENOWARS Pypi'
+
 - script: python3 setup.py sdist bdist_wheel
+
 - script: 'python3 -m twine upload -r pypi_enowars --config-file $(PYPIRC_PATH) dist/*'
+
