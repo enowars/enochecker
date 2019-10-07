@@ -15,8 +15,8 @@ steps:
 
 - task: TwineAuthenticate@1
   inputs:
-    pythonUploadServiceConnection: 'ENOWARS Pypi'
+    pythonUploadServiceConnection: 'pypi_enowars'
 
 - script: python3 setup.py sdist bdist_wheel
 
-- script: 'python3 -m twine upload -r "ENOWARS Pypi" --config-file $(PYPIRC_PATH) dist/*'
+- script: 'python3 -m twine upload -r "pypi_enowars" --config-file $(PYPIRC_PATH) dist/*'
