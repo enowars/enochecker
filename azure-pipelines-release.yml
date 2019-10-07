@@ -19,5 +19,4 @@ steps:
 
 - script: python3 setup.py sdist bdist_wheel
 
-- script: 'python3 -m twine upload -r pypi_enowars --config-file $(PYPIRC_PATH) dist/*'
-
+- script: 'python3 -m twine upload -r enochecker --config-file $(PYPIRC_PATH) dist/*'
