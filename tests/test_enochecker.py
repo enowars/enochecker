@@ -236,10 +236,16 @@ def test_checker():
 def test_useragents():
     flag = "ENOFLAG"
     checker = CheckerExampleImpl(method="putflag", flag=flag)
-    last_agent = checker.http_useragent
-    new_agent = checker.http_useragent_randomize()
-    assert checker.http_useragent == new_agent
-    assert last_agent != checker.http_useragent
+    first_agent = checker.http_useragent
+
+    for _ in range(10):
+        new_agent = checker.http_useragent_randomize()
+        assert checker.http_useragent == new_agent
+        if first_agent != checker.http_useragent:
+            return
+    
+    assert first_agent != checker.http_useragent
+    
 
 
 def test_exceptionHandling(capsys):
