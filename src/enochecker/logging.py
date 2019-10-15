@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING
 
 import requests
 
+LOGGING_PREFIX = "##ENOLOGMESSAGE "
+
 if TYPE_CHECKING:
     from .enochecker import BaseChecker
 
@@ -92,7 +94,7 @@ class ELKFormatter(logging.Formatter):
             "serviceName": self.checker.service_name
         }
 
-        return json.dumps(log_output)
+        return LOGGING_PREFIX + json.dumps(log_output)
 
 
 class RestLogHandler(logging.Handler):
