@@ -1,6 +1,7 @@
 import json
 import logging
 import traceback
+import datetime
 from logging import LogRecord
 from typing import TYPE_CHECKING
 
@@ -52,7 +53,7 @@ class ELKFormatter(logging.Formatter):
     def format(self, record):
         # type: (LogRecord) -> str
         record.stack = self.formatStack(record.stack_info)
-        record.asctime = self.formatTime(record, self.datefmt)
+        record.asctime = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
         # stacktrace = ""
         # if record.exc_info:
