@@ -8,3 +8,4 @@ tmp
 .env
 .venv
 .vscode
+*.swp
