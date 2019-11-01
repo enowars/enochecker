@@ -23,15 +23,20 @@ logging.basicConfig(level=logging.DEBUG)
 dictlogger = logging.Logger(__name__)
 dictlogger.setLevel(logging.DEBUG)
 
-T = TypeVar('T')  # typing things
+T = TypeVar("T")  # typing things
 
-DB_DEFAULT_DIR = os.path.join(os.getcwd(), ".data")  # Default location db files will be stored in -> usually cwd.
+DB_DEFAULT_DIR = os.path.join(
+    os.getcwd(), ".data"
+)  # Default location db files will be stored in -> usually cwd.
 # TODO: Force remove locks after a while?
-DB_LOCK_RETRYCOUNT = 6  # 2**6 / 10 seconds are 6.4 secs. -> That's how long the db will wait for a log
+DB_LOCK_RETRYCOUNT = (
+    6  # 2**6 / 10 seconds are 6.4 secs. -> That's how long the db will wait for a log
+)
 DB_PREFIX = "_store_"  # Prefix all db files will get
 DB_EXTENSION = ".json"  # Extension all db files will get
 DB_LOCK_EXTENSION = ".lock"  # Extension all lock folders will get
 DB_GLOBAL_CACHE_SETTING = True
+
 
 def makedirs(path, exist_ok=True):
     # type: (str, bool) -> None
@@ -75,8 +80,16 @@ class StoredDict(collections.MutableMapping):
     Note: Complex won't be tracked.
     """
 
-    def __init__(self, base_path=DB_DEFAULT_DIR, name="default", persist_secs=3, ignore_locks=False, logger=None, *args,
-                 **kwargs):
+    def __init__(
+        self,
+        base_path=DB_DEFAULT_DIR,
+        name="default",
+        persist_secs=3,
+        ignore_locks=False,
+        logger=None,
+        *args,
+        **kwargs
+    ):
         # type: (str, str, int, bool, Optional[logging.Logger], *Any, **Any) -> None
         """
         Creates a new File System backed Store.
@@ -110,7 +123,9 @@ class StoredDict(collections.MutableMapping):
         atexit.register(self._cleanup)
         self._stopping = False
 
-        self.update(dict(*args, **kwargs))  # In case we got initialized using a dict, make sure it's in sync.
+        self.update(
+            dict(*args, **kwargs)
+        )  # In case we got initialized using a dict, make sure it's in sync.
 
     @_locked
     def _spawn_persist_thread(self):
@@ -119,6 +134,7 @@ class StoredDict(collections.MutableMapping):
         Spawns a thread persisting all changes, if necessary.
         """
         if self.persist_secs > 0 and not self._persist_thread:
+
             def persist_async():
                 time.sleep(self.persist_secs)
                 self.logger.debug("Persisting db {} from background.".format(self.name))
@@ -191,7 +207,9 @@ class StoredDict(collections.MutableMapping):
                 makedirs(path, exist_ok=False)
                 return
             except OSError as ex:
-                self.logger.debug("Waiting for lock on file {} (currently {})".format(path, ex))
+                self.logger.debug(
+                    "Waiting for lock on file {} (currently {})".format(path, ex)
+                )
                 time.sleep(float(2 ** i) / 10)
         raise TimeoutError("Lock for {} could not be acquired in time!".format(path))
 
@@ -318,8 +336,11 @@ class StoredDict(collections.MutableMapping):
         :return: An iterator containing all keys to a dict.
         """
         self.persist()
-        keys = [debase64ify(x[len(DB_PREFIX):-len(DB_EXTENSION)], b"+-") for x in os.listdir(self.path) if
-                x.startswith(DB_PREFIX) and x.endswith(DB_EXTENSION)]
+        keys = [
+            debase64ify(x[len(DB_PREFIX) : -len(DB_EXTENSION)], b"+-")
+            for x in os.listdir(self.path)
+            if x.startswith(DB_PREFIX) and x.endswith(DB_EXTENSION)
+        ]
         for key in keys:
             yield key
 
@@ -330,6 +351,9 @@ class StoredDict(collections.MutableMapping):
         :return: the the number of elements
         """
         self.persist()
-        keys = [x[len(DB_PREFIX):-len(DB_EXTENSION)] for x in os.listdir(self.path) if
-                x.startswith(DB_PREFIX) and x.endswith(DB_EXTENSION)]
+        keys = [
+            x[len(DB_PREFIX) : -len(DB_EXTENSION)]
+            for x in os.listdir(self.path)
+            if x.startswith(DB_PREFIX) and x.endswith(DB_EXTENSION)
+        ]
         return len(keys)

@@ -1,11 +1,12 @@
-
 from abc import ABC
 from enum import IntEnum
+
 
 class Result(IntEnum):
     """
     Result Values to be returned from a Checker
     """
+
     INTERNAL_ERROR = -1  # The checker crashed
     OK = 0  # Everything is alright
     MUMBLE = 1  # (ENOFLAG/mumble)
@@ -27,6 +28,7 @@ class EnoException(Exception, ABC):
     """
     Base error including the Result. Raise a subclass of me once we know what to do.
     """
+
     result = Result.INTERNAL_ERROR  # type: int
 
 
@@ -34,6 +36,7 @@ class BrokenServiceException(EnoException):
     """
     Indicates a broken Service
     """
+
     result = Result.MUMBLE  # type: int
 
 
@@ -41,6 +44,7 @@ class OfflineException(EnoException):
     """
     Service was not reachable (at least once) during our checks
     """
+
     result = Result.OFFLINE  # type: int
 
 
@@ -49,4 +53,5 @@ class BrokenCheckerException(EnoException):
     Shouldn't be raised ever since we catch all abstract Errors
     Used internally if something goes horribly wrong
     """
+
     result = Result.INTERNAL_ERROR  # type: int

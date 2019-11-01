@@ -103,7 +103,7 @@ class StoredDict(collections.MutableMapping):
             password=DB_DEFAULT_PASS,
         )
         cls.unlock()
-        print("MONGO CLIENT INITIALIZED: {}".format(cls._mongo)
+        print("MONGO CLIENT INITIALIZED: {}".format(cls._mongo))
         return cls._mongo
 
     def __init__(

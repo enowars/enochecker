@@ -34,8 +34,20 @@ if "TimeoutError" not in globals():  # Python2
 
 TIME_BUFFER = 5  # type: int # time in seconds we try to finish earlier
 
-VALID_ARGS = ["method", "address", "team", "team_id", "round", "flag_round", "flag", "timeout", "flag_idx", "json_logging", "log_endpoint",
-              "round_length"]
+VALID_ARGS = [
+    "method",
+    "address",
+    "team",
+    "team_id",
+    "round",
+    "flag_round",
+    "flag",
+    "timeout",
+    "flag_idx",
+    "json_logging",
+    "log_endpoint",
+    "round_length",
+]
 
 
 # DATABASE_INIT
@@ -50,24 +62,28 @@ print(list(config.items()))
 if "MONGO_ENABLED" in os.environ:
     if os.environ["MONGO_ENABLED"] == "1":
         from .nosqlremotedict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
-    
+
 elif "DATABASE" in config:
     print("INIT DB")
-    print(config['DATABASE'])
-    if 'REMOTE' in config['DATABASE']:
-        if bool(int(config['DATABASE']['REMOTE'])):
+    print(config["DATABASE"])
+    if "REMOTE" in config["DATABASE"]:
+        if bool(int(config["DATABASE"]["REMOTE"])):
             print("INIT REMOTE DB")
-            from .nosqlremotedict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
-            
+            from .nosqlremotedict import (
+                StoredDict,
+                DB_DEFAULT_DIR,
+                DB_GLOBAL_CACHE_SETTING,
+            )
+
         else:
             from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
-    elif "LOCAL" in config['DATABASE']:
+    elif "LOCAL" in config["DATABASE"]:
         from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
     else:
         from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
 else:
     from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
-    
+
 # Global cache for all stored dicts.  TODO: Prune this at some point?
 global_db_cache = {}  # type: Dict[str, StoredDict]
 
@@ -94,43 +110,108 @@ def parse_args(argv=None):
     choices = CHECKER_METHODS + ["listen"]
     parser = argparse.ArgumentParser(description="Your friendly checker script")
     # noinspection SpellCheckingInspection
-    subparsers = parser.add_subparsers(help="The checker runmode (run/listen)", dest="runmode")
+    subparsers = parser.add_subparsers(
+        help="The checker runmode (run/listen)", dest="runmode"
+    )
     subparsers.required = True
 
     listen = subparsers.add_parser("listen", help="Spawn checker service")
-    listen.add_argument('listen_port', help="The port the checker service should listen on")
+    listen.add_argument(
+        "listen_port", help="The port the checker service should listen on"
+    )
 
     runparser = subparsers.add_parser("run", help="Run checker on cmdline")
-    runparser.add_argument('method', choices=choices,
-                           help='The Method, one of {} or "listen" to start checker service'.format(CHECKER_METHODS))
-    runparser.add_argument("-a", '--address', type=str, default="localhost",
-                           help="The ip or address of the remote team to check")
-    runparser.add_argument("-t", '--team', type=str, default="team",
-                           help="The name of the target team to check")
-    runparser.add_argument("-T", '--team_id', type=int, default=1,
-                           help="The Team_id belonging to the specified Team")
-    runparser.add_argument("-I", "--run_id", type=int, default=1,
-                           help="An id for this run. Used to find it in the DB later.")
-    runparser.add_argument("-r", '--round', type=int, default=1,
-                           help="The round we are in right now")
-    runparser.add_argument("-R", "--round_length", type=int, default=300,
-                           help="The round length in seconds (default 300)")
-    runparser.add_argument("-f", '--flag', type=str, default="ENOFLAGENOFLAG=",
-                           help="The Flag, a Fake flag or a Unique ID, depending on the mode")
-    runparser.add_argument("-F", '--flag_round', type=int, default=1,
-                           help="The Round the Flag belongs to (was placed)")
-    runparser.add_argument("-x", '--timeout', type=int, default=30,
-                           help="The maximum amount of time the script has to execute in seconds")
-    runparser.add_argument("-i", '--flag_idx', type=int, default=0,
-                           help="Unique numerical index per round. Each id only occurs once and is tighly packed, "
-                                "starting with 0. In a service supporting multiple flags, this would be used to "
-                                "decide which flag to place.")
-    runparser.add_argument("-l", "--log_endpoint", type=str, default="",
-                           help="URI to an optional RESTlike service accepting log jsons via POST.")
-    runparser.add_argument("-j", "--json_logging", dest="json_logging", action='store_true',
-                           help="If set, logging will be in ELK/Kibana friendly JSON format.")
+    runparser.add_argument(
+        "method",
+        choices=choices,
+        help='The Method, one of {} or "listen" to start checker service'.format(
+            CHECKER_METHODS
+        ),
+    )
+    runparser.add_argument(
+        "-a",
+        "--address",
+        type=str,
+        default="localhost",
+        help="The ip or address of the remote team to check",
+    )
+    runparser.add_argument(
+        "-t",
+        "--team",
+        type=str,
+        default="team",
+        help="The name of the target team to check",
+    )
+    runparser.add_argument(
+        "-T",
+        "--team_id",
+        type=int,
+        default=1,
+        help="The Team_id belonging to the specified Team",
+    )
+    runparser.add_argument(
+        "-I",
+        "--run_id",
+        type=int,
+        default=1,
+        help="An id for this run. Used to find it in the DB later.",
+    )
+    runparser.add_argument(
+        "-r", "--round", type=int, default=1, help="The round we are in right now"
+    )
+    runparser.add_argument(
+        "-R",
+        "--round_length",
+        type=int,
+        default=300,
+        help="The round length in seconds (default 300)",
+    )
+    runparser.add_argument(
+        "-f",
+        "--flag",
+        type=str,
+        default="ENOFLAGENOFLAG=",
+        help="The Flag, a Fake flag or a Unique ID, depending on the mode",
+    )
+    runparser.add_argument(
+        "-F",
+        "--flag_round",
+        type=int,
+        default=1,
+        help="The Round the Flag belongs to (was placed)",
+    )
+    runparser.add_argument(
+        "-x",
+        "--timeout",
+        type=int,
+        default=30,
+        help="The maximum amount of time the script has to execute in seconds",
+    )
+    runparser.add_argument(
+        "-i",
+        "--flag_idx",
+        type=int,
+        default=0,
+        help="Unique numerical index per round. Each id only occurs once and is tighly packed, "
+        "starting with 0. In a service supporting multiple flags, this would be used to "
+        "decide which flag to place.",
+    )
+    runparser.add_argument(
+        "-l",
+        "--log_endpoint",
+        type=str,
+        default="",
+        help="URI to an optional RESTlike service accepting log jsons via POST.",
+    )
+    runparser.add_argument(
+        "-j",
+        "--json_logging",
+        dest="json_logging",
+        action="store_true",
+        help="If set, logging will be in ELK/Kibana friendly JSON format.",
+    )
 
-    return parser.parse_args(args=argv) # (return is of type argparse.Namespace)
+    return parser.parse_args(args=argv)  # (return is of type argparse.Namespace)
 
 
 class _CheckerMeta(ABCMeta):
@@ -160,9 +241,25 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
     Magic.
     """
 
-    def __init__(self, request_dict=None, run_id=None, method=None, address=None, team=None, team_id=None, round=None, flag_round=None,
-                round_length=300, flag=None, flag_idx=None,
-                 timeout=None, storage_dir=DB_DEFAULT_DIR, log_endpoint=None, use_db_cache=DB_GLOBAL_CACHE_SETTING, json_logging=True):
+    def __init__(
+        self,
+        request_dict=None,
+        run_id=None,
+        method=None,
+        address=None,
+        team=None,
+        team_id=None,
+        round=None,
+        flag_round=None,
+        round_length=300,
+        flag=None,
+        flag_idx=None,
+        timeout=None,
+        storage_dir=DB_DEFAULT_DIR,
+        log_endpoint=None,
+        use_db_cache=DB_GLOBAL_CACHE_SETTING,
+        json_logging=True,
+    ):
         # type: (Optional[int], Optional[str], Optional[str], Optional[str], Optional[int], Optional[int], Optional[str], Optional[int], Optional[int], str, Optional[str], bool, bool) -> None
         """
         Inits the Checker, filling the params, according to:
@@ -179,8 +276,8 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         self.team = team  # type: str
         self.team_id = team_id
         self.round = round  # type: int
-        self.current_round = round 
-        self.flag_round = flag_round # type: int
+        self.current_round = round
+        self.flag_round = flag_round  # type: int
         self.round_length = round_length  # type: int
         self.flag = flag  # type: str
         self.timeout = timeout  # type: int
@@ -198,7 +295,11 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
         if not hasattr(self, "service_name"):
             self.service_name = type(self).__name__.split("Checker")[0]
-            self.debug("Assuming checker Name {}. If that's not the case, please override.".format(self.service_name))
+            self.debug(
+                "Assuming checker Name {}. If that's not the case, please override.".format(
+                    self.service_name
+                )
+            )
 
         if not hasattr(self, "port"):
             self.warning("No default port defined.")
@@ -207,9 +308,12 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         self.request_dict = request_dict  # kinda duplicate
         self.config = {x: getattr(self, x) for x in VALID_ARGS}
 
-        self.debug("Initialized checker for flag {} with in {} seconds".format(
-            json.dumps(self.config), datetime.datetime.now() - self.time_started_at))
-        
+        self.debug(
+            "Initialized checker for flag {} with in {} seconds".format(
+                json.dumps(self.config), datetime.datetime.now() - self.time_started_at
+            )
+        )
+
         if self.method == "havok":
             self.method = "havoc"
             self.warning("Ignoring method 'havok', calling 'havoc' instead")
@@ -230,7 +334,9 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         if self.json_logging:
             formatter = ELKFormatter(self)
         else:
-            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            formatter = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
 
@@ -290,28 +396,42 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 if method is None:
                     method = self.method
                 if method not in CHECKER_METHODS:
-                    raise ValueError("Method {} not supported! Supported: {}".format(method, CHECKER_METHODS))
-                
+                    raise ValueError(
+                        "Method {} not supported! Supported: {}".format(
+                            method, CHECKER_METHODS
+                        )
+                    )
+
                 ignore_run = False
                 if method == "getflag":
                     try:
-                        ignore_run = not ("OK" == self.team_db[
-                            f"__Checker-internals-RESULT:putflag,{self.flag_round},{self.flag_idx}__"
-                            ])
+                        ignore_run = not (
+                            "OK"
+                            == self.team_db[
+                                f"__Checker-internals-RESULT:putflag,{self.flag_round},{self.flag_idx}__"
+                            ]
+                        )
 
                     except KeyError as ex:
-                        self.info(f"original putflag did not return successfully -- ignoring getflag for flag_round:{self.flag_round}, index: {self.flag_idx}")
+                        self.info(
+                            f"original putflag did not return successfully -- ignoring getflag for flag_round:{self.flag_round}, index: {self.flag_idx}"
+                        )
                         ignore_run = True
-                
+
                 if method == "getnoise":
                     try:
-                        
-                        ignore_run = not ("OK" == self.team_db[
-                            f"__Checker-internals-RESULT:putnoise,{self.flag_round},{self.flag_idx}__"
-                            ])
+
+                        ignore_run = not (
+                            "OK"
+                            == self.team_db[
+                                f"__Checker-internals-RESULT:putnoise,{self.flag_round},{self.flag_idx}__"
+                            ]
+                        )
 
                     except KeyError as ex:
-                        self.info(f"original putnoise did not return successfully -- ignoring getnoise for flag_round:{self.flag_round}, index: {self.flag_idx}")
+                        self.info(
+                            f"original putnoise did not return successfully -- ignoring getnoise for flag_round:{self.flag_round}, index: {self.flag_idx}"
+                        )
                         ignore_run = True
 
                 if ignore_run:
@@ -320,40 +440,53 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
                 ret = getattr(self, snake_caseify(method))()
             if Result.is_valid(ret):
-                ret = Result(ret)  # Better wrap this, in case somebody returns raw ints (?)
+                ret = Result(
+                    ret
+                )  # Better wrap this, in case somebody returns raw ints (?)
                 self.info("Checker [{}] resulted in {}".format(self.method, ret.name))
-                self.team_db[f"__Checker-internals-RESULT:{str(method)},{self.flag_round},{self.flag_idx}__"] = ret.name
+                self.team_db[
+                    f"__Checker-internals-RESULT:{str(method)},{self.flag_round},{self.flag_idx}__"
+                ] = ret.name
                 return ret
             if ret is not None:
                 self.error("Illegal return value from {}: {}".format(self.method, ret))
-                return Result.INTERNAL_ERROR#, "Illegal return value from {}: {}".format(self.method, ret)
-            
+                return (
+                    Result.INTERNAL_ERROR
+                )  # , "Illegal return value from {}: {}".format(self.method, ret)
+
             # Returned Normally
             self.info("Checker [{}] executed successfully!".format(self.method))
-            self.team_db[f"__Checker-internals-RESULT:{str(method)},{self.flag_round},{self.flag_idx}__"] = "OK"
+            self.team_db[
+                f"__Checker-internals-RESULT:{str(method)},{self.flag_round},{self.flag_idx}__"
+            ] = "OK"
             return Result.OK
 
         except EnoException as eno:
-            self.info("Checker[{}] result: {}({})".format(self.method, eno.result.name , eno), exc_info=eno)
-            return Result(eno.result)#, eno.message
+            self.info(
+                "Checker[{}] result: {}({})".format(self.method, eno.result.name, eno),
+                exc_info=eno,
+            )
+            return Result(eno.result)  # , eno.message
         except requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
-            return Result.MUMBLE#, "HTTP Error" #For now
+            return Result.MUMBLE  # , "HTTP Error" #For now
         except (
-                requests.ConnectionError,  # requests
-                requests.ConnectTimeout,  # requests
-                TimeoutError,
-                socket.timeout,
-                ConnectionError,
-                socket.error,
-                # ConnectionAbortedError,  # not in py2, already handled by ConnectionError.
-                # ConnectionRefusedError
+            requests.ConnectionError,  # requests
+            requests.ConnectTimeout,  # requests
+            TimeoutError,
+            socket.timeout,
+            ConnectionError,
+            socket.error,
+            # ConnectionAbortedError,  # not in py2, already handled by ConnectionError.
+            # ConnectionRefusedError
         ) as ex:
-            self.info("Error in connection to service occurred: {}\n".format(ex), exc_info=ex)
-            return Result.OFFLINE#, ex.message
+            self.info(
+                "Error in connection to service occurred: {}\n".format(ex), exc_info=ex
+            )
+            return Result.OFFLINE  # , ex.message
         except Exception as ex:
             self.error("Unhandled checker error occurred: {}\n".format(ex), exc_info=ex)
-            return Result.INTERNAL_ERROR#, ex.message
+            return Result.INTERNAL_ERROR  # , ex.message
         finally:
             for db in self._active_dbs.values():
                 # A bit of cleanup :)
@@ -463,7 +596,9 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             except KeyError:
                 try:
                     self.debug("Remote DB {} was not cached.".format(name))
-                    ret = StoredDict(checker_name=type(self).__name__, dict_name=name) # , logger=self.logger)
+                    ret = StoredDict(
+                        checker_name=type(self).__name__, dict_name=name
+                    )  # , logger=self.logger)
                     self._active_dbs[name] = ret
                     return ret
                 except Exception as ex:
@@ -476,7 +611,12 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 return db
             except KeyError:
                 self.debug("DB {} was not cached.".format(name))
-                ret = StoredDict(base_path=self.storage_dir, name=name, ignore_locks=ignore_locks, logger=self.logger)
+                ret = StoredDict(
+                    base_path=self.storage_dir,
+                    name=name,
+                    ignore_locks=ignore_locks,
+                    logger=self.logger,
+                )
                 self._active_dbs[name] = ret
                 return ret
 
@@ -518,7 +658,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             port = self.port
         if port is None:
             raise ValueError("Port for service not set. Cannot Request.")
-        
+
         if ":" in self.address:
             netloc = "[{}]:{}".format(self.address, port)
         else:
@@ -542,14 +682,18 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         """
         timeout_fun = lambda: timeout
         if timeout is None:
-            timeout = self.time_remaining/2
-            timeout_fun = lambda: self.time_remaining/2
+            timeout = self.time_remaining / 2
+            timeout_fun = lambda: self.time_remaining / 2
         if port is None:
             port = self.port
         if host is None:
             host = self.address
-        self.debug("Opening socket to {}:{} (timeout {} secs).".format(host, port, timeout))
-        return SimpleSocket(host, port, timeout=timeout, logger=self.logger, timeout_fun=timeout_fun)
+        self.debug(
+            "Opening socket to {}:{} (timeout {} secs).".format(host, port, timeout)
+        )
+        return SimpleSocket(
+            host, port, timeout=timeout, logger=self.logger, timeout_fun=timeout_fun
+        )
 
     @property
     def http_useragent(self):
@@ -581,8 +725,16 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         self.http_useragent = new_agent
         return new_agent
 
-    def http_post(self, route="/", params=None, port=None, scheme="http", raise_http_errors=False, timeout=None,
-                  **kwargs):
+    def http_post(
+        self,
+        route="/",
+        params=None,
+        port=None,
+        scheme="http",
+        raise_http_errors=False,
+        timeout=None,
+        **kwargs,
+    ):
         # type: (str, Any, Optional[int], str, bool, Optional[int], ...) -> requests.Response
         """
         Performs a (http) requests.post to the current host.
@@ -595,11 +747,21 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         :param timeout: How long we'll try to connect
         :return: The response
         """
-        kwargs.setdefault('allow_redirects', False)
-        return self.http("post", route, params, port, scheme, raise_http_errors, timeout, **kwargs)
+        kwargs.setdefault("allow_redirects", False)
+        return self.http(
+            "post", route, params, port, scheme, raise_http_errors, timeout, **kwargs
+        )
 
-    def http_get(self, route="/", params=None, port=None, scheme="http", raise_http_errors=False, timeout=None,
-                 **kwargs):
+    def http_get(
+        self,
+        route="/",
+        params=None,
+        port=None,
+        scheme="http",
+        raise_http_errors=False,
+        timeout=None,
+        **kwargs,
+    ):
         # type: (str, Any, Optional[int], str, bool, Optional[int], ...) -> requests.Response
         """
         Performs a (http) requests.get to the current host.
@@ -612,11 +774,22 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         :param timeout: How long we'll try to connect
         :return: The response
         """
-        kwargs.setdefault('allow_redirects', False)
-        return self.http("get", route, params, port, scheme, raise_http_errors, timeout, **kwargs)
+        kwargs.setdefault("allow_redirects", False)
+        return self.http(
+            "get", route, params, port, scheme, raise_http_errors, timeout, **kwargs
+        )
 
-    def http(self, method, route="/", params=None, port=None, scheme="http", raise_http_errors=False, timeout=None,
-             **kwargs):
+    def http(
+        self,
+        method,
+        route="/",
+        params=None,
+        port=None,
+        scheme="http",
+        raise_http_errors=False,
+        timeout=None,
+        **kwargs,
+    ):
         # type: (str, str, Any, Optional[int], str, bool, Optional[int], ...) -> requests.Response
         """
         Performs an http request (requests lib) to the current host.
@@ -630,12 +803,18 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         :param timeout: How long we'll try to connect (default: self.timeout)
         :return: The response
         """
-        kwargs.setdefault('allow_redirects', False)
+        kwargs.setdefault("allow_redirects", False)
         url = self._sanitize_url(route, port, scheme)
         if timeout is None:
-            timeout = self.time_remaining/2
-        self.debug("Request: {} {} with params: {} and {} secs timeout.".format(method, url, params, timeout))
-        resp = self.http_session.request(method, url, params=params, timeout=timeout, **kwargs)
+            timeout = self.time_remaining / 2
+        self.debug(
+            "Request: {} {} with params: {} and {} secs timeout.".format(
+                method, url, params, timeout
+            )
+        )
+        resp = self.http_session.request(
+            method, url, params=params, timeout=timeout, **kwargs
+        )
         if raise_http_errors:
             resp.raise_for_status()
         return resp

@@ -3,7 +3,8 @@ import logging
 import sys
 import json
 from typing import TYPE_CHECKING, Callable, Type, Any, List, Union, Dict, Tuple
-#from elasticapm.contrib.flask import ElasticAPM
+
+# from elasticapm.contrib.flask import ElasticAPM
 
 from flask import Flask, Response
 from flask import jsonify
@@ -21,7 +22,7 @@ logger = logging.Logger(__name__)
 logger.setLevel(logging.DEBUG)
 
 # ElasticSearch performance monitoring
-#apm = ElasticAPM()
+# apm = ElasticAPM()
 
 Optional = collections.namedtuple("Optional", "key type default")
 Required = collections.namedtuple("Required", "key type")
@@ -32,7 +33,7 @@ CHECKER_METHODS = [
     "putnoise",
     "getnoise",
     "havoc",
-    "exploit"
+    "exploit",
 ]  # type: List[str]
 
 # The json spec a checker request follows.
@@ -41,14 +42,16 @@ spec = [
     Required("address", str),  # address to check
     Optional("runId", int, 0),  # internal ID of this run inside our db
     Optional("team", str, "FakeTeam"),  # the team name
-    Optional("teamId", int, 1),         # team ID
+    Optional("teamId", int, 1),  # team ID
     Optional("round", int, 0),  # which tick we are in
-    Optional("relatedRoundId", int, 0), #Flag-Related
+    Optional("relatedRoundId", int, 0),  # Flag-Related
     Optional("roundLength", int, 300),  # the default tick time
     Optional("flag", str, "ENOTESTFLAG"),  # the flag or noise to drop or get
-    Optional("flagIndex", int, 0),  # the index of this flag in a given round (starts at 0)
+    Optional(
+        "flagIndex", int, 0
+    ),  # the index of this flag in a given round (starts at 0)
     Optional("timeout", int, 30),  # timeout we have for this run
-    Optional("logEndpoint", str, None)  # endpoint to send runs to
+    Optional("logEndpoint", str, None),  # endpoint to send runs to
 ]  # type: List[Union[Required, Optional]]
 
 UI_TEMPLATE = """
@@ -109,15 +112,24 @@ def check_type(name, val, expected_type):
     if isinstance(expected_type, list):
         if val not in expected_type:
             # The given type is not in the list of allowed members.
-            raise ValueError("{} is not a member of expected list {}, got {}".format(name, expected_type, val))
+            raise ValueError(
+                "{} is not a member of expected list {}, got {}".format(
+                    name, expected_type, val
+                )
+            )
     elif not isinstance(val, expected_type):
         raise ValueError(
-            "{} should be a '{}' but is of type '{}'.".format(name, expected_type.__name__, type(val).__name__))
+            "{} should be a '{}' but is of type '{}'.".format(
+                name, expected_type.__name__, type(val).__name__
+            )
+        )
 
-#def generate_form(spec):
+
+# def generate_form(spec):
 #    form = "<form class=\"json-form\">\n"
 #    for entry in spec:
 #        if isinstance(entry, Required):
+
 
 def stringify_spec_entry(entry):
     # type: (Union[Optional, Required]) -> str
@@ -131,7 +143,9 @@ def stringify_spec_entry(entry):
         return '"{}": {}'.format(entry.key, entrytype)
     if isinstance(entry, Optional):
         return '"{}": ({} ?? {})'.format(entry.key, entrytype, entry.default)
-    raise ValueError("Could not stringify unknown entry type {}: {}".format(type(entry), entry))
+    raise ValueError(
+        "Could not stringify unknown entry type {}: {}".format(type(entry), entry)
+    )
 
 
 def serialize_spec(spec):
@@ -172,7 +186,11 @@ def assert_types(json, spec):
             if isinstance(entry, Optional):
                 ret[key_to_name(entry.key)] = entry.default
             else:
-                raise ValueError("Required parameter {} is missing.".format(stringify_spec_entry(entry)))
+                raise ValueError(
+                    "Required parameter {} is missing.".format(
+                        stringify_spec_entry(entry)
+                    )
+                )
         else:
 
             val = json[entry.key]
@@ -204,10 +222,13 @@ def checker_routes(checker_cls):
         """
         logging.info("Request on /")
 
-        return Response('<h1>Welcome to {} :)</h1>'
-                        '<p>Expecting POST with a JSON:</p><div><textarea id="jsonTextbox" rows={} cols="80">{}</textarea>{}</div>'
-                        '<a href="https://www.youtube.com/watch?v=SBClImpnfAg"><br>check it out now</a><div id="out">'.format(
-                checker_cls.__name__, len(spec) + 3, serialize_spec(spec), tiny_poster))
+        return Response(
+            "<h1>Welcome to {} :)</h1>"
+            '<p>Expecting POST with a JSON:</p><div><textarea id="jsonTextbox" rows={} cols="80">{}</textarea>{}</div>'
+            '<a href="https://www.youtube.com/watch?v=SBClImpnfAg"><br>check it out now</a><div id="out">'.format(
+                checker_cls.__name__, len(spec) + 3, serialize_spec(spec), tiny_poster
+            )
+        )
 
     def serve_checker():
         # type: () -> Response
@@ -220,29 +241,36 @@ def checker_routes(checker_cls):
         try:
             logger.info(request.json)
             req_json = request.get_json(force=True)
-            
+
             kwargs = assert_types(req_json, spec)
 
             checker = checker_cls(request_dict=kwargs, **kwargs)
-    
+
             checker.logger.info(request.json)
             res = checker.run().name
 
             req_json["result"] = res
             req_json = json.dumps(req_json)
 
-            #checker.logger.info("Run resulted in {}: {}".format(res, request.json))
+            # checker.logger.info("Run resulted in {}: {}".format(res, request.json))
             checker.logger.info("{}".format(req_json))
 
             return jsonify({"result": res})
         except Exception as ex:
             print(ex)
-            logger.error("Returning Internal Error {}.\nTraceback:\n{}".format(ex, exception_to_string(ex)), exc_info=ex)
-            return jsonify({
-                "result": Result.INTERNAL_ERROR.name,
-                "message": str(ex),
-                "traceback": exception_to_string(ex)
-            })
+            logger.error(
+                "Returning Internal Error {}.\nTraceback:\n{}".format(
+                    ex, exception_to_string(ex)
+                ),
+                exc_info=ex,
+            )
+            return jsonify(
+                {
+                    "result": Result.INTERNAL_ERROR.name,
+                    "message": str(ex),
+                    "traceback": exception_to_string(ex),
+                }
+            )
 
     def service_info():
         # type: () -> Response
@@ -260,30 +288,34 @@ def checker_routes(checker_cls):
                 service_name = checker_cls.service_name
 
             info_dict = {
-                'serviceName': service_name,
-                'flagCount':   checker_cls.flag_count,
-                'havocCount':  checker_cls.havoc_count,
-                'noiseCount':  checker_cls.noise_count  
+                "serviceName": service_name,
+                "flagCount": checker_cls.flag_count,
+                "havocCount": checker_cls.havoc_count,
+                "noiseCount": checker_cls.noise_count,
             }
 
-            assert isinstance(info_dict['serviceName'], str)
-            assert isinstance(info_dict['flagCount'],   int)
-            assert isinstance(info_dict['havocCount'],  int)
-            assert isinstance(info_dict['noiseCount'],  int)
+            assert isinstance(info_dict["serviceName"], str)
+            assert isinstance(info_dict["flagCount"], int)
+            assert isinstance(info_dict["havocCount"], int)
+            assert isinstance(info_dict["noiseCount"], int)
 
         except Exception:
             print("SERVICE INFO NOT SPECIFIED!!!11ELF!")
-            print("add service_name, flag_count, havoc_count and noise_count as \
-static fields to your CHECKER\n")
-            print("""
+            print(
+                "add service_name, flag_count, havoc_count and noise_count as \
+static fields to your CHECKER\n"
+            )
+            print(
+                """
 Example:
 class ExampleChecker(BaseChecker):
     flag_count  = 1
     noise_count = 1
     havoc_count = 1
-""")        
+"""
+            )
             raise AttributeError("REQUIRED SERVICE INFO FIELDS NOT SPECIFIED!")
-        
+
         return info_dict
 
     def get_service_info():
@@ -302,16 +334,16 @@ def init_service(checker):
     """
     app = Flask(__name__)
     index, checker_route, service_info, get_service_info = checker_routes(checker)
-    
+
     app.route("/", methods=["GET"])(index)
-    app.route('/', methods=['POST'])(checker_route)
-    app.route('/service', methods=["GET"])(get_service_info)
+    app.route("/", methods=["POST"])(checker_route)
+    app.route("/service", methods=["GET"])(get_service_info)
 
     print(service_info())
 
     if "run" not in sys.argv:
         # ElasticSearch Performance Monitoring (disabled on commandline)
-        #apm.init_app(app, service_name=checker.__name__.split("Checker")[0])  # secret_token=SECRET)
+        # apm.init_app(app, service_name=checker.__name__.split("Checker")[0])  # secret_token=SECRET)
         pass
-        
+
     return app  # Start service using service.run(host="0.0.0.0")

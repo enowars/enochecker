@@ -21,13 +21,11 @@ class ExampleChecker(BaseChecker):
     (Or read the source, Luke)
     """
 
-    flag_count  = 1
+    flag_count = 1
     noise_count = 1
     havoc_count = 1
 
-
     port = 80  # The port will automatically be picked up as default by self.connect and self.http.
-
 
     def putflag(self):  # type: () -> None
         """
@@ -43,10 +41,16 @@ class ExampleChecker(BaseChecker):
         if self.flag_idx == 0:
             self.team_db[sha256ify(self.flag)] = self.flag
         elif self.flag_idx == 1:
-            self.global_db["{}_{}".format(self.address, self.flag)] = "Different place for different flag_idx"
+            self.global_db[
+                "{}_{}".format(self.address, self.flag)
+            ] = "Different place for different flag_idx"
         else:
-            raise ValueError("Call_Idx {} exceeds the amount of flags. Not supported.".format(self.flag_idx))
-        
+            raise ValueError(
+                "Call_Idx {} exceeds the amount of flags. Not supported.".format(
+                    self.flag_idx
+                )
+            )
+
     def getflag(self):  # type: () -> None
         """
         This method retrieves a flag from the service.
@@ -61,11 +65,16 @@ class ExampleChecker(BaseChecker):
             if not self.team_db.get(sha256ify(self.flag), None) == self.flag:
                 raise BrokenServiceException("We did not get flag 0 back :/")
         elif self.flag_idx == 1:
-            if not self.global_db.get("{}_{}".format(self.address, self.flag), None) == "Different place for " \
-                                                                                        "different flag_idx":
+            if (
+                not self.global_db.get("{}_{}".format(self.address, self.flag), None)
+                == "Different place for "
+                "different flag_idx"
+            ):
                 raise BrokenServiceException("Flag 2 was missing. Service is broken.")
         else:
-            raise ValueError("Call_idx {} not supported!".format(self.flag_idx))  # Internal error.
+            raise ValueError(
+                "Call_idx {} not supported!".format(self.flag_idx)
+            )  # Internal error.
 
     def putnoise(self):  # type: () -> None
         """
@@ -107,7 +116,9 @@ class ExampleChecker(BaseChecker):
                 The preferred way to report Errors in the service is by raising an appropriate EnoException
         """
         self.info("I wanted to inform you: I'm  running <3")
-        self.http_get("/")  # This will probably fail, depending on what params you give the script. :)
+        self.http_get(
+            "/"
+        )  # This will probably fail, depending on what params you give the script. :)
 
     def exploit(self):
         """
@@ -119,6 +130,7 @@ class ExampleChecker(BaseChecker):
                 The preferred way to report Errors in the service is by raising an appropriate EnoException
         """
         pass
+
 
 app = ExampleChecker.service  # This can be used for uswgi.
 if __name__ == "__main__":
