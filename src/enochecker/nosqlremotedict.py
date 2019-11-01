@@ -87,7 +87,8 @@ class StoredDict(collections.MutableMapping):
     """
     A dictionary that is MongoDb backed.
     """
-
+    cache = {}
+    
     @classmethod
     def get_client(cls) -> MongoClient:
         if hasattr(cls, "_mongo"):
@@ -126,7 +127,7 @@ class StoredDict(collections.MutableMapping):
                 #                   Table by checker
                 self.db = self.get_client[checker_name][self.dict_name]
                 #                           Collection by team/global
-                self.cache = dict()
+                
 
                 # Add DB index
                 try:
@@ -211,7 +212,7 @@ class StoredDict(collections.MutableMapping):
 
     def persist(self):
         old_cache = self.cache
-        self.cache = dict()
+        self.cache = {}
         for key, value in old_cache:
             self[key] = value
 
