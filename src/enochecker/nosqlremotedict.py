@@ -2,17 +2,15 @@ import collections
 import configparser
 import os
 import logging
-import uwsgi
+import threading
 
 from functools import wraps
-from pymongo.errors import PyMongoError
 
-# import logging
 from pymongo import MongoClient
+from pymongo.errors import PyMongoError
 from .results import BrokenCheckerException
 from .utils import base64ify
 
-# from urllib.parse import quote_plus
 
 # LOGGING SETUP
 logging.basicConfig(level=logging.DEBUG)
@@ -82,6 +80,9 @@ def _try_n_times(func):
     return try_n_times
 
 
+dblock = threading.Lock()
+
+
 class StoredDict(collections.MutableMapping):
     """
     A dictionary that is MongoDb backed.
@@ -91,19 +92,22 @@ class StoredDict(collections.MutableMapping):
     def get_client(cls) -> MongoClient:
         if hasattr(cls, "_mongo"):
             return cls._mongo
-        uwsgi.lock()
-        if hasattr(cls, "_mongo"):
-            # we found a mongo in the meantime
-            cls.unlock()
-            return cls._mongo
-        cls._mongo = MongoClient(
-            host=DB_DEFAULT_HOST,
-            port=DB_DEFAULT_PORT,
-            username=DB_DEFAULT_USER,
-            password=DB_DEFAULT_PASS,
+        with dblock:
+            if hasattr(cls, "_mongo"):
+                # we found a mongo in the meantime
+                cls.unlock()
+                return cls._mongo
+            cls._mongo = MongoClient(
+                host=DB_DEFAULT_HOST,
+                port=DB_DEFAULT_PORT,
+                username=DB_DEFAULT_USER,
+                password=DB_DEFAULT_PASS,
+            )
+        print(
+            "MONGO CLIENT INITIALIZED for thread {}: {}".format(
+                threading.current_thread(), cls._mongo
+            )
         )
-        cls.unlock()
-        print("MONGO CLIENT INITIALIZED: {}".format(cls._mongo))
         return cls._mongo
 
     def __init__(
