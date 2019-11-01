@@ -153,8 +153,7 @@ class StoredDict(collections.MutableMapping):
 
     @_try_n_times
     def __getitem__(self, key, print_result=False):
-
-        if key in self.cache:
+        if key in self.cache.items():
             return self.cache[key]
 
         to_extract = {
@@ -175,7 +174,6 @@ class StoredDict(collections.MutableMapping):
 
     @_try_n_times
     def __delitem__(self, key):
-
         if key in self.cache:
             del self.cache[key]
 
@@ -188,14 +186,12 @@ class StoredDict(collections.MutableMapping):
 
     @_try_n_times
     def __len__(self):
-
         return self.db.count_documents(
             {"checker": self.checker_name, "name": self.dict_name}
         )
 
     @_try_n_times
     def __iter__(self):
-
         iterdict = {"checker": self.checker_name, "name": self.dict_name}
         results = self.db.find(iterdict)
         for key in map(lambda res: res["key"], results):
