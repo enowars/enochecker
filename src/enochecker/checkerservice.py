@@ -4,8 +4,7 @@ import logging
 import sys
 from typing import TYPE_CHECKING, Callable, Type, Any, List, Union, Dict, Tuple
 
-from flask import Flask, Response
-from flask import jsonify
+from flask import Flask, Response, request, jsonify
 
 from .enochecker import Result
 from .logging import exception_to_string
