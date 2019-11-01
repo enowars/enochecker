@@ -2,7 +2,7 @@ import collections
 import configparser
 import os
 import logging
-import uswgi
+import uwsgi
 
 from functools import wraps
 from pymongo.errors import PyMongoError
