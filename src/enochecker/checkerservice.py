@@ -1,18 +1,17 @@
 import collections
+import json
 import logging
 import sys
-import json
 from typing import TYPE_CHECKING, Callable, Type, Any, List, Union, Dict, Tuple
-
-# from elasticapm.contrib.flask import ElasticAPM
 
 from flask import Flask, Response
 from flask import jsonify
-from flask import request
 
 from .enochecker import Result
 from .logging import exception_to_string
 from .utils import snake_caseify
+
+# from elasticapm.contrib.flask import ElasticAPM
 
 if TYPE_CHECKING:
     from .enochecker import BaseChecker

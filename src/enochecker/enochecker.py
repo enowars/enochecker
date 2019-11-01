@@ -17,7 +17,6 @@ from abc import ABCMeta, abstractmethod
 from typing import Optional, Callable, Any, Dict, List, Union, Type
 from urllib.parse import urlparse
 
-import requests
 from future.utils import with_metaclass
 
 from concurrent.futures import TimeoutError
@@ -266,6 +265,12 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         :param: run_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
         :param: method: The method to run
         """
+        # We import requests after startup global imports may deadlock, see
+        # https://github.com/psf/requests/issues/2925
+        import requests
+
+        self.requests = requests
+
         self.time_started_at = datetime.datetime.now()  # type: datetime
         self.run_id = run_id  # type: int
         self.log_endpoint = log_endpoint  # type: Optional[str]
@@ -467,12 +472,12 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 exc_info=eno,
             )
             return Result(eno.result)  # , eno.message
-        except requests.HTTPError as ex:
+        except self.requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
             return Result.MUMBLE  # , "HTTP Error" #For now
         except (
-            requests.ConnectionError,  # requests
-            requests.ConnectTimeout,  # requests
+            self.requests.ConnectionError,  # requests
+            self.requests.ConnectTimeout,  # requests
             TimeoutError,
             socket.timeout,
             ConnectionError,
@@ -762,7 +767,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         timeout=None,
         **kwargs,
     ):
-        # type: (str, Any, Optional[int], str, bool, Optional[int], ...) -> requests.Response
+        # type: (str, Any, Optional[int], str, bool, Optional[int], ...) -> self.requests.Response
         """
         Performs a (http) requests.get to the current host.
         Caches cookies in self.http_session
@@ -790,7 +795,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         timeout=None,
         **kwargs,
     ):
-        # type: (str, str, Any, Optional[int], str, bool, Optional[int], ...) -> requests.Response
+        # type: (str, str, Any, Optional[int], str, bool, Optional[int], ...) -> self.requests.Response
         """
         Performs an http request (requests lib) to the current host.
         Caches cookies in self.http_session

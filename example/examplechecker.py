@@ -25,7 +25,9 @@ class ExampleChecker(BaseChecker):
     noise_count = 1
     havoc_count = 1
 
-    port = 80  # The port will automatically be picked up as default by self.connect and self.http.
+    port = (
+        80
+    )  # The port will automatically be picked up as default by self.connect and self.http.
 
     def putflag(self):  # type: () -> None
         """
