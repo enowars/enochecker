@@ -95,7 +95,6 @@ class StoredDict(collections.MutableMapping):
         with dblock:
             if hasattr(cls, "_mongo"):
                 # we found a mongo in the meantime
-                cls.unlock()
                 return cls._mongo
             cls._mongo = MongoClient(
                 host=DB_DEFAULT_HOST,
@@ -210,11 +209,11 @@ class StoredDict(collections.MutableMapping):
         for key in map(lambda res: res["key"], results):
             yield key
 
-    @_try_n_times
     def persist(self):
-
+        old_cache = self.cache
         self.cache = dict()
+        for key, value in old_cache:
+            self[key] = value
 
-    @_try_n_times
     def __del__(self):
         self.persist()
