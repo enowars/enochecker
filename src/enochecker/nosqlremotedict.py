@@ -10,7 +10,7 @@ from .utils import base64ify
 
 if TYPE_CHECKING:
     # We do these things as late as possible to avoid strange deadlocks when forking in UWSGI
-    import MongoClient
+    from pymongo import MongoClient
 
 # LOGGING SETUP
 logging.basicConfig(level=logging.DEBUG)
