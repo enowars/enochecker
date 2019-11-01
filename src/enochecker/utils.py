@@ -88,8 +88,8 @@ def ensure_valid_filename(s, min_length=3):
     :return: all illegal chars stripped or base64ified if it gets too small
     """
     orig = s
-    s = str(s).strip().replace(' ', '_')
-    s = re.sub(r'(?u)[^-\w.]', '', s)
+    s = str(s).strip().replace(" ", "_")
+    s = re.sub(r"(?u)[^-\w.]", "", s)
     if len(s) < min_length:
         s = base64ify(orig, "+-")
     return s
@@ -103,8 +103,8 @@ def snake_caseify(camel):
     :return: camel_or_snake_whatever
     """
     camel = ensure_unicode(camel)
-    half_snake = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camel)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', half_snake).lower()
+    half_snake = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", camel)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", half_snake).lower()
 
 
 def sha256ify(s):
@@ -130,6 +130,7 @@ def base64ify(s, altchars=None):
         return base64.b64encode(s, altchars).decode("utf-8")
     else:
         return base64.b64encode(s).decode("utf-8")
+
 
 def debase64ify(s, altchars=None):
     # type: (Union[str, bytes]) -> str
@@ -193,7 +194,14 @@ def start_daemon(target):
     return t
 
 
-def serve_once(html, start_port=5000, autoincrement_port=True, content_type='text/html', headers=None, logger=None):
+def serve_once(
+    html,
+    start_port=5000,
+    autoincrement_port=True,
+    content_type="text/html",
+    headers=None,
+    logger=None,
+):
     # type: (Union[str, bytes, requests.Response], int, bool, str, Optional[Dict[str, str]], Optional[logging.Logger]) -> int
     """
     Render Text in the users browser
@@ -221,7 +229,7 @@ def serve_once(html, start_port=5000, autoincrement_port=True, content_type='tex
         # noinspection PyPep8Naming
         def do_GET(self):
             self.send_response(200)
-            self.send_header('Content-type', content_type)
+            self.send_header("Content-type", content_type)
             for key, value in headers.items():
                 self.send_header(key, value)
             self.end_headers()
@@ -231,19 +239,27 @@ def serve_once(html, start_port=5000, autoincrement_port=True, content_type='tex
 
     for port in range(start_port, PORT_MAX):
         try:
-            server = HTTPServer(('', port), OutputHandler)
+            server = HTTPServer(("", port), OutputHandler)
             logging.debug("Serving {} bytes on port {}".format(len(html), port))
             start_daemon(server.serve_forever)
             time.sleep(0.1)  # some extra time thrown in for good measure. :)
             return port
         except socket.error as ex:
             if not autoincrement_port:
-                logger.info("Serve once was not set to automatically increment port {} but faced socket exception{}".
-                            format(start_port, ex), exc_info=True, stack_info=True)
+                logger.info(
+                    "Serve once was not set to automatically increment port {} but faced socket exception{}".format(
+                        start_port, ex
+                    ),
+                    exc_info=True,
+                    stack_info=True,
+                )
                 break
 
     raise socket.error(
-        "No unused port found, start_port={}, autoincrement_port={}".format(start_port, autoincrement_port))
+        "No unused port found, start_port={}, autoincrement_port={}".format(
+            start_port, autoincrement_port
+        )
+    )
 
 
 class SimpleSocket(telnetlib.Telnet):
@@ -253,7 +269,14 @@ class SimpleSocket(telnetlib.Telnet):
     """
 
     # pylint:  disable=protected-access
-    def __init__(self, host=None, port=0, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, logger=None, timeout_fun=None):
+    def __init__(
+        self,
+        host=None,
+        port=0,
+        timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
+        logger=None,
+        timeout_fun=None,
+    ):
         # type: (str, int, int, Optional[logging.Logger], Optional[Callable[[], int]]) -> None
         """
         Initializes a new SimpleSocket Object.

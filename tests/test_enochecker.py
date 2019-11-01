@@ -1,4 +1,4 @@
-import logging  
+import logging
 from logging import DEBUG, WARNING, CRITICAL, FATAL, INFO
 import pytest
 import sys
@@ -10,25 +10,55 @@ from enochecker import *
 
 class CheckerExampleImpl(BaseChecker):
     port = 9999
-    flag_count  = 1
+    flag_count = 1
     noise_count = 1
     havoc_count = 1
-    def __init__(self, method=CHECKER_METHODS[0], run_id=0, address="localhost", team="Testteam", team_id=1, flag_round=None,
-                round_length=300, flag_idx=None, storage_dir=".data", log_endpoint=None, use_db_cache=True, json_logging=True,
-                round=1, flag="ENOFLAG", timeout=30):
+
+    def __init__(
+        self,
+        method=CHECKER_METHODS[0],
+        run_id=0,
+        address="localhost",
+        team="Testteam",
+        team_id=1,
+        flag_round=None,
+        round_length=300,
+        flag_idx=None,
+        storage_dir=".data",
+        log_endpoint=None,
+        use_db_cache=True,
+        json_logging=True,
+        round=1,
+        flag="ENOFLAG",
+        timeout=30,
+    ):
         """
         An mocked implementation of a checker for testing purposes
         :param method: The method the checker uses
         :param fail: If and how
         """
-        super(CheckerExampleImpl, self).__init__(method=method, run_id=run_id, address=address, team=team, team_id=team_id, flag_round=flag_round,
-                round_length=round_length, flag_idx=flag_idx, storage_dir=storage_dir, log_endpoint=log_endpoint, use_db_cache=use_db_cache, json_logging=json_logging,
-                round=round, flag=flag, timeout=timeout)
-        self.logger.setLevel(DEBUG) 
+        super(CheckerExampleImpl, self).__init__(
+            method=method,
+            run_id=run_id,
+            address=address,
+            team=team,
+            team_id=team_id,
+            flag_round=flag_round,
+            round_length=round_length,
+            flag_idx=flag_idx,
+            storage_dir=storage_dir,
+            log_endpoint=log_endpoint,
+            use_db_cache=use_db_cache,
+            json_logging=json_logging,
+            round=round,
+            flag=flag,
+            timeout=timeout,
+        )
+        self.logger.setLevel(DEBUG)
 
     def putflag(self):
         self.team_db["flag"] = self.flag
-        if self.flag_idx==2:
+        if self.flag_idx == 2:
             self.info("RAN IDX 2")
             raise Exception()
 
@@ -50,8 +80,11 @@ class CheckerExampleImpl(BaseChecker):
             raise BrokenServiceException("Noise not found!")
 
     def havoc(self):
-        raise OfflineException("Could not connect to team {} at {}:{} because this is not a real checker script."
-                               .format(self.team, self.address, self.port))
+        raise OfflineException(
+            "Could not connect to team {} at {}:{} because this is not a real checker script.".format(
+                self.team, self.address, self.port
+            )
+        )
 
     def exploit(self):
         pass
@@ -125,16 +158,25 @@ def test_args():
     argv = [
         "run",
         CHECKER_METHODS[0],
-        "-a", "localhost",
-        "-t", "TestTeam",
-        "-I", "1",
-        "-f", "ENOTESTFLAG",
-        "-x", "30", 
-        "-i", "0",
-        "-R", "500",
-        "-F", "299", 
-        "-T", "19"
-        #"-p", "1337"
+        "-a",
+        "localhost",
+        "-t",
+        "TestTeam",
+        "-I",
+        "1",
+        "-f",
+        "ENOTESTFLAG",
+        "-x",
+        "30",
+        "-i",
+        "0",
+        "-R",
+        "500",
+        "-F",
+        "299",
+        "-T",
+        "19"
+        # "-p", "1337"
     ]
     args = parse_args(argv)
     print(args)
@@ -148,16 +190,21 @@ def test_args():
     assert args.round_length == int(argv[15])
     assert args.flag_round == int(argv[17])
     assert args.team_id == int(argv[19])
-    
-    #assert args.port == int(argv[15])
-    #port should be specified in the basechecker as a constant, so this test isn't neccesary
+
+    # assert args.port == int(argv[15])
+    # port should be specified in the basechecker as a constant, so this test isn't neccesary
+
 
 def test_checker_connections():
     # TODO: Check timeouts?
     text = "ECHO :)"
     port = serve_once(text, 9999)
-    checker = CheckerExampleImpl(CHECKER_METHODS[0])    #Conflict between logging and enochecker.logging because of wildcart import
-    assert checker.http_get("/").text == text           #Should probably rename it to enologger to avoid further conflicts
+    checker = CheckerExampleImpl(
+        CHECKER_METHODS[0]
+    )  # Conflict between logging and enochecker.logging because of wildcart import
+    assert (
+        checker.http_get("/").text == text
+    )  # Should probably rename it to enologger to avoid further conflicts
 
     # Give server time to shut down
     time.sleep(0.2)
@@ -194,13 +241,15 @@ def test_useragents():
     assert checker.http_useragent == new_agent
     assert last_agent != checker.http_useragent
 
+
 def test_exceptionHandling(capsys):
-    #CheckerExampleImpl(method="putflag", call_idx=2).run()
-    run(CheckerExampleImpl, args=["run" ,"putflag", "-i", "2"])
-    
+    # CheckerExampleImpl(method="putflag", call_idx=2).run()
+    run(CheckerExampleImpl, args=["run", "putflag", "-i", "2"])
+
     a = capsys.readouterr()
     with capsys.disabled():
         print(a.out)
+
 
 def main():
     pytest.main(sys.argv)

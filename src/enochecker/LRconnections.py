@@ -13,14 +13,13 @@ from sys import exc_info
 
 
 class LR_Action(ABC):
-
     def __init__(self, request_params):
         self.request = request_params
 
     @abstractmethod
     async def initial_call(self):
         pass
-    
+
     @abstractmethod
     async def background_call(self):
         pass
@@ -42,56 +41,54 @@ class LR_Handler(Starlette):
             print(f"/{call.__name__}")
 
     @staticmethod
-    async def _callwrapper(
-         lr_callable, 
-         scope, recieve, send, 
-         *args, **rkwargs
-         ):
-        
-        async def __bg_task(timeout):  # lr_action: LR_Action, 
+    async def _callwrapper(lr_callable, scope, recieve, send, *args, **rkwargs):
+        async def __bg_task(timeout):  # lr_action: LR_Action,
             nonlocal lr_action
             try:
                 await wait_for(lr_action.background_call(), timeout)
-                print({
-                      "status": "FINISHED",
-                      "exception": None
-                      })
+                print({"status": "FINISHED", "exception": None})
 
             except TimeoutError:
                 exc_inf = exc_info()
-                print({
-                      "status": "Timeout",
-                      "exception": {
-                        "type":    exc_inf[0].__name__,
-                        "message": str(exc_inf[1]),
-                        "trace ":  format_tb(exc_inf[2])
-                        }
-                      })
+                print(
+                    {
+                        "status": "Timeout",
+                        "exception": {
+                            "type": exc_inf[0].__name__,
+                            "message": str(exc_inf[1]),
+                            "trace ": format_tb(exc_inf[2]),
+                        },
+                    }
+                )
 
             except Exception:
                 exc_inf = exc_info()
-                print({
-                      "status": "Error",
-                      "exception": {
-                        "type":    exc_inf[0].__name__,
-                        "message": str(exc_inf[1]),
-                        "trace ":  format_tb(exc_inf[2])
-                        }
-                      })
+                print(
+                    {
+                        "status": "Error",
+                        "exception": {
+                            "type": exc_inf[0].__name__,
+                            "message": str(exc_inf[1]),
+                            "trace ": format_tb(exc_inf[2]),
+                        },
+                    }
+                )
 
             finally:
                 try:
                     await lr_action.cleanup()
                 except Exception:
                     exc_inf = exc_info()
-                    print({
-                      "status": "cleanup failed",
-                      "exception": {
-                        "type":    exc_inf[0].__name__,
-                        "message": str(exc_inf[1]),
-                        "trace ":  format_tb(exc_inf[2])
+                    print(
+                        {
+                            "status": "cleanup failed",
+                            "exception": {
+                                "type": exc_inf[0].__name__,
+                                "message": str(exc_inf[1]),
+                                "trace ": format_tb(exc_inf[2]),
+                            },
                         }
-                      })
+                    )
                 del lr_action
 
         request = Request(scope, recieve)
@@ -101,12 +98,14 @@ class LR_Handler(Starlette):
         # lr_action = None
         try:
             # initial Call
-            continue_with_bg, ret_dict = await wait_for(lr_action.initial_call(), kwargs['initial_timeout'])
+            continue_with_bg, ret_dict = await wait_for(
+                lr_action.initial_call(), kwargs["initial_timeout"]
+            )
             print("initial call succeded")
             # Background Task
-            
+
             if continue_with_bg:
-                task = BackgroundTask(__bg_task, kwargs['long_timeout'])
+                task = BackgroundTask(__bg_task, kwargs["long_timeout"])
             else:
                 task = None
 
@@ -121,33 +120,34 @@ class LR_Handler(Starlette):
 
             # print(await lr_action.reader.read(20000))
             if cleanup_failed is None:
-                return await JSONResponse({
-                    "status": "aborted",
-                    "exception": {
-                        "type":    exc_inf[0].__name__,
-                        "message": str(exc_inf[1]),
-                        "trace ":  format_tb(exc_inf[2])
+                return await JSONResponse(
+                    {
+                        "status": "aborted",
+                        "exception": {
+                            "type": exc_inf[0].__name__,
+                            "message": str(exc_inf[1]),
+                            "trace ": format_tb(exc_inf[2]),
                         },
-                    "cleanup failed": None
-                    })(scope, recieve, send)
+                        "cleanup failed": None,
+                    }
+                )(scope, recieve, send)
             else:
-                return await JSONResponse({
-                    "status": "aborted",
-                    "exception": {
-                        "type":    exc_inf[0].__name__,
-                        "message": str(exc_inf[1]),
-                        "trace ":  format_tb(exc_inf[2])
+                return await JSONResponse(
+                    {
+                        "status": "aborted",
+                        "exception": {
+                            "type": exc_inf[0].__name__,
+                            "message": str(exc_inf[1]),
+                            "trace ": format_tb(exc_inf[2]),
                         },
-                    "cleanup failed": {
-                        "type":    cleanup_failed[0].__name__,
-                        "message": str(cleanup_failed[1]),
-                        "trace ":  format_tb(cleanup_failed[2])
-                        }
-                    })(scope, recieve, send)
-        
+                        "cleanup failed": {
+                            "type": cleanup_failed[0].__name__,
+                            "message": str(cleanup_failed[1]),
+                            "trace ": format_tb(cleanup_failed[2]),
+                        },
+                    }
+                )(scope, recieve, send)
+
         return await JSONResponse(
-                        {"status": "OK", "result": ret_dict},
-                        background=task
-                        )(scope, recieve, send)
-
-
+            {"status": "OK", "result": ret_dict}, background=task
+        )(scope, recieve, send)
