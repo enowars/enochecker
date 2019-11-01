@@ -200,7 +200,7 @@ class StoredDict(collections.MutableMapping):
     def persist(self):
         old_cache = self.cache
         self.cache = {}
-        for key, value in old_cache:
+        for key, value in old_cache.items():
             self[key] = value
 
     def __del__(self):
