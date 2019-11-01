@@ -2,6 +2,7 @@ import collections
 import configparser
 import os
 import logging
+import uswgi
 
 from functools import wraps
 from pymongo.errors import PyMongoError
@@ -86,12 +87,13 @@ class StoredDict(collections.MutableMapping):
     A dictionary that is MongoDb backed.
     """
 
-    @staticmethod
+    @classmethod
     def get_client(cls) -> MongoClient:
-        if cls._mongo:
+        if hasattr(cls, "_mongo"):
             return cls._mongo
         uwsgi.lock()
-        if cls._mongo:
+        if hasattr(cls, "_mongo"):
+            # we found a mongo in the meantime
             cls.unlock()
             return cls._mongo
         cls._mongo = MongoClient(
@@ -100,8 +102,8 @@ class StoredDict(collections.MutableMapping):
             username=DB_DEFAULT_USER,
             password=DB_DEFAULT_PASS,
         )
-        print("MONGO CLIENT INITIALIZED")
         cls.unlock()
+        print("MONGO CLIENT INITIALIZED: {}".format(cls._mongo)
         return cls._mongo
 
     def __init__(
