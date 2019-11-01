@@ -29,7 +29,7 @@ class EnoException(Exception, ABC):
     Base error including the Result. Raise a subclass of me once we know what to do.
     """
 
-    result = Result.INTERNAL_ERROR  # type: int
+    result = Result.INTERNAL_ERROR  # type: Result
 
 
 class BrokenServiceException(EnoException):
@@ -37,7 +37,7 @@ class BrokenServiceException(EnoException):
     Indicates a broken Service
     """
 
-    result = Result.MUMBLE  # type: int
+    result = Result.MUMBLE  # type: Result
 
 
 class OfflineException(EnoException):
@@ -45,7 +45,7 @@ class OfflineException(EnoException):
     Service was not reachable (at least once) during our checks
     """
 
-    result = Result.OFFLINE  # type: int
+    result = Result.OFFLINE  # type: Result
 
 
 class BrokenCheckerException(EnoException):
@@ -54,4 +54,4 @@ class BrokenCheckerException(EnoException):
     Used internally if something goes horribly wrong
     """
 
-    result = Result.INTERNAL_ERROR  # type: int
+    result = Result.INTERNAL_ERROR  # type: Result

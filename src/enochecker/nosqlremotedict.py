@@ -72,8 +72,8 @@ class StoredDict(collections.MutableMapping):
 
     @classmethod
     def get_client(
-            cls, host: str, port: int, username: Optional[str], password: Optional[str]
-    ) -> MongoClient:
+        cls, host: str, port: int, username: Optional[str], password: Optional[str]
+    ) -> "MongoClient":
         """
         Lazily tries to get the mongo db connection or creates a new one.
         :param host: mongo host
@@ -104,13 +104,13 @@ class StoredDict(collections.MutableMapping):
         return mongo
 
     def __init__(
-            self,
-            checker_name="BaseChecker",
-            dict_name="default",
-            host=DB_DEFAULT_HOST,
-            port=DB_DEFAULT_PORT,
-            username=DB_DEFAULT_USER,
-            password=DB_DEFAULT_PASS,
+        self,
+        checker_name="BaseChecker",
+        dict_name="default",
+        host=DB_DEFAULT_HOST,
+        port=DB_DEFAULT_PORT,
+        username=DB_DEFAULT_USER,
+        password=DB_DEFAULT_PASS,
     ):
         self.dict_name = base64ify(dict_name, altchars=b"-_")
         self.checker_name = checker_name
