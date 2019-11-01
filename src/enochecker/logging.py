@@ -1,11 +1,9 @@
+import datetime
 import json
 import logging
 import traceback
-import datetime
 from logging import LogRecord
 from typing import TYPE_CHECKING
-
-import requests
 
 LOGGING_PREFIX = "##ENOLOGMESSAGE "
 
@@ -114,8 +112,13 @@ class RestLogHandler(logging.Handler):
         :param checker: The checker to use
         :param level: the Level
         """
-
         super(RestLogHandler, self).__init__(level)
+
+        # see https://github.com/psf/requests/issues/2925
+        import requests
+
+        self.requests = requests
+
         self.checker = checker  # type: BaseChecker
 
     def emit(self, record):
@@ -131,7 +134,7 @@ class RestLogHandler(logging.Handler):
             "tag": "{}:{}:{}".format(record.name, record.module, record.funcName),
         }
         try:
-            r = requests.post(self.checker.log_endpoint, json=json)
+            r = self.requests.post(self.checker.log_endpoint, json=json)
             if r.status_code != 200:
                 print(
                     "Error while logging. Request to {} returned: {}".format(

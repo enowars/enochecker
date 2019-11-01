@@ -1,16 +1,16 @@
 import collections
-import configparser
-import os
 import logging
-import threading
-
+import os
 from functools import wraps
+from threading import RLock, current_thread
+from typing import Iterable, Any, Optional, TYPE_CHECKING
 
-from pymongo import MongoClient
-from pymongo.errors import PyMongoError
-from .results import BrokenCheckerException
+from enochecker import utils
 from .utils import base64ify
 
+if TYPE_CHECKING:
+    # We do these things as late as possible to avoid strange deadlocks when forking in UWSGI
+    import MongoClient
 
 # LOGGING SETUP
 logging.basicConfig(level=logging.DEBUG)
@@ -23,29 +23,10 @@ DB_GLOBAL_CACHE_SETTING = False
 RETRY_COUNT = 4
 
 # DB DEFAULT PARAMS
-DB_DEFAULT_USER = "root"
-DB_DEFAULT_PASS = "example"
-DB_DEFAULT_HOST = "172.20.0.3"
+DB_DEFAULT_USER = None
+DB_DEFAULT_PASS = None
+DB_DEFAULT_HOST = "localhost"
 DB_DEFAULT_PORT = 27017
-
-# INIT OVERRIDE
-print("READING INIT")
-config = configparser.ConfigParser()
-config.read("db.ini")
-config.read("DB.ini")
-config.read("database.ini")
-config.read("Database.ini")
-config.read("DATABASE.ini")
-
-if "DATABASE" in config:
-    if "HOST" in config["DATABASE"]:
-        DB_DEFAULT_HOST = config["DATABASE"]["HOST"]
-    if "PORT" in config["DATABASE"]:
-        DB_DEFAULT_PORT = int(config["DATABASE"]["PORT"])
-    if "USER" in config["DATABASE"]:
-        DB_DEFAULT_USER = config["DATABASE"]["USER"]
-    if "PASSWORD" in config["DATABASE"]:
-        DB_DEFAULT_PASS = config["DATABASE"]["PASSWORD"]
 
 if "MONGO_HOST" in os.environ:
     DB_DEFAULT_HOST = os.environ["MONGO_HOST"]
@@ -69,6 +50,8 @@ def to_keyfmt(key):
 def _try_n_times(func):
     @wraps(func)
     def try_n_times(*args, **kwargs):
+        from pymongo.errors import PyMongoError
+
         for i in range(RETRY_COUNT):
             try:
                 return func(*args, **kwargs)
@@ -80,51 +63,61 @@ def _try_n_times(func):
     return try_n_times
 
 
-dblock = threading.Lock()
-
-
 class StoredDict(collections.MutableMapping):
     """
     A dictionary that is MongoDb backed.
     """
-    cache = {}
-    
+
+    dblock = RLock()
+
     @classmethod
-    def get_client(cls) -> MongoClient:
-        if hasattr(cls, "_mongo"):
-            return cls._mongo
-        with dblock:
-            if hasattr(cls, "_mongo"):
-                # we found a mongo in the meantime
-                return cls._mongo
-            cls._mongo = MongoClient(
-                host=DB_DEFAULT_HOST,
-                port=DB_DEFAULT_PORT,
-                username=DB_DEFAULT_USER,
-                password=DB_DEFAULT_PASS,
-            )
-        print(
-            "MONGO CLIENT INITIALIZED for thread {}: {}".format(
-                threading.current_thread(), cls._mongo
-            )
+    def get_client(
+            cls, host: str, port: int, username: Optional[str], password: Optional[str]
+    ) -> MongoClient:
+        """
+        Lazily tries to get the mongo db connection or creates a new one.
+        :param host: mongo host
+        :param port: mongo port
+        :param username: the username to connect to
+        :param password: the password to use
+        :return:
+        """
+        mongo_name = utils.ensure_valid_filename(
+            "mongo_{}_{}_{}_{}".format(host, port, username, password)
         )
-        return cls._mongo
+        if hasattr(cls, mongo_name):
+            return getattr(cls, mongo_name)
+
+        from pymongo import MongoClient
+
+        with StoredDict.dblock:
+            if hasattr(cls, mongo_name):
+                # we found a mongo in the meantime
+                return getattr(cls, mongo_name)
+            mongo = MongoClient(
+                host=host, port=port, username=username, password=password
+            )
+            setattr(cls, mongo_name, mongo)
+        print(
+            "MONGO CLIENT INITIALIZED for thread {}: {}".format(current_thread(), mongo)
+        )
+        return mongo
 
     def __init__(
-        self,
-        checker_name="BaseChecker",
-        dict_name="default",
-        host=DB_DEFAULT_HOST,
-        port=DB_DEFAULT_PORT,
-        username=DB_DEFAULT_USER,
-        password=DB_DEFAULT_PASS,
+            self,
+            checker_name="BaseChecker",
+            dict_name="default",
+            host=DB_DEFAULT_HOST,
+            port=DB_DEFAULT_PORT,
+            username=DB_DEFAULT_USER,
+            password=DB_DEFAULT_PASS,
     ):
         self.dict_name = base64ify(dict_name, altchars=b"-_")
         self.checker_name = checker_name
-        #                   Table by checker
-        self.db = self.get_client()[checker_name][self.dict_name]
-        #                           Collection by team/global
-        # Add DB index
+        self.cache = {}
+        self.db = self.get_client(host, port, username, password)[checker_name][
+            self.dict_name
+        ]
         try:
             self.db.index_information()["checker_key"]
         except KeyError:
@@ -170,7 +163,7 @@ class StoredDict(collections.MutableMapping):
         if result:
             self.cache[key] = result["value"]
             return result["value"]
-        raise KeyError()
+        raise KeyError("Could not find {} in {}".format(key, self))
 
     @_try_n_times
     def __delitem__(self, key):
@@ -185,23 +178,14 @@ class StoredDict(collections.MutableMapping):
         self.db.delete_one(to_extract)
 
     @_try_n_times
-    def __len__(self):
+    def __len__(self) -> int:
         return self.db.count_documents(
             {"checker": self.checker_name, "name": self.dict_name}
         )
 
     @_try_n_times
-    def __iter__(self):
+    def __iter__(self) -> Iterable[Any]:
         iterdict = {"checker": self.checker_name, "name": self.dict_name}
         results = self.db.find(iterdict)
         for key in map(lambda res: res["key"], results):
             yield key
-
-    def persist(self):
-        old_cache = self.cache
-        self.cache = {}
-        for key, value in old_cache.items():
-            self[key] = value
-
-    def __del__(self):
-        self.persist()

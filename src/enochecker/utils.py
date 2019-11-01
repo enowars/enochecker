@@ -13,8 +13,12 @@ import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Union, Any, Optional, Dict, Callable, List, Pattern, Match, Tuple
 
-import requests
 from .results import BrokenServiceException, OfflineException
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import requests
 
 PORT_MAX = 65535
 
@@ -57,7 +61,10 @@ def assert_equals(o1, o2, message=None, autobyteify=False):
 
 def ensure_bytes(obj):
     # type: (Union[bytes, str, Any]) -> bytes
-    """Converts to bytes"""
+    """
+    Converts to bytes
+    :param obj: Str or Bytes (or anything else) to convert to bytes representation
+    """
     if obj is None:
         raise ValueError("Cannot byteify None")
     if isinstance(obj, bytes):
@@ -119,28 +126,32 @@ def sha256ify(s):
 
 
 def base64ify(s, altchars=None):
-    # type: (Union[str, bytes]) -> str
+    # type: (Union[str, bytes], Union[str, bytes, None]) -> str
     """
     Calculate the base64 representation of a value
     :param s: the input string
+    :param altchars: base64 encodes using the given altchars (or not, if None)
     :return: base64 representation
     """
     s = ensure_bytes(s)
     if altchars != None:
+        altchars = ensure_bytes(altchars)
         return base64.b64encode(s, altchars).decode("utf-8")
     else:
         return base64.b64encode(s).decode("utf-8")
 
 
 def debase64ify(s, altchars=None):
-    # type: (Union[str, bytes]) -> str
+    # type: (Union[str, bytes], Union[str, bytes, None]) -> str
     """
     Return a string out of a base64
     :param s: the string
+    :param altchars: base64 decodes using the given altchars (or not, if None)
     :return: the original value
     """
     s = ensure_bytes(s)
     if altchars != None:
+        altchars = ensure_bytes(altchars)
         return base64.b64decode(s, altchars).decode("utf-8")
     else:
         return base64.b64decode(s).decode("utf-8")
@@ -215,6 +226,9 @@ def serve_once(
     :param logger: the optional logger to redirect logs to.
     :return: The port the server started listening on
     """
+    # see https://github.com/psf/requests/issues/2925
+    import requests
+
     if logger is None:
         logger = utilslogger
     if headers is None:
