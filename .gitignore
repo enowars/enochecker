@@ -9,3 +9,6 @@ tmp
 .venv
 .vscode
 *.swp
+build
+dist
+*.egg-info

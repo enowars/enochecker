@@ -1,8 +1,9 @@
-import logging
-from logging import DEBUG, WARNING, CRITICAL, FATAL, INFO
-import pytest
+#!/usr/bin/env python3
 import sys
 import time
+from logging import DEBUG
+
+import pytest
 
 import enochecker
 from enochecker import *
@@ -151,7 +152,6 @@ def test_dict():
 
 
 def test_args():
-
     with pytest.raises(SystemExit):
         parse_args()
 

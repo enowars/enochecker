@@ -14,7 +14,7 @@ import os
 import sys
 
 from abc import ABCMeta, abstractmethod
-from typing import Optional, Callable, Any, Dict, List, Union, Type
+from typing import Optional, Callable, Any, Dict, List, Union, Type, TYPE_CHECKING
 from urllib.parse import urlparse
 
 from future.utils import with_metaclass
@@ -26,6 +26,10 @@ from .useragents import random_useragent
 from .results import Result, EnoException
 from .checkerservice import init_service, CHECKER_METHODS
 from .logging import RestLogHandler, ELKFormatter, exception_to_string
+
+if TYPE_CHECKING:
+    # The import might fail in UWSGI, see the comments below.
+    import requests
 
 if "TimeoutError" not in globals():  # Python2
     # noinspection PyShadowingBuiltins
@@ -295,7 +299,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             self._active_dbs = global_db_cache  # type: Dict[str, StoredDict]
         else:
             self._active_dbs = {}  # type: Dict[str, StoredDict]
-        self.http_session = requests.session()  # type: requests.Session
+        self.http_session = self.requests.session()  # type: requests.Session
         self.http_useragent = random_useragent()
 
         if not hasattr(self, "service_name"):
@@ -740,7 +744,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         timeout=None,
         **kwargs,
     ):
-        # type: (str, Any, Optional[int], str, bool, Optional[int], ...) -> requests.Response
+        # type: (str, Any, Optional[int], str, bool, Optional[int], ...) -> "requests.Response"
         """
         Performs a (http) requests.post to the current host.
         Caches cookies in self.http_session
@@ -767,7 +771,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         timeout=None,
         **kwargs,
     ):
-        # type: (str, Any, Optional[int], str, bool, Optional[int], ...) -> self.requests.Response
+        # type: (str, Any, Optional[int], str, bool, Optional[int], ...) -> "requests.Response"
         """
         Performs a (http) requests.get to the current host.
         Caches cookies in self.http_session
@@ -795,7 +799,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         timeout=None,
         **kwargs,
     ):
-        # type: (str, str, Any, Optional[int], str, bool, Optional[int], ...) -> self.requests.Response
+        # type: (str, str, Any, Optional[int], str, bool, Optional[int], ...) -> "requests.Response"
         """
         Performs an http request (requests lib) to the current host.
         Caches cookies in self.http_session
