@@ -119,27 +119,18 @@ class StoredDict(collections.MutableMapping):
         username=DB_DEFAULT_USER,
         password=DB_DEFAULT_PASS,
     ):
-        for i in range(RETRY_COUNT):
-            try:
-                # self.client =
-                self.dict_name = base64ify(dict_name, altchars=b"-_")
-                self.checker_name = checker_name
-                #                   Table by checker
-                self.db = self.get_client[checker_name][self.dict_name]
-                #                           Collection by team/global
-                
-
-                # Add DB index
-                try:
-                    self.db.index_information()["checker_key"]
-                except KeyError:
-                    self.db.create_index(
-                        [("key", 1)], name="checker_key", unique=True, background=True
-                    )
-            except PyMongoError as ex:
-                dictlogger.error("noSQLdict_Error", exc_info=ex)
-                if i == RETRY_COUNT - 1:
-                    raise BrokenCheckerException from ex
+        self.dict_name = base64ify(dict_name, altchars=b"-_")
+        self.checker_name = checker_name
+        #                   Table by checker
+        self.db = self.get_client()[checker_name][self.dict_name]
+        #                           Collection by team/global
+        # Add DB index
+        try:
+            self.db.index_information()["checker_key"]
+        except KeyError:
+            self.db.create_index(
+                [("key", 1)], name="checker_key", unique=True, background=True
+            )
 
     @_try_n_times
     def __setitem__(self, key, value):
