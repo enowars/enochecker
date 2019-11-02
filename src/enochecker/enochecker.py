@@ -568,8 +568,8 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             checker_name = type(self).__name__
             self.debug("Remote DB {} was not cached.".format(name))
             if os.getenv("MONGO_ENABLED"):
-                host = int(os.getenv("MONGO_HOST"))
-                port = os.getenv("MONGO_PORT")
+                host = os.getenv("MONGO_HOST")
+                port = int(os.getenv("MONGO_PORT"))
                 username = os.getenv("MONGO_USER")
                 password = os.getenv("MONGO_PASSWORD")
                 self.debug(
