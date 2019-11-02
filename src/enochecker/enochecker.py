@@ -28,6 +28,8 @@ from .logging import RestLogHandler, ELKFormatter
 from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
 from .nosqldict import NoSqlDict
 
+print(os.environ)
+
 if TYPE_CHECKING:
     # The import might fail in UWSGI, see the comments below.
     import requests
@@ -259,9 +261,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         if use_db_cache:
             self._active_dbs = global_db_cache  # type: Dict[str, StoredDict]
         else:
-            self._active_dbs = (
-                {}
-            )  # type: Dict[str, Union[NoSqlDict, StoredDict] ]
+            self._active_dbs = {}  # type: Dict[str, Union[NoSqlDict, StoredDict]]
         self.http_session = self.requests.session()  # type: requests.Session
         self.http_useragent = random_useragent()
 
@@ -561,56 +561,43 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 Manual locking ist still possible.
         :return: A dict that will be self storing. Alternatively,
         """
-        if self.storage_dir is None:
-            try:
-                db = self._active_dbs[name]
-                return db
-            except KeyError:
-                try:
-                    checker_name = type(self).__name__
-                    self.debug("Remote DB {} was not cached.".format(name))
-                    if os.getenv("MONGO_ENABLED"):
-                        host = os.getenv("MONGO_HOST")
-                        port = os.getenv("MONGO_PORT")
-                        username = os.getenv("MONGO_USER")
-                        password = os.getenv("MONGO_PASSWORD")
-                        print("host = ", host)
-                        print("port = ", port)
-                        print("user = ", username)
-                        print("password = ", password)
+        try:
+            db = self._active_dbs[name]
+            db.logger = self.logger
+            # TODO: Settng a new Logger backend may throw logs in the wrong direction in a multithreaded environment!
+            return db
+        except KeyError:
+            checker_name = type(self).__name__
+            self.debug("Remote DB {} was not cached.".format(name))
+            print(os.environ)
+            if os.getenv("MONGO_ENABLED"):
+                host = os.getenv("MONGO_HOST")
+                port = os.getenv("MONGO_PORT")
+                username = os.getenv("MONGO_USER")
+                password = os.getenv("MONGO_PASSWORD")
+                print("host = ", host)
+                print("port = ", port)
+                print("user = ", username)
+                print("password = ", password)
 
-                        ret = NoSqlDict(
-                            checker_name=checker_name,
-                            dict_name=name,
-                            host=host,
-                            port=port,
-                            username=username,
-                            password=password,
-                        )
-                    else:
-                        ret = StoredDict(
-                            checker_name=type(self).__name__, dict_name=name
-                        )  # , logger=self.logger)
-                    self._active_dbs[name] = ret
-                    return ret
-                except Exception as ex:
-                    self.error("RemoteDict Error", exc_info=ex)
-        else:
-            try:
-                db = self._active_dbs[name]
-                # TODO: Settng a new Logger backend may throw logs in the wrong direction in a multithreaded environment!
-                db.logger = self.logger
-                return db
-            except KeyError:
-                self.debug("DB {} was not cached.".format(name))
+                ret = NoSqlDict(
+                    dict_name=name,
+                    checker_name=checker_name,
+                    host=host,
+                    port=port,
+                    username=username,
+                    password=password,
+                )
+            else:
                 ret = StoredDict(
-                    base_path=self.storage_dir,
+                    name=name, 
+                    base_path=self.storage_dir, 
                     name=name,
                     ignore_locks=ignore_locks,
-                    logger=self.logger,
-                )
-                self._active_dbs[name] = ret
-                return ret
+                    logger=self.logger
+                )  
+            self._active_dbs[name] = ret
+            return ret
 
     @property
     def global_db(self):
