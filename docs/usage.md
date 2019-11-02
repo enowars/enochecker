@@ -82,7 +82,7 @@ Despite being not encouraged you can also define global dictionarys outside the 
 They *kinda* work in the same way as regular StoredDicts, however they are hosted on a external Mongodb.
 For that add an Database.ini as seen in the [example database.ini](../database.ini).
 If either one of HOST, PORT, USER or PASS is not specified it is overloaded by a default value as seen in the `# database init` in  
-[nosqlremotedict.py](../src/enochecker/nosqlremotedict.py).
+[nosqlremotedict.py](../src/enochecker/nosqldict.py).
 
 ## Checker-Results
 The last Important thing a Checker has to do every round is to report back to the central GameServer about how his Run went. In the checkerlib the responses are taken care for you.
