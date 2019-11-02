@@ -189,3 +189,7 @@ class StoredDict(collections.MutableMapping):
         results = self.db.find(iterdict)
         for key in map(lambda res: res["key"], results):
             yield key
+
+    def persist(self) -> None:
+        # TODO: could wait until here before hitting the mongodb...
+        pass
