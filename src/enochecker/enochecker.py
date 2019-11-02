@@ -160,8 +160,8 @@ def parse_args(argv=None):
         type=int,
         default=0,
         help="Unique numerical index per round. Each id only occurs once and is tighly packed, "
-             "starting with 0. In a service supporting multiple flags, this would be used to "
-             "decide which flag to place.",
+        "starting with 0. In a service supporting multiple flags, this would be used to "
+        "decide which flag to place.",
     )
     runparser.add_argument(
         "-l",
@@ -209,23 +209,23 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
     """
 
     def __init__(
-            self,
-            request_dict: Dict[str, Any] = None,
-            run_id: int = None,
-            method: str = None,
-            address: str = None,
-            team: str = None,
-            team_id: int = None,
-            round: int = None,
-            flag_round: int = None,
-            round_length: int = 300,
-            flag: str = None,
-            flag_idx: int = None,
-            timeout: int = None,
-            storage_dir: str = DB_DEFAULT_DIR,
-            log_endpoint: Optional[str] = None,
-            use_db_cache: bool = DB_GLOBAL_CACHE_SETTING,
-            json_logging: bool = True,
+        self,
+        request_dict: Dict[str, Any] = None,
+        run_id: int = None,
+        method: str = None,
+        address: str = None,
+        team: str = None,
+        team_id: int = None,
+        round: int = None,
+        flag_round: int = None,
+        round_length: int = 300,
+        flag: str = None,
+        flag_idx: int = None,
+        timeout: int = None,
+        storage_dir: str = DB_DEFAULT_DIR,
+        log_endpoint: Optional[str] = None,
+        use_db_cache: bool = DB_GLOBAL_CACHE_SETTING,
+        json_logging: bool = True,
     ) -> None:
         """
         Inits the Checker, filling the params, according to:
@@ -378,10 +378,10 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 if method == "getflag":
                     try:
                         ignore_run = not (
-                                "OK"
-                                == self.team_db[
-                                    f"__Checker-internals-RESULT:putflag,{self.flag_round},{self.flag_idx}__"
-                                ]
+                            "OK"
+                            == self.team_db[
+                                f"__Checker-internals-RESULT:putflag,{self.flag_round},{self.flag_idx}__"
+                            ]
                         )
 
                     except KeyError as ex:
@@ -394,10 +394,10 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                     try:
 
                         ignore_run = not (
-                                "OK"
-                                == self.team_db[
-                                    f"__Checker-internals-RESULT:putnoise,{self.flag_round},{self.flag_idx}__"
-                                ]
+                            "OK"
+                            == self.team_db[
+                                f"__Checker-internals-RESULT:putnoise,{self.flag_round},{self.flag_idx}__"
+                            ]
                         )
 
                     except KeyError as ex:
@@ -443,14 +443,14 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
             return Result.MUMBLE  # , "HTTP Error" #For now
         except (
-                self.requests.ConnectionError,  # requests
-                self.requests.ConnectTimeout,  # requests
-                TimeoutError,
-                socket.timeout,
-                ConnectionError,
-                socket.error,
-                # ConnectionAbortedError,  # not in py2, already handled by ConnectionError.
-                # ConnectionRefusedError
+            self.requests.ConnectionError,  # requests
+            self.requests.ConnectTimeout,  # requests
+            TimeoutError,
+            socket.timeout,
+            ConnectionError,
+            socket.error,
+            # ConnectionAbortedError,  # not in py2, already handled by ConnectionError.
+            # ConnectionRefusedError
         ) as ex:
             self.info(
                 "Error in connection to service occurred: {}\n".format(ex), exc_info=ex
@@ -581,7 +581,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 print("password = ", password)
 
                 ret = NoSqlDict(
-                    dict_name=name,
+                    name=name,
                     checker_name=checker_name,
                     host=host,
                     port=port,
@@ -590,12 +590,11 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 )
             else:
                 ret = StoredDict(
-                    name=name, 
-                    base_path=self.storage_dir, 
                     name=name,
+                    base_path=self.storage_dir,
                     ignore_locks=ignore_locks,
-                    logger=self.logger
-                )  
+                    logger=self.logger,
+                )
             self._active_dbs[name] = ret
             return ret
 
@@ -705,14 +704,14 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         return new_agent
 
     def http_post(
-            self,
-            route="/",
-            params=None,
-            port=None,
-            scheme="http",
-            raise_http_errors=False,
-            timeout=None,
-            **kwargs,
+        self,
+        route="/",
+        params=None,
+        port=None,
+        scheme="http",
+        raise_http_errors=False,
+        timeout=None,
+        **kwargs,
     ):
         # type: (str, Any, Optional[int], str, bool, Optional[int], ...) -> "requests.Response"
         """
@@ -732,14 +731,14 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         )
 
     def http_get(
-            self,
-            route="/",
-            params=None,
-            port=None,
-            scheme="http",
-            raise_http_errors=False,
-            timeout=None,
-            **kwargs,
+        self,
+        route="/",
+        params=None,
+        port=None,
+        scheme="http",
+        raise_http_errors=False,
+        timeout=None,
+        **kwargs,
     ):
         # type: (str, Any, Optional[int], str, bool, Optional[int], ...) -> "requests.Response"
         """
@@ -759,15 +758,15 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         )
 
     def http(
-            self,
-            method,
-            route="/",
-            params=None,
-            port=None,
-            scheme="http",
-            raise_http_errors=False,
-            timeout=None,
-            **kwargs,
+        self,
+        method,
+        route="/",
+        params=None,
+        port=None,
+        scheme="http",
+        raise_http_errors=False,
+        timeout=None,
+        **kwargs,
     ):
         # type: (str, str, Any, Optional[int], str, bool, Optional[int], ...) -> "requests.Response"
         """

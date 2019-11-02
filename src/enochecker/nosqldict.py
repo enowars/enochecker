@@ -88,14 +88,16 @@ class NoSqlDict(collections.MutableMapping):
 
     def __init__(
         self,
+        name="default",
         checker_name="BaseChecker",
-        dict_name="default",
         host=DB_DEFAULT_HOST,
         port=DB_DEFAULT_PORT,
         username=DB_DEFAULT_USER,
         password=DB_DEFAULT_PASS,
+        *args,
+        **kwargs
     ):
-        self.dict_name = base64ify(dict_name, altchars=b"-_")
+        self.dict_name = base64ify(name, altchars=b"-_")
         self.checker_name = checker_name
         self.cache = {}
         self.db = self.get_client(host, port, username, password)[checker_name][
