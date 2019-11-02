@@ -7,7 +7,6 @@ from future.standard_library import install_aliases
 install_aliases()
 
 import argparse
-import configparser
 import json
 import logging
 import os
@@ -25,15 +24,13 @@ from .utils import snake_caseify, SimpleSocket
 from .useragents import random_useragent
 from .results import Result, EnoException
 from .checkerservice import init_service, CHECKER_METHODS
-from .logging import RestLogHandler, ELKFormatter, exception_to_string
+from .logging import RestLogHandler, ELKFormatter
+from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
+from .nosqlremotedict import NoSqlRemoteDict
 
 if TYPE_CHECKING:
     # The import might fail in UWSGI, see the comments below.
     import requests
-
-if "TimeoutError" not in globals():  # Python2
-    # noinspection PyShadowingBuiltins
-    TimeoutError = socket.timeout
 
 TIME_BUFFER = 5  # type: int # time in seconds we try to finish earlier
 
@@ -52,43 +49,8 @@ VALID_ARGS = [
     "round_length",
 ]
 
-
-# DATABASE_INIT
-print("READING INIT")
-config = configparser.ConfigParser()
-config.read("db.ini")
-config.read("DB.ini")
-config.read("database.ini")
-config.read("Database.ini")
-config.read("DATABASE.ini")
-print(list(config.items()))
-if "MONGO_ENABLED" in os.environ:
-    if os.environ["MONGO_ENABLED"] == "1":
-        from .nosqlremotedict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
-
-elif "DATABASE" in config:
-    print("INIT DB")
-    print(config["DATABASE"])
-    if "REMOTE" in config["DATABASE"]:
-        if bool(int(config["DATABASE"]["REMOTE"])):
-            print("INIT REMOTE DB")
-            from .nosqlremotedict import (
-                StoredDict,
-                DB_DEFAULT_DIR,
-                DB_GLOBAL_CACHE_SETTING,
-            )
-
-        else:
-            from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
-    elif "LOCAL" in config["DATABASE"]:
-        from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
-    else:
-        from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
-else:
-    from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
-
 # Global cache for all stored dicts.  TODO: Prune this at some point?
-global_db_cache = {}  # type: Dict[str, StoredDict]
+global_db_cache = {}  # type: Dict[str, Union[StoredDict, NoSqlRemoteDict]]
 
 
 def parse_args(argv=None):
@@ -246,24 +208,23 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
     def __init__(
         self,
-        request_dict=None,
-        run_id=None,
-        method=None,
-        address=None,
-        team=None,
-        team_id=None,
-        round=None,
-        flag_round=None,
-        round_length=300,
-        flag=None,
-        flag_idx=None,
-        timeout=None,
-        storage_dir=DB_DEFAULT_DIR,
-        log_endpoint=None,
-        use_db_cache=DB_GLOBAL_CACHE_SETTING,
-        json_logging=True,
-    ):
-        # type: (Optional[int], Optional[str], Optional[str], Optional[str], Optional[int], Optional[int], Optional[str], Optional[int], Optional[int], str, Optional[str], bool, bool) -> None
+        request_dict: Dict[str, Any] = None,
+        run_id: int = None,
+        method: str = None,
+        address: str = None,
+        team: str = None,
+        team_id: int = None,
+        round: int = None,
+        flag_round: int = None,
+        round_length: int = 300,
+        flag: str = None,
+        flag_idx: int = None,
+        timeout: int = None,
+        storage_dir: str = DB_DEFAULT_DIR,
+        log_endpoint: Optional[str] = None,
+        use_db_cache: bool = DB_GLOBAL_CACHE_SETTING,
+        json_logging: bool = True,
+    ) -> None:
         """
         Inits the Checker, filling the params, according to:
         :param: run_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
@@ -298,7 +259,9 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         if use_db_cache:
             self._active_dbs = global_db_cache  # type: Dict[str, StoredDict]
         else:
-            self._active_dbs = {}  # type: Dict[str, StoredDict]
+            self._active_dbs = (
+                {}
+            )  # type: Dict[str, Union[NoSqlRemoteDict, StoredDict] ]
         self.http_session = self.requests.session()  # type: requests.Session
         self.http_useragent = random_useragent()
 
@@ -588,7 +551,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
     # ---- DB specific methods ---- #
     def db(self, name, ignore_locks=False):
-        # type: (str, bool) -> StoredDict
+        # type: (str, bool) -> Union[NoSqlRemoteDict, StoredDict]
         """
         Get a (global) db by name
         Subsequent calls will return the same db.
@@ -604,10 +567,30 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 return db
             except KeyError:
                 try:
+                    checker_name = type(self).__name__
                     self.debug("Remote DB {} was not cached.".format(name))
-                    ret = StoredDict(
-                        checker_name=type(self).__name__, dict_name=name
-                    )  # , logger=self.logger)
+                    if os.getenv("MONGO_ENABLED"):
+                        host = os.getenv("MONGO_HOST")
+                        port = os.getenv("MONGO_PORT")
+                        username = os.getenv("MONGO_USER")
+                        password = os.getenv("MONGO_PASSWORD")
+                        print("host = ", host)
+                        print("port = ", port)
+                        print("user = ", username)
+                        print("password = ", password)
+
+                        ret = NoSqlRemoteDict(
+                            checker_name=checker_name,
+                            dict_name=name,
+                            host=host,
+                            port=port,
+                            username=username,
+                            password=password,
+                        )
+                    else:
+                        ret = StoredDict(
+                            checker_name=type(self).__name__, dict_name=name
+                        )  # , logger=self.logger)
                     self._active_dbs[name] = ret
                     return ret
                 except Exception as ex:

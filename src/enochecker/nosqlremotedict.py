@@ -17,9 +17,6 @@ logging.basicConfig(level=logging.DEBUG)
 dictlogger = logging.Logger(__name__)
 dictlogger.setLevel(logging.DEBUG)
 
-# DIR
-DB_DEFAULT_DIR = None
-DB_GLOBAL_CACHE_SETTING = False
 RETRY_COUNT = 4
 
 # DB DEFAULT PARAMS
@@ -27,20 +24,6 @@ DB_DEFAULT_USER = None
 DB_DEFAULT_PASS = None
 DB_DEFAULT_HOST = "localhost"
 DB_DEFAULT_PORT = 27017
-
-if "MONGO_HOST" in os.environ:
-    DB_DEFAULT_HOST = os.environ["MONGO_HOST"]
-if "MONGO_PORT" in os.environ:
-    DB_DEFAULT_PORT = int(os.environ["MONGO_PORT"])
-if "MONGO_USER" in os.environ:
-    DB_DEFAULT_USER = os.environ["MONGO_USER"]
-if "MONGO_PASSWORD" in os.environ:
-    DB_DEFAULT_PASS = os.environ["MONGO_PASSWORD"]
-
-print("host = ", DB_DEFAULT_HOST)
-print("port = ", DB_DEFAULT_PORT)
-print("username = ", DB_DEFAULT_USER)
-print("password = ", DB_DEFAULT_PASS)
 
 
 def to_keyfmt(key):
@@ -63,7 +46,7 @@ def _try_n_times(func):
     return try_n_times
 
 
-class StoredDict(collections.MutableMapping):
+class NoSqlRemoteDict(collections.MutableMapping):
     """
     A dictionary that is MongoDb backed.
     """
@@ -90,7 +73,7 @@ class StoredDict(collections.MutableMapping):
 
         from pymongo import MongoClient
 
-        with StoredDict.dblock:
+        with NoSqlRemoteDict.dblock:
             if hasattr(cls, mongo_name):
                 # we found a mongo in the meantime
                 return getattr(cls, mongo_name)
@@ -98,7 +81,7 @@ class StoredDict(collections.MutableMapping):
                 host=host, port=port, username=username, password=password
             )
             setattr(cls, mongo_name, mongo)
-        print(
+        dictlogger.debug(
             "MONGO CLIENT INITIALIZED for thread {}: {}".format(current_thread(), mongo)
         )
         return mongo
@@ -158,7 +141,7 @@ class StoredDict(collections.MutableMapping):
         result = self.db.find_one(to_extract)
 
         if print_result:
-            print(result)
+            dictlogger.debug(result)
 
         if result:
             self.cache[key] = result["value"]
