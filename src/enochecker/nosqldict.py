@@ -3,7 +3,7 @@ import logging
 import os
 from functools import wraps
 from threading import RLock, current_thread
-from typing import Iterable, Any, Optional, TYPE_CHECKING
+from typing import Iterable, Any, Optional, TYPE_CHECKING, Union
 
 from enochecker import utils
 from .utils import base64ify
@@ -88,12 +88,12 @@ class NoSqlDict(collections.MutableMapping):
 
     def __init__(
         self,
-        name="default",
-        checker_name="BaseChecker",
-        host=DB_DEFAULT_HOST,
-        port=DB_DEFAULT_PORT,
-        username=DB_DEFAULT_USER,
-        password=DB_DEFAULT_PASS,
+        name: str = "default",
+        checker_name: str = "BaseChecker",
+        host: str = DB_DEFAULT_HOST,
+        port: int = DB_DEFAULT_PORT,
+        username: str = DB_DEFAULT_USER,
+        password: str = DB_DEFAULT_PASS,
         *args,
         **kwargs
     ):
