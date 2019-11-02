@@ -28,8 +28,6 @@ from .logging import RestLogHandler, ELKFormatter
 from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
 from .nosqldict import NoSqlDict
 
-print(os.environ)
-
 if TYPE_CHECKING:
     # The import might fail in UWSGI, see the comments below.
     import requests
@@ -569,16 +567,16 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         except KeyError:
             checker_name = type(self).__name__
             self.debug("Remote DB {} was not cached.".format(name))
-            print(os.environ)
             if os.getenv("MONGO_ENABLED"):
                 host = os.getenv("MONGO_HOST")
                 port = os.getenv("MONGO_PORT")
                 username = os.getenv("MONGO_USER")
                 password = os.getenv("MONGO_PASSWORD")
-                print("host = ", host)
-                print("port = ", port)
-                print("user = ", username)
-                print("password = ", password)
+                self.debug(
+                    "Using NoSqlDict mongo://{}:{}@{}:{}".format(
+                        username, password, host, port
+                    )
+                )
 
                 ret = NoSqlDict(
                     name=name,
@@ -589,6 +587,11 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                     password=password,
                 )
             else:
+                self.debug(
+                    "MONGO_ENABLED not set. Using stored dict at {}".format(
+                        self.storage_dir
+                    )
+                )
                 ret = StoredDict(
                     name=name,
                     base_path=self.storage_dir,
