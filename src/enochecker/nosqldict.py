@@ -46,7 +46,7 @@ def _try_n_times(func):
     return try_n_times
 
 
-class NoSqlRemoteDict(collections.MutableMapping):
+class NoSqlDict(collections.MutableMapping):
     """
     A dictionary that is MongoDb backed.
     """
@@ -73,7 +73,7 @@ class NoSqlRemoteDict(collections.MutableMapping):
 
         from pymongo import MongoClient
 
-        with NoSqlRemoteDict.dblock:
+        with NoSqlDict.dblock:
             if hasattr(cls, mongo_name):
                 # we found a mongo in the meantime
                 return getattr(cls, mongo_name)
