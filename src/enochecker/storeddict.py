@@ -82,8 +82,8 @@ class StoredDict(collections.MutableMapping):
 
     def __init__(
         self,
-        base_path=DB_DEFAULT_DIR,
         name="default",
+        base_path=DB_DEFAULT_DIR,
         persist_secs=3,
         ignore_locks=False,
         logger=None,
