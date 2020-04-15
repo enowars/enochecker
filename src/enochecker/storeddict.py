@@ -3,7 +3,7 @@ from future.standard_library import install_aliases
 install_aliases()
 
 import atexit
-import collections
+from collections.abc import MutableMapping
 import json
 import os
 import threading
@@ -72,7 +72,7 @@ def _locked(func):
     return cast(T, locked)
 
 
-class StoredDict(collections.MutableMapping):
+class StoredDict(MutableMapping):
     """
     A dictionary that is filesystem backed.
     It will write to disk every few seconds and at exit.
