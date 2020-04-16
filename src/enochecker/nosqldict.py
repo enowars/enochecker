@@ -1,4 +1,4 @@
-import collections
+from collections.abc import MutableMapping
 import logging
 import os
 from functools import wraps
@@ -46,7 +46,7 @@ def _try_n_times(func):
     return try_n_times
 
 
-class NoSqlDict(collections.MutableMapping):
+class NoSqlDict(MutableMapping):
     """
     A dictionary that is MongoDb backed.
     """
