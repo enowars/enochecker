@@ -37,7 +37,7 @@ if __name__ == "__main__":
     run(AwesomeChecker)
 ```
 
-A full example, including helpful comments, can be found in [examplechecker.py](examplechecker.py).
+A full example, including helpful comments, can be found in [examplechecker.py](example/examplechecker.py).
 
 The full API specification can be found [docs/api.md](docs/api.md).
 (Generated from docstring using `pydocmd simple ...`).
