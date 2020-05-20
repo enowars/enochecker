@@ -80,7 +80,7 @@ Despite being not encouraged you can also define global dictionarys outside the 
 
 ## RemoteDict(s)
 They *kinda* work in the same way as regular StoredDicts, however they are hosted on a external Mongodb.
-For that add an Database.ini as seen in the [example database.ini](../database.ini).
+For that add an Database.ini as seen in the [example database.ini](../example/database.ini).
 If either one of HOST, PORT, USER or PASS is not specified it is overloaded by a default value as seen in the `# database init` in  
 [nosqlremotedict.py](../src/enochecker/nosqldict.py).
 
