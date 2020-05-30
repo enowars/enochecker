@@ -44,7 +44,7 @@ The full API specification can be found [docs/api.md](docs/api.md).
 
 ## Installation
 For now, the library can be installed using pip/git, like:
-`pip install git+https://github.com/domenukk/enochecker`
+`pip install git+https://github.com/enowars/enochecker`
 
 ## Launch Checker
 The goal is to have checkers launched via uSWGI and the Engine talking to it via http. 
