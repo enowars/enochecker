@@ -2,10 +2,9 @@ import logging
 from collections.abc import MutableMapping
 from functools import wraps
 from threading import RLock, current_thread
-from typing import TYPE_CHECKING, Any, Iterable, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional
 
-from enochecker import utils
-
+from . import utils
 from .utils import base64ify
 
 if TYPE_CHECKING:
@@ -92,14 +91,14 @@ class NoSqlDict(MutableMapping):
         checker_name: str = "BaseChecker",
         host: str = DB_DEFAULT_HOST,
         port: int = DB_DEFAULT_PORT,
-        username: str = DB_DEFAULT_USER,
-        password: str = DB_DEFAULT_PASS,
+        username: Optional[str] = DB_DEFAULT_USER,
+        password: Optional[str] = DB_DEFAULT_PASS,
         *args,
         **kwargs
     ):
         self.dict_name = base64ify(name, altchars=b"-_")
         self.checker_name = checker_name
-        self.cache = {}
+        self.cache: Dict[Any, Any] = {}
         self.db = self.get_client(host, port, username, password)[checker_name][
             self.dict_name
         ]
