@@ -7,21 +7,10 @@ import socket
 import sys
 from abc import ABCMeta, abstractmethod
 from concurrent.futures import TimeoutError
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Type, Union
 from urllib.parse import urlparse
 
 from flask import Flask
-from future.utils import with_metaclass
 
 from .checkerservice import CHECKER_METHODS, init_service
 from .logging import ELKFormatter, RestLogHandler

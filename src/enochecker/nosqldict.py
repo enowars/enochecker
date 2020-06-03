@@ -1,9 +1,8 @@
 import logging
-import os
 from collections.abc import MutableMapping
 from functools import wraps
 from threading import RLock, current_thread
-from typing import TYPE_CHECKING, Any, Iterable, Optional, Union
+from typing import TYPE_CHECKING, Any, Iterable, Optional
 
 from enochecker import utils
 
