@@ -5,3 +5,7 @@ lint:
 format:
 	python -m isort -rc src/
 	python -m black src/
+
+test:
+	pip install .
+	python -m pytest
