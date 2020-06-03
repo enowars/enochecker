@@ -57,7 +57,7 @@ class ELKFormatter(logging.Formatter):
             "exception": exception_info,
             "stacktrace": record.stack_info,
             "serviceName": self.checker.service_name,
-            "method": record.checker.method
+            "method": self.checker.method
         }
 
         return LOGGING_PREFIX + json.dumps(log_output)
