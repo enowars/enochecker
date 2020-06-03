@@ -41,3 +41,9 @@ steps:
     pip install .
     pytest
   displayName: 'pytest'
+
+- script: |
+    pip install -r dev-requirements.txt
+    python -m isort -c -rc src/
+    python -m black --check src/
+  displayName: 'lint'

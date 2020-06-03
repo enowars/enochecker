@@ -1,29 +1,30 @@
 from future.standard_library import install_aliases
 
-install_aliases()
-
-from .utils import (
-    assert_equals,
-    assert_in,
-    base64ify,
-    debase64ify,
-    sha256ify,
-    ensure_bytes,
-    ensure_unicode,
-    ensure_valid_filename,
-    snake_caseify,
-    readline_expect,
-    serve_once,
-    start_daemon,
-    SimpleSocket,
-)  # the util stuff
-from .results import (
+from .checkerservice import CHECKER_METHODS
+from .enochecker import BaseChecker, parse_args, run  # the BaseChecker
+from .results import (  # Possible results
     BrokenServiceException,
     EnoException,
     OfflineException,
     Result,
-)  # Possible results
-from .enochecker import run, parse_args, BaseChecker  # the BaseChecker
-from .checkerservice import CHECKER_METHODS
+)
+from .utils import (  # the util stuff
+    SimpleSocket,
+    assert_equals,
+    assert_in,
+    base64ify,
+    debase64ify,
+    ensure_bytes,
+    ensure_unicode,
+    ensure_valid_filename,
+    readline_expect,
+    serve_once,
+    sha256ify,
+    snake_caseify,
+    start_daemon,
+)
+
+install_aliases()
+
 
 name = "enochecker"

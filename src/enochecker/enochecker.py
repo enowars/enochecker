@@ -1,32 +1,29 @@
-import datetime
-import socket
-
-from flask import Flask
-from future.standard_library import install_aliases
-
-install_aliases()
-
 import argparse
+import datetime
 import json
 import logging
 import os
+import socket
 import sys
-
 from abc import ABCMeta, abstractmethod
-from typing import Optional, Callable, Any, Dict, List, Union, Type, TYPE_CHECKING
+from concurrent.futures import TimeoutError
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Type, Union
 from urllib.parse import urlparse
 
+from flask import Flask
+from future.standard_library import install_aliases
 from future.utils import with_metaclass
 
-from concurrent.futures import TimeoutError
-
-from .utils import snake_caseify, SimpleSocket
-from .useragents import random_useragent
-from .results import Result, EnoException
-from .checkerservice import init_service, CHECKER_METHODS
-from .logging import RestLogHandler, ELKFormatter
-from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
+from .checkerservice import CHECKER_METHODS, init_service
+from .logging import ELKFormatter, RestLogHandler
 from .nosqldict import NoSqlDict
+from .results import EnoException, Result
+from .storeddict import DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING, StoredDict
+from .useragents import random_useragent
+from .utils import SimpleSocket, snake_caseify
+
+install_aliases()
+
 
 if TYPE_CHECKING:
     # The import might fail in UWSGI, see the comments below.

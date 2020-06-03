@@ -2,9 +2,9 @@ import collections
 import json
 import logging
 import sys
-from typing import TYPE_CHECKING, Callable, Type, Any, List, Union, Dict, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Type, Union
 
-from flask import Flask, Response, request, jsonify
+from flask import Flask, Response, jsonify, request
 
 from .enochecker import Result
 from .logging import exception_to_string

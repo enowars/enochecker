@@ -1,7 +1,3 @@
-from future.standard_library import install_aliases
-
-install_aliases()
-
 import base64
 import hashlib
 import logging
@@ -11,11 +7,25 @@ import telnetlib
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Union, Any, Optional, Dict, Callable, List, Pattern, Match, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Match,
+    Optional,
+    Pattern,
+    Tuple,
+    Union,
+)
+
+from future.standard_library import install_aliases
 
 from .results import BrokenServiceException, OfflineException
 
-from typing import TYPE_CHECKING
+install_aliases()
+
 
 if TYPE_CHECKING:
     import requests

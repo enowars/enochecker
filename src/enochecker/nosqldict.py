@@ -1,11 +1,12 @@
-from collections.abc import MutableMapping
 import logging
 import os
+from collections.abc import MutableMapping
 from functools import wraps
 from threading import RLock, current_thread
-from typing import Iterable, Any, Optional, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Any, Iterable, Optional, Union
 
 from enochecker import utils
+
 from .utils import base64ify
 
 if TYPE_CHECKING:

@@ -1,23 +1,25 @@
-from future.standard_library import install_aliases
-
-install_aliases()
-
 import atexit
-from collections.abc import MutableMapping
 import json
+import logging
 import os
 import threading
 import time
-import logging
+from collections.abc import MutableMapping
 from functools import wraps
-from typing import Any, Dict, Set, Iterator, Optional, TypeVar, cast
+from typing import Any, Dict, Iterator, Optional, Set, TypeVar, cast
+
+from future.standard_library import install_aliases
+
+from .utils import base64ify, debase64ify, ensure_valid_filename, start_daemon
+
+install_aliases()
+
 
 try:
     from pathlib import Path
 except ImportError:
     from pathlib2 import Path  # python 2 backport
 
-from .utils import ensure_valid_filename, base64ify, debase64ify, start_daemon
 
 logging.basicConfig(level=logging.DEBUG)
 dictlogger = logging.Logger(__name__)
