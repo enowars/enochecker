@@ -35,10 +35,18 @@ class ELKFormatter(logging.Formatter):
                 "message": str(record.exc_info[1]),
                 "traceback": "".join(x.encode().decode("unicode_escape") for x in traceback.format_tb(record.exc_info[2], 20)),
             }
+            exception_info["traceback"] = exception_info["traceback"].enocode().decode("unicode_escape")
         else:
             exception_info = None
 
-        message = record.getMessage() + f" excp: {exception_info} trace: {record.stack_info}"
+        message = record.getMessage()
+        if record.exc_info:
+            eno = record.exc_info
+            stacktrace = ''.join(traceback.format_exception(None, eno, eno.__traceback__))
+            message += f" excp: {stacktrace}"
+        if record.stack_info:
+            message += f" trace: {record.stack}"
+
         log_output = {
             "tool": type(self.checker).__name__,
             "type": "infrastructure",
