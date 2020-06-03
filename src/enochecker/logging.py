@@ -33,7 +33,7 @@ class ELKFormatter(logging.Formatter):
             exception_info = {
                 "type": record.exc_info[0].__name__,
                 "message": str(record.exc_info[1]),
-                "traceback": traceback.format_tb(record.exc_info[2], 20),
+                "traceback": "".join(x.encode().decode("unicode_escape") for x in traceback.format_tb(record.exc_info[2], 20)),
             }
         else:
             exception_info = None
