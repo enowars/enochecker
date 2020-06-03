@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Type, Union
 
 from flask import Flask, Response, jsonify, request
 
-from .results import Result
 from .logging import exception_to_string
+from .results import Result
 from .utils import snake_caseify
 
 # from elasticapm.contrib.flask import ElasticAPM

@@ -193,7 +193,7 @@ class _CheckerMeta(ABCMeta):
         """
         if len(cls.mro()) > 2:  # 1==BaseChecker
             cls.service = init_service(cls)  # type: Flask
-        super(_CheckerMeta, cls).__init__(name, bases, clsdict)
+        super().__init__(name, bases, clsdict)
 
 
 class BaseChecker(with_metaclass(_CheckerMeta, object)):
@@ -443,9 +443,8 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             TimeoutError,
             socket.timeout,
             ConnectionError,
-            socket.error,
-            # ConnectionAbortedError,  # not in py2, already handled by ConnectionError.
-            # ConnectionRefusedError
+            OSError,
+            ConnectionAbortedError,
         ) as ex:
             self.info(
                 "Error in connection to service occurred: {}\n".format(ex), exc_info=ex

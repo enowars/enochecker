@@ -268,7 +268,7 @@ def serve_once(
             start_daemon(server.serve_forever)
             time.sleep(0.1)  # some extra time thrown in for good measure. :)
             return port
-        except socket.error as ex:
+        except OSError as ex:
             if not autoincrement_port:
                 logger.info(
                     "Serve once was not set to automatically increment port {} but faced socket exception{}".format(
@@ -279,7 +279,7 @@ def serve_once(
                 )
                 break
 
-    raise socket.error(
+    raise OSError(
         "No unused port found, start_port={}, autoincrement_port={}".format(
             start_port, autoincrement_port
         )
@@ -310,8 +310,8 @@ class SimpleSocket(telnetlib.Telnet):
         :param logger: The optional logger to use
         :param timeout_fun: function that will output the current timeout on each call.
         """
-        super(SimpleSocket, self).__init__(host, port, timeout)
-        self.telnet = super(SimpleSocket, self)  # type: telnetlib.Telnet
+        super().__init__(host, port, timeout)
+        self.telnet = super()  # type: telnetlib.Telnet
         self.socket = self.telnet.get_socket()  # type: socket.socket
         if logger:
             self.logger = logger

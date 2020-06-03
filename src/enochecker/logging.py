@@ -112,7 +112,7 @@ class RestLogHandler(logging.Handler):
         :param checker: The checker to use
         :param level: the Level
         """
-        super(RestLogHandler, self).__init__(level)
+        super().__init__(level)
 
         # see https://github.com/psf/requests/issues/2925
         import requests

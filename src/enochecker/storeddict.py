@@ -299,7 +299,7 @@ class StoredDict(MutableMapping):
         try:
             with open(self._dir_jsonname(key), "rb") as f:
                 val = json.loads(f.read().decode("utf-8"))
-        except IOError as ex:
+        except OSError as ex:
             raise KeyError("Key {} not found - {}".format(key, ex))
         finally:
             if not locked:
@@ -343,8 +343,7 @@ class StoredDict(MutableMapping):
             for x in os.listdir(self.path)
             if x.startswith(DB_PREFIX) and x.endswith(DB_EXTENSION)
         ]
-        for key in keys:
-            yield key
+        yield from keys
 
     def __len__(self):
         # type: () -> int
