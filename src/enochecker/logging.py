@@ -3,7 +3,7 @@ import json
 import logging
 import traceback
 from logging import LogRecord
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 LOGGING_PREFIX = "##ENOLOGMESSAGE "
 
@@ -58,7 +58,7 @@ class ELKFormatter(logging.Formatter):
         self.checker: "BaseChecker" = checker
 
     def format(self, record: LogRecord) -> str:
-        record.stack = self.formatStack(record.stack_info)
+        # record.stack = self.formatStack(record.stack_info)
         record.asctime = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
         # stacktrace = ""
@@ -74,8 +74,8 @@ class ELKFormatter(logging.Formatter):
         #     import sys
         #     sys.exit(1)
         if record.exc_info is not None:
-            exception_info = {
-                "type": record.exc_info[0].__name__,
+            exception_info: Optional[Dict[str, Union[str, Any]]] = {
+                "type": record.exc_info[0].__name__,  # type: ignore
                 "message": str(record.exc_info[1]),
                 "traceback": traceback.format_tb(record.exc_info[2], 20),
             }
@@ -128,6 +128,10 @@ class RestLogHandler(logging.Handler):
         # timestamp = datetime.datetime.fromtimestamp(record.msecs/1000.0).strftime('%Y-%m-%dT%H:%M:%SZ')
         # timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
         # "millis": record.msecs,
+        if not self.checker.log_endpoint:
+            print("Error while logging, no log endpoint specified")
+            return
+
         json = {
             "message": record.getMessage(),
             "timestamp": record.asctime,  # Todo: Might not be available everywhere (?)

@@ -256,7 +256,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.http_useragent = random_useragent()
 
         if not hasattr(self, "service_name"):
-            self.service_name = type(self).__name__.split("Checker")[0]
+            self.service_name: str = type(self).__name__.split("Checker")[0]
             self.debug(
                 "Assuming checker Name {}. If that's not the case, please override.".format(
                     self.service_name
