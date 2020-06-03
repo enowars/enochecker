@@ -198,6 +198,10 @@ class BaseChecker(metaclass=_CheckerMeta):
     Magic.
     """
 
+    flag_count: int
+    havoc_count: int
+    noise_count: int
+
     def __init__(
         self,
         request_dict: Dict[str, Any] = None,
