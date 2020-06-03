@@ -6,15 +6,10 @@ import threading
 import time
 from collections.abc import MutableMapping
 from functools import wraps
+from pathlib import Path
 from typing import Any, Dict, Iterator, Optional, Set, TypeVar, cast
 
 from .utils import base64ify, debase64ify, ensure_valid_filename, start_daemon
-
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path  # python 2 backport
-
 
 logging.basicConfig(level=logging.DEBUG)
 dictlogger = logging.Logger(__name__)
