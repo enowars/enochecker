@@ -7,7 +7,18 @@ import socket
 import sys
 from abc import ABCMeta, abstractmethod
 from concurrent.futures import TimeoutError
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Type, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 from urllib.parse import urlparse
 
 from flask import Flask
@@ -24,6 +35,7 @@ if TYPE_CHECKING:
     # The import might fail in UWSGI, see the comments below.
     import requests
 
+DEFAULT_TIMEOUT: int = 30
 TIME_BUFFER: int = 5  # time in seconds we try to finish earlier
 
 VALID_ARGS = [
@@ -45,9 +57,7 @@ VALID_ARGS = [
 global_db_cache: Dict[str, Union[StoredDict, NoSqlDict]] = {}
 
 
-def parse_args(
-    argv: Union[None, List[str], argparse.Namespace] = None
-) -> argparse.Namespace:
+def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     """
     Returns the parsed argparser args.
     Args look like this:
@@ -142,7 +152,7 @@ def parse_args(
         "-x",
         "--timeout",
         type=int,
-        default=30,
+        default=DEFAULT_TIMEOUT,
         help="The maximum amount of time the script has to execute in seconds",
     )
     runparser.add_argument(
@@ -179,7 +189,9 @@ class _CheckerMeta(ABCMeta):
     ABCMeta is used as superclass instead of type, such that BaseChecker is declared abstract -> needs to be overridden.
     """
 
-    def __init__(cls: "_CheckerMeta", name: str, bases: Dict[Any, Any], clsdict):
+    def __init__(
+        cls: "_CheckerMeta", name: str, bases: Tuple[type, ...], clsdict: Dict[Any, Any]
+    ):
         """
         Called whenever this class is subclassed.
         :param name: The name of the new class
@@ -187,7 +199,7 @@ class _CheckerMeta(ABCMeta):
         :param clsdict: Contents of this class (.__dict__)
         """
         if len(cls.mro()) > 2:  # 1==BaseChecker
-            cls.service: Flask = init_service(cls)
+            cls.service: Flask = init_service(cast(Type[BaseChecker], cls))
         super().__init__(name, bases, clsdict)
 
 
@@ -210,7 +222,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         address: str = None,
         team: str = None,
         team_id: int = None,
-        round: int = None,
+        round_: int = None,
         flag_round: int = None,
         round_length: int = 300,
         flag: str = None,
@@ -233,29 +245,31 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.requests = requests
 
         self.time_started_at: datetime.datetime = datetime.datetime.now()
-        self.run_id: int = run_id
+        self.run_id: Optional[int] = run_id
         self.log_endpoint: Optional[str] = log_endpoint
         self.json_logging: bool = json_logging
 
-        self.method: str = method
+        self.method: Optional[str] = method
+        if not address:
+            raise TypeError("must specify address")
         self.address: str = address
-        self.team: str = team
+        self.team: Optional[str] = team
         self.team_id = team_id
-        self.round: int = round
-        self.current_round: int = round
-        self.flag_round: int = flag_round
+        self.round: Optional[int] = round_
+        self.current_round: Optional[int] = round_
+        self.flag_round: Optional[int] = flag_round
         self.round_length: int = round_length
-        self.flag: str = flag
-        self.timeout: int = timeout
+        self.flag: Optional[str] = flag
+        self.timeout: Optional[int] = timeout
 
-        self.flag_idx: int = flag_idx
+        self.flag_idx: Optional[int] = flag_idx
         self.storage_dir = storage_dir
 
         self._setup_logger()
         if use_db_cache:
             self._active_dbs: Dict[str, Union[NoSqlDict, StoredDict]] = global_db_cache
         else:
-            self._active_dbs: Dict[str, Union[NoSqlDict, StoredDict]] = {}
+            self._active_dbs = {}
         self.http_session: requests.Session = self.requests.session()
         self.http_useragent = random_useragent()
 
@@ -271,7 +285,7 @@ class BaseChecker(metaclass=_CheckerMeta):
             self.warning("No default port defined.")
             self.port = -1
 
-        self.request_dict: Dict[str, Any] = request_dict  # kinda duplicate
+        self.request_dict: Optional[Dict[str, Any]] = request_dict  # kinda duplicate
         self.config = {x: getattr(self, x) for x in VALID_ARGS}
 
         self.debug(
@@ -297,7 +311,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         handler = logging.StreamHandler(sys.stdout)
         handler.setLevel(logging.DEBUG)
         if self.json_logging:
-            formatter = ELKFormatter(self)
+            formatter: logging.Formatter = ELKFormatter(self)
         else:
             formatter = logging.Formatter(
                 "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -314,7 +328,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.error: Callable[..., None] = self.logger.error
 
     @property
-    def noise(self) -> str:
+    def noise(self) -> Optional[str]:
         """
         Pretty similar to a flag, just in a different mode (storeNoise vs storeFlag)
         :return: The noise
@@ -335,7 +349,14 @@ class BaseChecker(metaclass=_CheckerMeta):
         Returns a remaining time that is save to be used as timeout (includes a buffer of TIME_BUFFER seconds)
         :return: A save number of seconds that may still be used
         """
-        return max(int(self.timeout - self.time_running - TIME_BUFFER), 1)
+        return max(
+            int(
+                getattr(self, "timeout", DEFAULT_TIMEOUT)
+                - self.time_running
+                - TIME_BUFFER
+            ),
+            1,
+        )
 
     # def __format_internal_db_entry(name):
     #     return f"__Checker-Internals:{name}__"
@@ -433,7 +454,7 @@ class BaseChecker(metaclass=_CheckerMeta):
             return Result.MUMBLE  # , "HTTP Error" #For now
         except (
             self.requests.ConnectionError,  # requests
-            self.requests.ConnectTimeout,  # requests
+            self.requests.exceptions.ConnectTimeout,  # requests
             TimeoutError,
             socket.timeout,
             ConnectionError,
@@ -532,7 +553,9 @@ class BaseChecker(metaclass=_CheckerMeta):
         pass
 
     # ---- DB specific methods ---- #
-    def db(self, name: str, ignore_locks: bool = False) -> Union[NoSqlDict, StoredDict]:
+    def db(
+        self, name: str, ignore_locks: bool = False
+    ) -> Union[NoSqlDict, StoredDict]:  # TODO: use a common supertype for all backends
         """
         Get a (global) db by name
         Subsequent calls will return the same db.
@@ -561,7 +584,7 @@ class BaseChecker(metaclass=_CheckerMeta):
                     )
                 )
 
-                ret = NoSqlDict(
+                ret: Union[NoSqlDict, StoredDict] = NoSqlDict(
                     name=name,
                     checker_name=checker_name,
                     host=host,
@@ -585,7 +608,9 @@ class BaseChecker(metaclass=_CheckerMeta):
             return ret
 
     @property
-    def global_db(self) -> StoredDict:
+    def global_db(
+        self,
+    ) -> Union[NoSqlDict, StoredDict]:  # TODO: use a common supertype for all backends
         """
         A global storage shared between all teams and rounds.
         Subsequent calls will return the same db.
@@ -595,14 +620,18 @@ class BaseChecker(metaclass=_CheckerMeta):
         return self.db("global")
 
     @property
-    def team_db(self) -> StoredDict:
+    def team_db(
+        self,
+    ) -> Union[NoSqlDict, StoredDict]:  # TODO: use a common supertype for all backends
         """
         The database for the current team
         :return: The team local db
         """
         return self.get_team_db()
 
-    def get_team_db(self, team: Optional[str] = None) -> StoredDict:
+    def get_team_db(
+        self, team: Optional[str] = None
+    ) -> Union[NoSqlDict, StoredDict]:  # TODO: use a common supertype for all backends
         """
         Returns the database for a specific team.
         Subsequent calls will return the same db.
@@ -782,9 +811,8 @@ class BaseChecker(metaclass=_CheckerMeta):
 
 
 def run(
-    checker_cls: Type[BaseChecker],
-    args: Union[None, List[str], argparse.Namespace] = None,
-) -> None:
+    checker_cls: Type[BaseChecker], args: Optional[Sequence[str]] = None,
+) -> Optional[Result]:
     """
     # Runs a checker, either from cmdline or as uwsgi script.
     :param checker: The checker (subclass of basechecker) to run
@@ -795,6 +823,7 @@ def run(
     parsed = parse_args(args)
     if parsed.runmode == "listen":
         checker_cls.service.run(host="::", debug=True, port=parsed.listen_port)
+        return None
     else:
         checker_args = vars(parsed)
         del checker_args["runmode"]  # will always be 'run' at this point
