@@ -42,7 +42,8 @@ class ELKFormatter(logging.Formatter):
             "tool": type(self.checker).__name__,
             "type": "infrastructure",
             "severity": record.levelname,
-            "severityLevel": record.level,
+            # TODO:
+            # "severityLevel": record.level,
             "timestamp": record.asctime,
             "module": record.module,
             "function": record.funcName,
