@@ -8,12 +8,7 @@ from collections.abc import MutableMapping
 from functools import wraps
 from typing import Any, Dict, Iterator, Optional, Set, TypeVar, cast
 
-from future.standard_library import install_aliases
-
 from .utils import base64ify, debase64ify, ensure_valid_filename, start_daemon
-
-install_aliases()
-
 
 try:
     from pathlib import Path
@@ -40,8 +35,7 @@ DB_LOCK_EXTENSION = ".lock"  # Extension all lock folders will get
 DB_GLOBAL_CACHE_SETTING = True
 
 
-def makedirs(path, exist_ok=True):
-    # type: (str, bool) -> None
+def makedirs(path: str, exist_ok: bool = True) -> None:
     """
     Python2 ready
     param path: the path to create
@@ -50,8 +44,7 @@ def makedirs(path, exist_ok=True):
     Path(path).mkdir(parents=True, exist_ok=exist_ok)
 
 
-def _locked(func):
-    # type: (T) -> T
+def _locked(func: T) -> T:
     """
     Internal wrapper method for StoredDict that will ensure locks on a python threading level
     :param func: StoredDict method to be wrapped
@@ -59,8 +52,7 @@ def _locked(func):
     """
 
     @wraps(func)
-    def locked(self, *args, **kwargs):
-        # type: (StoredDict, *str, **int)->Any
+    def locked(self: "StoredDict", *args: str, **kwargs: int) -> Any:
         """The called function first acquires a lock and then releases it later."""
         self.logger.debug("Locking {} db".format(self.name))
         self._local_lock.acquire()
@@ -84,15 +76,14 @@ class StoredDict(MutableMapping):
 
     def __init__(
         self,
-        name="default",
-        base_path=DB_DEFAULT_DIR,
-        persist_secs=3,
-        ignore_locks=False,
-        logger=None,
+        name: str = "default",
+        base_path: str = DB_DEFAULT_DIR,
+        persist_secs: int = 3,
+        ignore_locks: bool = False,
+        logger: Optional[logging.Logger] = None,
         *args,
         **kwargs
-    ):
-        # type: (str, str, int, bool, Optional[logging.Logger], *Any, **Any) -> None
+    ) -> None:
         """
         Creates a new File System backed Store.
         It quacks like a dict and will persist to filesystem every few seconds if possible. :)
@@ -103,16 +94,16 @@ class StoredDict(MutableMapping):
                 This flag seaves them out.
         :param logger: The logger instance to log events to
         """
-        self._cache = {}  # type: Dict[str, any]
-        self._dirties = set()  # type: Set[str]
-        self._locks = set()  # type: Set[str]
-        self._to_delete = set()  # type: Set[str]
-        self._persist_thread = None  # type: Optional[threading.Thread]
+        self._cache: Dict[str, Any] = {}
+        self._dirties: Set[str] = set()
+        self._locks: Set[str] = set()
+        self._to_delete: Set[str] = set()
+        self._persist_thread: Optional[threading.Thread] = None
         self.name = name
-        self.path = os.path.join(base_path, ensure_valid_filename(name))  # type: str
-        self.persist_secs = persist_secs  # type: int
-        self.ignore_locks = ignore_locks  # type: bool
-        self.persist_secs = persist_secs  # type: int
+        self.path: str = os.path.join(base_path, ensure_valid_filename(name))
+        self.persist_secs: int = persist_secs
+        self.ignore_locks: bool = ignore_locks
+        self.persist_secs: int = persist_secs
 
         if logger:
             self.logger = logger
@@ -130,8 +121,7 @@ class StoredDict(MutableMapping):
         )  # In case we got initialized using a dict, make sure it's in sync.
 
     @_locked
-    def _spawn_persist_thread(self):
-        # type: () -> None
+    def _spawn_persist_thread(self) -> None:
         """
         Spawns a thread persisting all changes, if necessary.
         """
@@ -145,8 +135,7 @@ class StoredDict(MutableMapping):
             self._persist_thread = start_daemon(persist_async)
 
     @_locked
-    def _cleanup(self):
-        # type: () -> None
+    def _cleanup(self) -> None:
         """Cleans up the db: persists and releases all locks currently held."""
         self.logger.debug("StoredDict cleanup task running.")
         self._stopping = True
@@ -154,31 +143,26 @@ class StoredDict(MutableMapping):
         for lock in self._locks:
             self.release(lock)
 
-    def __del__(self):
-        # type: () -> None
+    def __del__(self) -> None:
         """
         Delete a key
         """
         self._cleanup()
 
-    def _dir(self, key):
-        # type: (str) -> str
+    def _dir(self, key: str) -> str:
         """The path for the this key"""
         return os.path.join(self.path, DB_PREFIX + base64ify(key, b"+-"))
 
-    def _dir_jsonname(self, key):
-        # type: (str) -> str
+    def _dir_jsonname(self, key: str) -> str:
         """The path for the json db file for this key"""
         return "{}{}".format(self._dir(key), DB_EXTENSION)
 
-    def _dir_lockname(self, key):
-        # type: (str) -> str
+    def _dir_lockname(self, key: str) -> str:
         """The path for the lock file for this key"""
         return "{}{}".format(self._dir(key), DB_LOCK_EXTENSION)
 
     @_locked
-    def release(self, locked_key):
-        # type: (str) -> None
+    def release(self, locked_key: str) -> None:
         """
         Release a file lock
         :param locked_key: the key we locked
@@ -190,8 +174,7 @@ class StoredDict(MutableMapping):
         self._locks.remove(locked_key)
 
     @_locked
-    def mark_dirty(self, key):
-        # type: (str) -> Any
+    def mark_dirty(self, key: str) -> Any:
         """
         Manually mark an entry as dirty. It will be updated on disk on the next occasion
         :param key: the key that needs to be stored
@@ -201,8 +184,9 @@ class StoredDict(MutableMapping):
         self[key] = val
         return val
 
-    def _create_lock_file(self, path, retrycount=DB_LOCK_RETRYCOUNT):
-        # type: (str, int) -> None
+    def _create_lock_file(
+        self, path: str, retrycount: int = DB_LOCK_RETRYCOUNT
+    ) -> None:
         """Creates new lock file, waiting up to retrycount seconds. Raises TimeoutError if failed."""
         for i in range(0, retrycount):
             try:
@@ -216,8 +200,7 @@ class StoredDict(MutableMapping):
         raise TimeoutError("Lock for {} could not be acquired in time!".format(path))
 
     @_locked
-    def lock(self, key):
-        # type: (str) -> None
+    def lock(self, key: str) -> None:
         """
         Waits for a lock
         :param key: the key to lock
@@ -228,8 +211,7 @@ class StoredDict(MutableMapping):
         self._locks.add(key)
 
     @_locked
-    def is_locked(self, key):
-        # type: (str) -> bool
+    def is_locked(self, key: str) -> bool:
         """
         Returns if the key is currently locked by this process
         :param key: The key
@@ -238,8 +220,7 @@ class StoredDict(MutableMapping):
         return key in self._locks
 
     @_locked
-    def reload(self):
-        # type: () -> None
+    def reload(self) -> None:
         """
         Reloads stored values from disk.
         There is usually no reason to call this.
@@ -251,8 +232,7 @@ class StoredDict(MutableMapping):
         self._to_delete = set()
 
     @_locked
-    def persist(self):
-        # type: () -> None
+    def persist(self) -> None:
         """
         Stores all dirty data to disk.
         If no data is to be stored, it's basically free to call.
@@ -279,8 +259,7 @@ class StoredDict(MutableMapping):
         self._dirties = set()
 
     @_locked
-    def __getitem__(self, key):
-        # type: (str) -> Any
+    def __getitem__(self, key: str) -> Any:
         """
         Gets an item from the dict. Will hit the cache first, then disk.
         :param key: the key to look up
@@ -309,8 +288,7 @@ class StoredDict(MutableMapping):
         return val
 
     @_locked
-    def __setitem__(self, key, value):
-        # type: (str, Any) -> None
+    def __setitem__(self, key: str, value: Any) -> None:
         """
         Set an item. It'll be stored to disk on the next persist.
         :param key: Key to store
@@ -323,16 +301,14 @@ class StoredDict(MutableMapping):
         self._dirties.add(key)
 
     @_locked
-    def __delitem__(self, key):
-        # type: (str) -> None
+    def __delitem__(self, key: str) -> None:
         """
         Delete an item. It will be deleted from disk on the next .persist().
         :param key: the key to delete
         """
         self._to_delete.add(key)
 
-    def __iter__(self):
-        # type: () -> Iterator[(str, Any)]
+    def __iter__(self) -> Iterator[str]:
         """
         Iterates over the dict. Implicitly persisting the data before reading.
         :return: An iterator containing all keys to a dict.
@@ -345,8 +321,7 @@ class StoredDict(MutableMapping):
         ]
         yield from keys
 
-    def __len__(self):
-        # type: () -> int
+    def __len__(self) -> int:
         """
         Calculates the length. Implicitly calls persist.
         :return: the the number of elements
