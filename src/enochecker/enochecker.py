@@ -369,7 +369,7 @@ class BaseChecker(metaclass=_CheckerMeta):
                             ]
                         )
 
-                    except KeyError as ex:
+                    except KeyError:
                         self.info(
                             f"original putflag did not return successfully -- ignoring getflag for flag_round:{self.flag_round}, index: {self.flag_idx}"
                         )
@@ -385,7 +385,7 @@ class BaseChecker(metaclass=_CheckerMeta):
                             ]
                         )
 
-                    except KeyError as ex:
+                    except KeyError:
                         self.info(
                             f"original putnoise did not return successfully -- ignoring getnoise for flag_round:{self.flag_round}, index: {self.flag_idx}"
                         )
