@@ -317,6 +317,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         self.info = self.logger.info  # type: Callable[[str, ...], None]
         self.warning = self.logger.warning  # type: Callable[[str, ...], None]
         self.error = self.logger.error  # type: Callable[[str, ...], None]
+        self.critical = self.logger.critical  # type: Callable[[str, ...], None]
 
     @property
     def noise(self):
