@@ -38,12 +38,13 @@ class ELKFormatter(logging.Formatter):
         else:
             exception_info = None
 
+        message = record.getMessage() + f" excp: {exception_info} trace: {record.stack_info}"
         log_output = {
             "tool": type(self.checker).__name__,
             "type": "infrastructure",
             "severity": record.levelname,
             # TODO:
-            # "severityLevel": record.level,
+            "severityLevel": record.levelno,
             "timestamp": record.asctime,
             "module": record.module,
             "function": record.funcName,
@@ -52,10 +53,12 @@ class ELKFormatter(logging.Formatter):
             "runId": self.checker.run_id,
             "roundId": self.checker.round,
             "relatedRoundId": self.checker.flag_round,
-            "message": record.getMessage(),
+            # "message": record.getMessage(),
+            "message": message,
             "teamName": self.checker.team,
-            "exception": exception_info,
-            "stacktrace": record.stack_info,
+            "teamId": self.checker.team_id,
+            # "exception": exception_info,
+            # "stacktrace": record.stack_info,
             "serviceName": self.checker.service_name,
             "method": self.checker.method
         }
