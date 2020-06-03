@@ -7,15 +7,13 @@ import time
 from collections.abc import MutableMapping
 from functools import wraps
 from pathlib import Path
-from typing import Any, Dict, Iterator, Optional, Set, TypeVar, cast
+from typing import Any, Callable, Dict, Iterator, Optional, Set, cast
 
 from .utils import base64ify, debase64ify, ensure_valid_filename, start_daemon
 
 logging.basicConfig(level=logging.DEBUG)
 dictlogger = logging.Logger(__name__)
 dictlogger.setLevel(logging.DEBUG)
-
-T = TypeVar("T")  # typing things
 
 DB_DEFAULT_DIR = os.path.join(
     os.getcwd(), ".data"
@@ -39,7 +37,7 @@ def makedirs(path: str, exist_ok: bool = True) -> None:
     Path(path).mkdir(parents=True, exist_ok=exist_ok)
 
 
-def _locked(func: T) -> T:
+def _locked(func: Callable[..., Any]) -> Callable[..., Any]:
     """
     Internal wrapper method for StoredDict that will ensure locks on a python threading level
     :param func: StoredDict method to be wrapped
@@ -58,7 +56,7 @@ def _locked(func: T) -> T:
             self._local_lock.release()
             self.logger.debug("Released db lock for {}".format(self.name))
 
-    return cast(T, locked)
+    return cast(Callable[..., Any], locked)
 
 
 class StoredDict(MutableMapping):
@@ -98,7 +96,6 @@ class StoredDict(MutableMapping):
         self.path: str = os.path.join(base_path, ensure_valid_filename(name))
         self.persist_secs: int = persist_secs
         self.ignore_locks: bool = ignore_locks
-        self.persist_secs: int = persist_secs
 
         if logger:
             self.logger = logger
