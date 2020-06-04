@@ -268,7 +268,7 @@ class BaseChecker(metaclass=_CheckerMeta):
             )
             team_name = team_name or team
         self.team: Optional[str] = team
-        self.team_id: int = team_id
+        self.team_id: int = team_id or -1  # TODO: make required
         if round:
             raise DeprecationWarning(
                 "Passing round as argument to BaseChecker is deprecated, use round_id instead"
@@ -604,12 +604,15 @@ class BaseChecker(metaclass=_CheckerMeta):
             self.debug("Remote DB {} was not cached.".format(name))
             if os.getenv("MONGO_ENABLED"):
                 host = os.getenv("MONGO_HOST")
-                port = int(os.getenv("MONGO_PORT"))
+                port = os.getenv("MONGO_PORT")
                 username = os.getenv("MONGO_USER")
                 password = os.getenv("MONGO_PASSWORD")
                 self.debug(
                     "Using NoSqlDict mongo://{}:{}@{}:{}".format(
-                        username, "".join(["X" for c in password]), host, port
+                        username,
+                        "".join(["X" for c in password]) if password else "None",
+                        host,
+                        port,
                     )
                 )
 

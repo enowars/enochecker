@@ -2,7 +2,7 @@ import logging
 from collections.abc import MutableMapping
 from functools import wraps
 from threading import RLock, current_thread
-from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Union
 
 from . import utils
 from .utils import base64ify
@@ -89,17 +89,24 @@ class NoSqlDict(MutableMapping):
         self,
         name: str = "default",
         checker_name: str = "BaseChecker",
-        host: str = DB_DEFAULT_HOST,
-        port: int = DB_DEFAULT_PORT,
-        username: Optional[str] = DB_DEFAULT_USER,
-        password: Optional[str] = DB_DEFAULT_PASS,
+        host: Optional[str] = None,
+        port: Union[int, str, None] = None,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
         *args,
         **kwargs
     ):
         self.dict_name = base64ify(name, altchars=b"-_")
         self.checker_name = checker_name
         self.cache: Dict[Any, Any] = {}
-        self.db = self.get_client(host, port, username, password)[checker_name][
+        host_: str = host or DB_DEFAULT_HOST
+        if isinstance(port, int):
+            port_: int = port
+        else:
+            port_ = int(port or DB_DEFAULT_PORT)
+        username_: Optional[str] = username or DB_DEFAULT_USER
+        password_: Optional[str] = password or DB_DEFAULT_PASS
+        self.db = self.get_client(host_, port_, username_, password_)[checker_name][
             self.dict_name
         ]
         try:
