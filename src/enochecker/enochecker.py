@@ -215,7 +215,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         team_name: str = None,
         team_id: int = None,
         round_id: int = None,
-        related_round_id: int = None,
+        flag_round: int = None,
         round_length: int = 300,
         flag: str = None,
         flag_idx: int = None,
@@ -247,7 +247,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         self.team_id = team_id
         self.round = round_id # type: int
         self.current_round = round_id
-        self.flag_round = related_round_id  # type: int
+        self.flag_round = flag_round  # type: int
         self.round_length = round_length  # type: int
         self.flag = flag  # type: str
         self.timeout = timeout  # type: int
