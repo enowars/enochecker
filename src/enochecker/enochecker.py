@@ -5,6 +5,7 @@ import logging
 import os
 import socket
 import sys
+import traceback
 from abc import ABCMeta, abstractmethod
 from concurrent.futures import TimeoutError
 from typing import (
@@ -109,6 +110,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         type=str,
         default="team",
         help="The name of the target team to check",
+        dest="team_name",
     )
     runparser.add_argument(
         "-T",
@@ -125,7 +127,12 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         help="An id for this run. Used to find it in the DB later.",
     )
     runparser.add_argument(
-        "-r", "--round", type=int, default=1, help="The round we are in right now"
+        "-r",
+        "--round",
+        type=int,
+        default=1,
+        help="The round we are in right now",
+        dest="round_id",
     )
     runparser.add_argument(
         "-R",
@@ -220,9 +227,11 @@ class BaseChecker(metaclass=_CheckerMeta):
         run_id: int = None,
         method: str = None,
         address: str = None,
-        team: str = None,
+        team: str = None,  # deprecated!
+        team_name: str = None,
         team_id: int = None,
-        round_: int = None,
+        round: int = None,  # deprecated!
+        round_id: int = None,
         flag_round: int = None,
         round_length: int = 300,
         flag: str = None,
@@ -253,16 +262,27 @@ class BaseChecker(metaclass=_CheckerMeta):
         if not address:
             raise TypeError("must specify address")
         self.address: str = address
+        if team:
+            raise DeprecationWarning(
+                "Passing team as argument to BaseChecker is deprecated, use team_name instead"
+            )
+            team_name = team_name or team
         self.team: Optional[str] = team
-        self.team_id = team_id
-        self.round: Optional[int] = round_
-        self.current_round: Optional[int] = round_
+        self.team_id: int = team_id
+        if round:
+            raise DeprecationWarning(
+                "Passing round as argument to BaseChecker is deprecated, use round_id instead"
+            )
+            round_id = round_id or round
+        self.round: Optional[int] = round_id
+        self.current_round: Optional[int] = round_id
         self.flag_round: Optional[int] = flag_round
         self.round_length: int = round_length
         self.flag: Optional[str] = flag
         self.timeout: Optional[int] = timeout
 
         self.flag_idx: Optional[int] = flag_idx
+
         self.storage_dir = storage_dir
 
         self._setup_logger()
@@ -326,6 +346,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.info: Callable[..., None] = self.logger.info
         self.warning: Callable[..., None] = self.logger.warning
         self.error: Callable[..., None] = self.logger.error
+        self.critical: Callable[..., None] = self.logger.critical
 
     @property
     def noise(self) -> Optional[str]:
@@ -444,8 +465,13 @@ class BaseChecker(metaclass=_CheckerMeta):
             return Result.OK
 
         except EnoException as eno:
+            stacktrace = "".join(
+                traceback.format_exception(None, eno, eno.__traceback__)
+            )
             self.info(
-                "Checker[{}] result: {}({})".format(self.method, eno.result.name, eno),
+                "Checker[{}] result: {}({})".format(
+                    self.method, eno.result.name, stacktrace
+                ),
                 exc_info=eno,
             )
             return Result(eno.result)  # , eno.message
@@ -466,7 +492,10 @@ class BaseChecker(metaclass=_CheckerMeta):
             )
             return Result.OFFLINE  # , ex.message
         except Exception as ex:
-            self.error("Unhandled checker error occurred: {}\n".format(ex), exc_info=ex)
+            stacktrace = "".join(traceback.format_exception(None, ex, ex.__traceback__))
+            self.error(
+                "Unhandled checker error occurred: {}\n".format(stacktrace), exc_info=ex
+            )
             return Result.INTERNAL_ERROR  # , ex.message
         finally:
             for db in self._active_dbs.values():

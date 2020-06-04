@@ -3,7 +3,7 @@ import json
 import logging
 import traceback
 from logging import LogRecord
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union
+from typing import TYPE_CHECKING
 
 LOGGING_PREFIX = "##ENOLOGMESSAGE "
 
@@ -16,37 +16,10 @@ def exception_to_string(excp):
         excp.__traceback__
     )  # add limit=??
     pretty = traceback.format_list(stack)
-    return "".join(pretty) + "\n  {} {}".format(excp.__class__, excp)
+    return "".join(pretty) + f"\n  {excp.__class__} {excp}"
 
 
 class ELKFormatter(logging.Formatter):
-    """
-    %(name)s            Name of the logger (logging channel)
-    %(levelno)s         Numeric logging level for the message (DEBUG, INFO,
-                        WARNING, ERROR, CRITICAL)
-    %(levelname)s       Text logging level for the message ("DEBUG", "INFO",
-                        "WARNING", "ERROR", "CRITICAL")
-    %(pathname)s        Full pathname of the source file where the logging
-                        call was issued (if available)
-    %(filename)s        Filename portion of pathname
-    %(module)s          Module (name portion of filename)
-    %(lineno)d          Source line number where the logging call was issued
-                        (if available)
-    %(funcName)s        Function name
-    %(created)f         Time when the LogRecord was created (time.time()
-                        return value)
-    %(asctime)s         Textual time when the LogRecord was created
-    %(msecs)d           Millisecond portion of the creation time
-    %(relativeCreated)d Time in milliseconds when the LogRecord was created,
-                        relative to the time the logging module was loaded
-                        (typically at application startup time)
-    %(thread)d          Thread ID (if available)
-    %(threadName)s      Thread name (if available)
-    %(process)d         Process ID (if available)
-    %(message)s         The result of record.getMessage(), computed just as
-                        the record is emitted
-    """
-
     def __init__(
         self,
         checker: "BaseChecker",
@@ -57,48 +30,38 @@ class ELKFormatter(logging.Formatter):
         super().__init__(fmt, datefmt, style)
         self.checker: "BaseChecker" = checker
 
-    def format(self, record: LogRecord) -> str:
-        # record.stack = self.formatStack(record.stack_info)
+    def format(self, record):
+        record.stack = self.formatStack(record.stack_info)
         record.asctime = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-        # stacktrace = ""
-        # if record.exc_info:
-        #     print("\n\n\n\n\nlog exc_info:", record.exc_info)
-        #     stacktrace = traceback.format_exc(record.exc_info)
-        # elif record.stack_info:
-        #     stacktrace = record.stack_info
-        # if record.exc_info is not None:
-        #     print("\n\n\n\n\n\n\n", type(record.exc_info), type(record.stack_info))
-        #     print("msg: ", record.exc_info[0], "traceback_info :", record.exc_info[1], "traceback_info :" record.stack_info)
-
-        #     import sys
-        #     sys.exit(1)
-        if record.exc_info is not None:
-            exception_info: Optional[Dict[str, Union[str, Any]]] = {
-                "type": record.exc_info[0].__name__,  # type: ignore
-                "message": str(record.exc_info[1]),
-                "traceback": traceback.format_tb(record.exc_info[2], 20),
-            }
-        else:
-            exception_info = None
+        message = record.getMessage()
+        if record.exc_info:
+            eno = record.exc_info
+            stacktrace = "".join(
+                traceback.format_exception(None, eno, eno.__traceback__)
+            )
+            message += f" excp: {stacktrace}"
+        if record.stack_info:
+            message += f" trace: {record.stack}"
 
         log_output = {
-            "module": record.module,
-            "severity": record.levelname,
-            "teamName": self.checker.team,
-            "runId": self.checker.run_id,
             "tool": type(self.checker).__name__,
-            "flag": self.checker.flag,
             "type": "infrastructure",
-            "function": record.funcName,
+            "severity": record.levelname,
+            "severityLevel": max(0, record.levelno // 10 - 1),
             "timestamp": record.asctime,
-            "round": self.checker.round,
-            "relatedRoundId": self.checker.flag_round,
+            "module": record.module,
+            "function": record.funcName,
+            "flag": self.checker.flag,
             "flagIndex": self.checker.flag_idx,
-            "message": record.getMessage(),
-            "exception": exception_info,
-            "stacktrace": record.stack_info,
+            "runId": self.checker.run_id,
+            "roundId": self.checker.round,
+            "relatedRoundId": self.checker.flag_round,
+            "message": message,
+            "teamName": self.checker.team,
+            "teamId": self.checker.team_id,
             "serviceName": self.checker.service_name,
+            "method": self.checker.method,
         }
 
         return LOGGING_PREFIX + json.dumps(log_output)
@@ -137,15 +100,13 @@ class RestLogHandler(logging.Handler):
             "timestamp": record.asctime,  # Todo: Might not be available everywhere (?)
             "severity": record.levelname,
             "runId": self.checker.run_id,
-            "tag": "{}:{}:{}".format(record.name, record.module, record.funcName),
+            "tag": f"{record.name}:{record.module}:{record.funcName}",
         }
         try:
             r = self.requests.post(self.checker.log_endpoint, json=json)
             if r.status_code != 200:
                 print(
-                    "Error while logging. Request to {} returned: {}".format(
-                        r.status_code, r.text
-                    )
+                    f"Error while logging. Request to {r.status_code} returned: {r.text}"
                 )
         except Exception as ex:
-            print("Error while logging: {}".format(ex))
+            print(f"Error while logging: {ex}")
