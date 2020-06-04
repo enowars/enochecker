@@ -20,7 +20,7 @@ class CheckerExampleImpl(BaseChecker):
         method=CHECKER_METHODS[0],
         run_id=0,
         address="localhost",
-        team="Testteam",
+        team_name="Testteam",
         team_id=1,
         flag_round=None,
         round_length=300,
@@ -29,9 +29,10 @@ class CheckerExampleImpl(BaseChecker):
         log_endpoint=None,
         use_db_cache=True,
         json_logging=True,
-        round=1,
+        round_id=1,
         flag="ENOFLAG",
         timeout=30,
+        **kwargs,
     ):
         """
         An mocked implementation of a checker for testing purposes
@@ -42,7 +43,7 @@ class CheckerExampleImpl(BaseChecker):
             method=method,
             run_id=run_id,
             address=address,
-            team=team,
+            team_name=team_name,
             team_id=team_id,
             flag_round=flag_round,
             round_length=round_length,
@@ -51,9 +52,10 @@ class CheckerExampleImpl(BaseChecker):
             log_endpoint=log_endpoint,
             use_db_cache=use_db_cache,
             json_logging=json_logging,
-            round=round,
+            round_id=round_id,
             flag=flag,
             timeout=timeout,
+            **kwargs,
         )
         self.logger.setLevel(DEBUG)
 
@@ -182,8 +184,8 @@ def test_args():
     print(args)
     assert args.method == argv[1]
     assert args.address == argv[3]
-    assert args.team == argv[5]
-    assert args.round == int(argv[7])
+    assert args.team_name == argv[5]
+    assert args.round_id == int(argv[7])
     assert args.flag == argv[9]
     assert args.timeout == int(argv[11])
     assert args.flag_idx == int(argv[13])
@@ -243,9 +245,9 @@ def test_useragents():
         assert checker.http_useragent == new_agent
         if first_agent != checker.http_useragent:
             return
-    
+
     assert first_agent != checker.http_useragent
-    
+
 
 
 def test_exceptionHandling(capsys):
