@@ -40,7 +40,7 @@ steps:
   displayName: 'Install dependencies'
 
 - script: |
-    pip install -r dev-requirements.txt pytest pytest-azurepipelines
+    pip install -r dev-requirements.txt pytest-azurepipelines
     make test
   displayName: 'pytest'
 
