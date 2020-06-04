@@ -1,6 +1,6 @@
 # EnoChecker
 
-This is the checker lib that shall be used by all checkers in ENOWARS3.
+This is the checker lib that shall be used by all checkers in ENOWARS3 and ENOWARS4.
 
 For a simple checker, subclass `enochecker.BaseChecker`.
 ```python
