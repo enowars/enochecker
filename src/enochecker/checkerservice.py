@@ -203,7 +203,12 @@ def assert_types(
 
 def checker_routes(
     checker_cls: Type["BaseChecker"],
-) -> Tuple[Callable[[], Response], Callable[[], Response]]:
+) -> Tuple[
+    Callable[[], Response],
+    Callable[[], Response],
+    Callable[[], Dict[str, Union[str, int]]],
+    Callable[[], str],
+]:
     """
     Creates a flask app for the given checker class.
     :param checker_cls: The checker class to use
@@ -266,7 +271,7 @@ def checker_routes(
                 }
             )
 
-    def service_info() -> Response:
+    def service_info() -> Dict[str, Union[str, int]]:
         """
         Serves a single checker request.
         The spec needs to be formed according to the spec above.
@@ -274,11 +279,9 @@ def checker_routes(
         :return: jsonified result of the checker.
         """
         try:
-
-            if not hasattr(checker_cls, "service_name"):
-                service_name = checker_cls.__name__.split("Checker")[0]
-            else:
-                service_name = checker_cls.service_name
+            service_name: str = getattr(
+                checker_cls, "service_name", checker_cls.__name__.split("Checker")[0]
+            )
 
             info_dict = {
                 "serviceName": service_name,
@@ -291,6 +294,8 @@ def checker_routes(
             assert isinstance(info_dict["flagCount"], int)
             assert isinstance(info_dict["havocCount"], int)
             assert isinstance(info_dict["noiseCount"], int)
+
+            return info_dict  # type: ignore # (mypy would infer Dict[str, object] instead)
 
         except Exception:
             print("SERVICE INFO NOT SPECIFIED!!!11ELF!")
@@ -309,9 +314,7 @@ class ExampleChecker(BaseChecker):
             )
             raise AttributeError("REQUIRED SERVICE INFO FIELDS NOT SPECIFIED!")
 
-        return info_dict
-
-    def get_service_info():
+    def get_service_info() -> str:
         return jsonify(service_info())
 
     return index, serve_checker, service_info, get_service_info
