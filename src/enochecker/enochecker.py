@@ -6,6 +6,7 @@ import os
 import socket
 import sys
 import traceback
+import warnings
 from abc import ABCMeta, abstractmethod
 from concurrent.futures import TimeoutError
 from typing import (
@@ -263,15 +264,17 @@ class BaseChecker(metaclass=_CheckerMeta):
             raise TypeError("must specify address")
         self.address: str = address
         if team:
-            raise DeprecationWarning(
-                "Passing team as argument to BaseChecker is deprecated, use team_name instead"
+            warnings.warn(
+                "Passing team as argument to BaseChecker is deprecated, use team_name instead",
+                DeprecationWarning,
             )
             team_name = team_name or team
         self.team: Optional[str] = team
         self.team_id: int = team_id or -1  # TODO: make required
         if round:
-            raise DeprecationWarning(
-                "Passing round as argument to BaseChecker is deprecated, use round_id instead"
+            warnings.warn(
+                "Passing round as argument to BaseChecker is deprecated, use round_id instead",
+                DeprecationWarning,
             )
             round_id = round_id or round
         self.round: Optional[int] = round_id
