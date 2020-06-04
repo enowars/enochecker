@@ -1,5 +1,6 @@
 import datetime
 import socket
+import traceback
 
 from flask import Flask
 from future.standard_library import install_aliases
@@ -106,6 +107,7 @@ def parse_args(argv=None):
         type=str,
         default="team",
         help="The name of the target team to check",
+        dest="team_name",
     )
     runparser.add_argument(
         "-T",
@@ -122,7 +124,7 @@ def parse_args(argv=None):
         help="An id for this run. Used to find it in the DB later.",
     )
     runparser.add_argument(
-        "-r", "--round", type=int, default=1, help="The round we are in right now"
+        "-r", "--round", type=int, default=1, help="The round we are in right now", dest="round_id",
     )
     runparser.add_argument(
         "-R",
@@ -212,8 +214,10 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         run_id: int = None,
         method: str = None,
         address: str = None,
+        team: str = None,  # deprecated!
         team_name: str = None,
         team_id: int = None,
+        round: int = None,  # deprecated!
         round_id: int = None,
         flag_round: int = None,
         round_length: int = 300,
@@ -243,8 +247,14 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
         self.method = method  # type: str
         self.address = address  # type: str
+        if team:
+            raise DeprecationWarning("Passing team as argument to BaseChecker is deprecated, use team_name instead")
+            team_name = team_name or team
         self.team = team_name  # type: str
         self.team_id = team_id
+        if round:
+            raise DeprecationWarning("Passing round as argument to BaseChecker is deprecated, use round_id instead")
+            round_id = round_id or round
         self.round = round_id # type: int
         self.current_round = round_id
         self.flag_round = flag_round  # type: int
