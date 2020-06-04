@@ -43,7 +43,9 @@ The full API specification can be found [docs/api.md](docs/api.md).
 (Generated from docstring using `pydocmd simple ...`).
 
 ## Installation
-For now, the library can be installed using pip/git, like:
+The latest stable version of the library is available on pip: `pip install enochecker`
+
+To access the development version, the library can be installed using pip/git, like:
 `pip install git+https://github.com/enowars/enochecker`
 
 ## Launch Checker
