@@ -16,7 +16,7 @@ def exception_to_string(excp):
         excp.__traceback__
     )  # add limit=??
     pretty = traceback.format_list(stack)
-    return "".join(pretty) + f"\n  {excp.__clas__} {excp}"
+    return "".join(pretty) + f"\n  {excp.__class__} {excp}"
 
 
 class ELKFormatter(logging.Formatter):
