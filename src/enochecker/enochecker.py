@@ -11,8 +11,6 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Type, Uni
 from urllib.parse import urlparse
 
 from flask import Flask
-from future.standard_library import install_aliases
-from future.utils import with_metaclass
 
 from .checkerservice import CHECKER_METHODS, init_service
 from .logging import ELKFormatter, RestLogHandler
@@ -22,14 +20,11 @@ from .storeddict import DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING, StoredDict
 from .useragents import random_useragent
 from .utils import SimpleSocket, snake_caseify
 
-install_aliases()
-
-
 if TYPE_CHECKING:
     # The import might fail in UWSGI, see the comments below.
     import requests
 
-TIME_BUFFER = 5  # type: int # time in seconds we try to finish earlier
+TIME_BUFFER: int = 5  # time in seconds we try to finish earlier
 
 VALID_ARGS = [
     "method",
@@ -47,11 +42,12 @@ VALID_ARGS = [
 ]
 
 # Global cache for all stored dicts.  TODO: Prune this at some point?
-global_db_cache = {}  # type: Dict[str, Union[StoredDict, NoSqlDict]]
+global_db_cache: Dict[str, Union[StoredDict, NoSqlDict]] = {}
 
 
-def parse_args(argv=None):
-    # type: (Union[None, List[str], argparse.Namespace]) -> argparse.Namespace
+def parse_args(
+    argv: Union[None, List[str], argparse.Namespace] = None
+) -> argparse.Namespace:
     """
     Returns the parsed argparser args.
     Args look like this:
@@ -183,8 +179,7 @@ class _CheckerMeta(ABCMeta):
     ABCMeta is used as superclass instead of type, such that BaseChecker is declared abstract -> needs to be overridden.
     """
 
-    def __init__(cls, name, bases, clsdict):
-        # type: (Type[_CheckerMeta], str, Dict[Any]) -> None
+    def __init__(cls: "_CheckerMeta", name: str, bases: Dict[Any, Any], clsdict):
         """
         Called whenever this class is subclassed.
         :param name: The name of the new class
@@ -192,11 +187,11 @@ class _CheckerMeta(ABCMeta):
         :param clsdict: Contents of this class (.__dict__)
         """
         if len(cls.mro()) > 2:  # 1==BaseChecker
-            cls.service = init_service(cls)  # type: Flask
-        super(_CheckerMeta, cls).__init__(name, bases, clsdict)
+            cls.service: Flask = init_service(cls)
+        super().__init__(name, bases, clsdict)
 
 
-class BaseChecker(with_metaclass(_CheckerMeta, object)):
+class BaseChecker(metaclass=_CheckerMeta):
     """
     All you base are belong to us. Also all your flags. And checker scripts.
     Override the methods given here, then simply init and .run().
@@ -233,31 +228,31 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
         self.requests = requests
 
-        self.time_started_at = datetime.datetime.now()  # type: datetime
-        self.run_id = run_id  # type: int
-        self.log_endpoint = log_endpoint  # type: Optional[str]
-        self.json_logging = json_logging  # type: bool
+        self.time_started_at: datetime.datetime = datetime.datetime.now()
+        self.run_id: int = run_id
+        self.log_endpoint: Optional[str] = log_endpoint
+        self.json_logging: bool = json_logging
 
-        self.method = method  # type: str
-        self.address = address  # type: str
-        self.team = team  # type: str
+        self.method: str = method
+        self.address: str = address
+        self.team: str = team
         self.team_id = team_id
-        self.round = round  # type: int
-        self.current_round = round
-        self.flag_round = flag_round  # type: int
-        self.round_length = round_length  # type: int
-        self.flag = flag  # type: str
-        self.timeout = timeout  # type: int
+        self.round: int = round
+        self.current_round: int = round
+        self.flag_round: int = flag_round
+        self.round_length: int = round_length
+        self.flag: str = flag
+        self.timeout: int = timeout
 
-        self.flag_idx = flag_idx  # type: int
+        self.flag_idx: int = flag_idx
         self.storage_dir = storage_dir
 
         self._setup_logger()
         if use_db_cache:
-            self._active_dbs = global_db_cache  # type: Dict[str, StoredDict]
+            self._active_dbs: Dict[str, Union[NoSqlDict, StoredDict]] = global_db_cache
         else:
-            self._active_dbs = {}  # type: Dict[str, Union[NoSqlDict, StoredDict]]
-        self.http_session = self.requests.session()  # type: requests.Session
+            self._active_dbs: Dict[str, Union[NoSqlDict, StoredDict]] = {}
+        self.http_session: requests.Session = self.requests.session()
         self.http_useragent = random_useragent()
 
         if not hasattr(self, "service_name"):
@@ -272,7 +267,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             self.warning("No default port defined.")
             self.port = -1
 
-        self.request_dict = request_dict  # kinda duplicate
+        self.request_dict: Dict[str, Any] = request_dict  # kinda duplicate
         self.config = {x: getattr(self, x) for x in VALID_ARGS}
 
         self.debug(
@@ -285,14 +280,13 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             self.method = "havoc"
             self.warning("Ignoring method 'havok', calling 'havoc' instead")
 
-    def _setup_logger(self):
-        # type: () -> None
+    def _setup_logger(self) -> None:
         """
         Sets up a logger usable from inside a checker using
         self.debug, self.info, self.warning, self.error or self.logger
         A logger can have additional args as well as exc_info=ex to log an exception, stack_info=True to log trace.
         """
-        self.logger = logging.Logger(type(self).__name__)  # type: logging.Logger
+        self.logger: logging.Logger = logging.Logger(type(self).__name__)
         self.logger.setLevel(logging.DEBUG)
 
         # default handler
@@ -310,14 +304,13 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         if self.log_endpoint and self.log_endpoint.startswith("http"):
             self.logger.addHandler(RestLogHandler(self))
 
-        self.debug = self.logger.debug  # type: Callable[[str, ...], None]
-        self.info = self.logger.info  # type: Callable[[str, ...], None]
-        self.warning = self.logger.warning  # type: Callable[[str, ...], None]
-        self.error = self.logger.error  # type: Callable[[str, ...], None]
+        self.debug: Callable[..., None] = self.logger.debug
+        self.info: Callable[..., None] = self.logger.info
+        self.warning: Callable[..., None] = self.logger.warning
+        self.error: Callable[..., None] = self.logger.error
 
     @property
-    def noise(self):
-        # type: () -> str
+    def noise(self) -> str:
         """
         Pretty similar to a flag, just in a different mode (storeNoise vs storeFlag)
         :return: The noise
@@ -325,8 +318,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         return self.flag
 
     @property
-    def time_running(self):
-        # type: () -> float
+    def time_running(self) -> float:
         """
         How long this checker has been running
         :return: time this checker has been running for
@@ -334,8 +326,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         return (datetime.datetime.now() - self.time_started_at).total_seconds()
 
     @property
-    def time_remaining(self):
-        # type: () -> int
+    def time_remaining(self) -> int:
         """
         Returns a remaining time that is save to be used as timeout (includes a buffer of TIME_BUFFER seconds)
         :return: A save number of seconds that may still be used
@@ -347,8 +338,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
     # ---- Basic checker functionality ---- #
 
-    def run(self, method=None):
-        # type: (Optional[str, Callable]) -> Result
+    def run(self, method: Optional[Union[str, Callable]] = None) -> Result:
         """
         Executes the checker and catches errors along the way.
         :param method: When calling run, you may call a different method than the one passed on Checker creation
@@ -443,9 +433,8 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             TimeoutError,
             socket.timeout,
             ConnectionError,
-            socket.error,
-            # ConnectionAbortedError,  # not in py2, already handled by ConnectionError.
-            # ConnectionRefusedError
+            OSError,
+            ConnectionAbortedError,
         ) as ex:
             self.info(
                 "Error in connection to service occurred: {}\n".format(ex), exc_info=ex
@@ -460,8 +449,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 db.persist()
 
     @abstractmethod
-    def putflag(self):
-        # type: () -> Optional[Result]
+    def putflag(self) -> Optional[Result]:
         """
         This method stores a flag in the service.
         In case multiple flags are provided, self.flag_idx gives the appropriate index.
@@ -475,8 +463,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         pass
 
     @abstractmethod
-    def getflag(self):
-        # type: () -> Optional[Result]
+    def getflag(self) -> Optional[Result]:
         """
         This method retrieves a flag from the service.
         Use self.flag to get the flag that needs to be recovered and self.roudn to get the round the flag was placed in.
@@ -489,8 +476,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         pass
 
     @abstractmethod
-    def putnoise(self):
-        # type: () -> Optional[Result]
+    def putnoise(self) -> Optional[Result]:
         """
         This method stores noise in the service. The noise should later be recoverable.
         The difference between noise and flag is that noise does not have to remain secret for other teams.
@@ -504,8 +490,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         pass
 
     @abstractmethod
-    def getnoise(self):
-        # type: () -> Optional[Result]
+    def getnoise(self) -> Optional[Result]:
         """
         This method retrieves noise in the service.
         The noise to be retrieved is inside self.flag
@@ -520,8 +505,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         pass
 
     @abstractmethod
-    def havoc(self):
-        # type: () -> Optional[Result]
+    def havoc(self) -> Optional[Result]:
         """
         This method unleashes havoc on the app -> Do whatever you must to prove the service still works. Or not.
         On error, raise an EnoException.
@@ -533,8 +517,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         pass
 
     @abstractmethod
-    def exploit(self):
-        # type: () -> Optional[Result]
+    def exploit(self) -> Optional[Result]:
         """
         This method is strictly for testing purposes and will hopefully not be called during the actual CTF.
         :raises EnoException on Error
@@ -545,8 +528,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         pass
 
     # ---- DB specific methods ---- #
-    def db(self, name, ignore_locks=False):
-        # type: (str, bool) -> Union[NoSqlDict, StoredDict]
+    def db(self, name: str, ignore_locks: bool = False) -> Union[NoSqlDict, StoredDict]:
         """
         Get a (global) db by name
         Subsequent calls will return the same db.
@@ -599,8 +581,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             return ret
 
     @property
-    def global_db(self):
-        # type: () -> StoredDict
+    def global_db(self) -> StoredDict:
         """
         A global storage shared between all teams and rounds.
         Subsequent calls will return the same db.
@@ -610,16 +591,14 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         return self.db("global")
 
     @property
-    def team_db(self):
-        # type: () -> StoredDict
+    def team_db(self) -> StoredDict:
         """
         The database for the current team
         :return: The team local db
         """
         return self.get_team_db()
 
-    def get_team_db(self, team=None):
-        # type: (Optional[str]) -> StoredDict
+    def get_team_db(self, team: Optional[str] = None) -> StoredDict:
         """
         Returns the database for a specific team.
         Subsequent calls will return the same db.
@@ -630,8 +609,9 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         return self.db("team_{}".format(team), ignore_locks=True)
 
     # ---- Networking specific methods ---- #
-    def _sanitize_url(self, route, port=None, scheme=None):
-        # type: (str, Optional[int], Optional[str]) -> str
+    def _sanitize_url(
+        self, route: str, port: Optional[int] = None, scheme: Optional[str] = None
+    ) -> str:
         if port is None:
             port = self.port
         if port is None:
@@ -648,8 +628,12 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         # noinspection PyProtectedMember
         return url._replace(netloc=netloc).geturl()
 
-    def connect(self, host=None, port=None, timeout=None):
-        # type: (Optional[str], Optional[int], Optional[int]) -> SimpleSocket
+    def connect(
+        self,
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        timeout: Optional[int] = None,
+    ) -> SimpleSocket:
         """
         Opens a socket/telnet connection to the remote host.
         Use connect(..).get_socket() for the raw socket.
@@ -674,8 +658,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         )
 
     @property
-    def http_useragent(self):
-        # type: () -> str
+    def http_useragent(self) -> str:
         """
         The useragent for http(s) requests
         :return: the current useragent
@@ -683,8 +666,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         return self.http_session.headers["User-Agent"]
 
     @http_useragent.setter
-    def http_useragent(self, useragent):
-        # type: (str) -> None
+    def http_useragent(self, useragent) -> None:
         """
         Sets the useragent for http requests.
         Randomize using http_useragent_randomize()
@@ -705,15 +687,14 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
     def http_post(
         self,
-        route="/",
-        params=None,
-        port=None,
-        scheme="http",
-        raise_http_errors=False,
-        timeout=None,
+        route: str = "/",
+        params: Any = None,
+        port: Optional[int] = None,
+        scheme: str = "http",
+        raise_http_errors: bool = False,
+        timeout: Optional[int] = None,
         **kwargs,
-    ):
-        # type: (str, Any, Optional[int], str, bool, Optional[int], ...) -> "requests.Response"
+    ) -> "requests.Response":
         """
         Performs a (http) requests.post to the current host.
         Caches cookies in self.http_session
@@ -732,15 +713,14 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
     def http_get(
         self,
-        route="/",
-        params=None,
-        port=None,
-        scheme="http",
-        raise_http_errors=False,
-        timeout=None,
+        route: str = "/",
+        params: Any = None,
+        port: Optional[int] = None,
+        scheme: str = "http",
+        raise_http_errors: bool = False,
+        timeout: Optional[int] = None,
         **kwargs,
-    ):
-        # type: (str, Any, Optional[int], str, bool, Optional[int], ...) -> "requests.Response"
+    ) -> "requests.Response":
         """
         Performs a (http) requests.get to the current host.
         Caches cookies in self.http_session
@@ -759,16 +739,15 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
     def http(
         self,
-        method,
-        route="/",
-        params=None,
-        port=None,
-        scheme="http",
-        raise_http_errors=False,
-        timeout=None,
+        method: str,
+        route: str = "/",
+        params: Any = None,
+        port: Optional[int] = None,
+        scheme: str = "http",
+        raise_http_errors: bool = False,
+        timeout: Optional[int] = None,
         **kwargs,
-    ):
-        # type: (str, str, Any, Optional[int], str, bool, Optional[int], ...) -> "requests.Response"
+    ) -> "requests.Response":
         """
         Performs an http request (requests lib) to the current host.
         Caches cookies in self.http_session
@@ -798,8 +777,10 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         return resp
 
 
-def run(checker_cls, args=None):
-    # type: (Type[BaseChecker], Union[None, List[str], argparse.Namespace]) -> None
+def run(
+    checker_cls: Type[BaseChecker],
+    args: Union[None, List[str], argparse.Namespace] = None,
+) -> None:
     """
     # Runs a checker, either from cmdline or as uwsgi script.
     :param checker: The checker (subclass of basechecker) to run

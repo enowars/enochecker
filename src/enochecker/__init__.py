@@ -1,5 +1,3 @@
-from future.standard_library import install_aliases
-
 from .checkerservice import CHECKER_METHODS
 from .enochecker import BaseChecker, parse_args, run  # the BaseChecker
 from .results import (  # Possible results
@@ -23,8 +21,5 @@ from .utils import (  # the util stuff
     snake_caseify,
     start_daemon,
 )
-
-install_aliases()
-
 
 name = "enochecker"

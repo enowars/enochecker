@@ -1,9 +1,8 @@
 import logging
-import os
 from collections.abc import MutableMapping
 from functools import wraps
 from threading import RLock, current_thread
-from typing import TYPE_CHECKING, Any, Iterable, Optional, Union
+from typing import TYPE_CHECKING, Any, Iterable, Optional
 
 from enochecker import utils
 
@@ -173,8 +172,7 @@ class NoSqlDict(MutableMapping):
     def __iter__(self) -> Iterable[Any]:
         iterdict = {"checker": self.checker_name, "name": self.dict_name}
         results = self.db.find(iterdict)
-        for key in map(lambda res: res["key"], results):
-            yield key
+        yield from map(lambda res: res["key"], results)
 
     def persist(self) -> None:
         # TODO: could wait until here before hitting the mongodb...

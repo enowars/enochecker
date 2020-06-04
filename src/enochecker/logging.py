@@ -47,13 +47,17 @@ class ELKFormatter(logging.Formatter):
                         the record is emitted
     """
 
-    def __init__(self, checker, fmt=None, datefmt="%Y-%m-%dT%H:%M:%S%z", style="%"):
-        # type: (BaseChecker, str, str, str) -> None
+    def __init__(
+        self,
+        checker: "BaseChecker",
+        fmt: str = None,
+        datefmt: str = "%Y-%m-%dT%H:%M:%S%z",
+        style: str = "%",
+    ) -> None:
         super().__init__(fmt, datefmt, style)
-        self.checker = checker  # type: BaseChecker
+        self.checker: "BaseChecker" = checker
 
-    def format(self, record):
-        # type: (LogRecord) -> str
+    def format(self, record: LogRecord) -> str:
         record.stack = self.formatStack(record.stack_info)
         record.asctime = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
@@ -105,24 +109,22 @@ class RestLogHandler(logging.Handler):
     Simple handler class to send Checker logs off to the logging backend Service.
     """
 
-    def __init__(self, checker, level=logging.DEBUG):
-        # type: (BaseChecker, int) -> None
+    def __init__(self, checker: "BaseChecker", level: int = logging.DEBUG) -> None:
         """
         Create a new handler.
         :param checker: The checker to use
         :param level: the Level
         """
-        super(RestLogHandler, self).__init__(level)
+        super().__init__(level)
 
         # see https://github.com/psf/requests/issues/2925
         import requests
 
         self.requests = requests
 
-        self.checker = checker  # type: BaseChecker
+        self.checker: "BaseChecker" = checker
 
-    def emit(self, record):
-        # type: (LogRecord) -> None
+    def emit(self, record: LogRecord) -> None:
         # timestamp = datetime.datetime.fromtimestamp(record.msecs/1000.0).strftime('%Y-%m-%dT%H:%M:%SZ')
         # timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
         # "millis": record.msecs,
