@@ -734,7 +734,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         return self.http_session.headers["User-Agent"]
 
     @http_useragent.setter
-    def http_useragent(self, useragent) -> None:
+    def http_useragent(self, useragent: str) -> None:
         """
         Sets the useragent for http requests.
         Randomize using http_useragent_randomize()
