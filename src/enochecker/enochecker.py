@@ -596,7 +596,8 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         try:
             db = self._active_dbs[name]
-            db.logger = self.logger
+            # TODO: make the NoSQLDict use the checker's logger
+            db.logger = self.logger  # type: ignore
             # TODO: Settng a new Logger backend may throw logs in the wrong direction in a multithreaded environment!
             return db
         except KeyError:
@@ -707,10 +708,12 @@ class BaseChecker(metaclass=_CheckerMeta):
         :param timeout: timeout on connection (defaults to self.timeout)
         :return: A connected Telnet instance
         """
-        timeout_fun = lambda: timeout
-        if timeout is None:
-            timeout = self.time_remaining / 2
-            timeout_fun = lambda: self.time_remaining / 2
+        if timeout:
+            timeout_fun: Callable[[], int] = lambda: cast(int, timeout)
+        else:
+            timeout = self.time_remaining // 2
+            timeout_fun = lambda: self.time_remaining // 2
+
         if port is None:
             port = self.port
         if host is None:
@@ -828,7 +831,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         kwargs.setdefault("allow_redirects", False)
         url = self._sanitize_url(route, port, scheme)
         if timeout is None:
-            timeout = self.time_remaining / 2
+            timeout = self.time_remaining // 2
         self.debug(
             "Request: {} {} with params: {} and {} secs timeout.".format(
                 method, url, params, timeout
