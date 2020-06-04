@@ -1,11 +1,10 @@
-from collections.abc import MutableMapping
 import logging
-import os
+from collections.abc import MutableMapping
 from functools import wraps
 from threading import RLock, current_thread
-from typing import Iterable, Any, Optional, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Union
 
-from enochecker import utils
+from . import utils
 from .utils import base64ify
 
 if TYPE_CHECKING:
@@ -90,17 +89,24 @@ class NoSqlDict(MutableMapping):
         self,
         name: str = "default",
         checker_name: str = "BaseChecker",
-        host: str = DB_DEFAULT_HOST,
-        port: int = DB_DEFAULT_PORT,
-        username: str = DB_DEFAULT_USER,
-        password: str = DB_DEFAULT_PASS,
+        host: Optional[str] = None,
+        port: Union[int, str, None] = None,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
         *args,
         **kwargs
     ):
         self.dict_name = base64ify(name, altchars=b"-_")
         self.checker_name = checker_name
-        self.cache = {}
-        self.db = self.get_client(host, port, username, password)[checker_name][
+        self.cache: Dict[Any, Any] = {}
+        host_: str = host or DB_DEFAULT_HOST
+        if isinstance(port, int):
+            port_: int = port
+        else:
+            port_ = int(port or DB_DEFAULT_PORT)
+        username_: Optional[str] = username or DB_DEFAULT_USER
+        password_: Optional[str] = password or DB_DEFAULT_PASS
+        self.db = self.get_client(host_, port_, username_, password_)[checker_name][
             self.dict_name
         ]
         try:
@@ -172,8 +178,7 @@ class NoSqlDict(MutableMapping):
     def __iter__(self) -> Iterable[Any]:
         iterdict = {"checker": self.checker_name, "name": self.dict_name}
         results = self.db.find(iterdict)
-        for key in map(lambda res: res["key"], results):
-            yield key
+        yield from map(lambda res: res["key"], results)
 
     def persist(self) -> None:
         # TODO: could wait until here before hitting the mongodb...

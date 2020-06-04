@@ -20,10 +20,15 @@ def exception_to_string(excp):
 
 
 class ELKFormatter(logging.Formatter):
-    def __init__(self, checker, fmt=None, datefmt="%Y-%m-%dT%H:%M:%S%z", style="%"):
-        # type: (BaseChecker, str, str, str) -> None
+    def __init__(
+        self,
+        checker: "BaseChecker",
+        fmt: str = None,
+        datefmt: str = "%Y-%m-%dT%H:%M:%S%z",
+        style: str = "%",
+    ) -> None:
         super().__init__(fmt, datefmt, style)
-        self.checker = checker  # type: BaseChecker
+        self.checker: "BaseChecker" = checker
 
     def format(self, record):
         record.stack = self.formatStack(record.stack_info)
@@ -32,7 +37,9 @@ class ELKFormatter(logging.Formatter):
         message = record.getMessage()
         if record.exc_info:
             eno = record.exc_info
-            stacktrace = ''.join(traceback.format_exception(None, eno, eno.__traceback__))
+            stacktrace = "".join(
+                traceback.format_exception(None, eno, eno.__traceback__)
+            )
             message += f" excp: {stacktrace}"
         if record.stack_info:
             message += f" trace: {record.stack}"
@@ -41,7 +48,7 @@ class ELKFormatter(logging.Formatter):
             "tool": type(self.checker).__name__,
             "type": "infrastructure",
             "severity": record.levelname,
-            "severityLevel": max(0, record.levelno//10-1),
+            "severityLevel": max(0, record.levelno // 10 - 1),
             "timestamp": record.asctime,
             "module": record.module,
             "function": record.funcName,
@@ -54,7 +61,7 @@ class ELKFormatter(logging.Formatter):
             "teamName": self.checker.team,
             "teamId": self.checker.team_id,
             "serviceName": self.checker.service_name,
-            "method": self.checker.method
+            "method": self.checker.method,
         }
 
         return LOGGING_PREFIX + json.dumps(log_output)
@@ -65,27 +72,29 @@ class RestLogHandler(logging.Handler):
     Simple handler class to send Checker logs off to the logging backend Service.
     """
 
-    def __init__(self, checker, level=logging.DEBUG):
-        # type: (BaseChecker, int) -> None
+    def __init__(self, checker: "BaseChecker", level: int = logging.DEBUG) -> None:
         """
         Create a new handler.
         :param checker: The checker to use
         :param level: the Level
         """
-        super(RestLogHandler, self).__init__(level)
+        super().__init__(level)
 
         # see https://github.com/psf/requests/issues/2925
         import requests
 
         self.requests = requests
 
-        self.checker = checker  # type: BaseChecker
+        self.checker: "BaseChecker" = checker
 
-    def emit(self, record):
-        # type: (LogRecord) -> None
+    def emit(self, record: LogRecord) -> None:
         # timestamp = datetime.datetime.fromtimestamp(record.msecs/1000.0).strftime('%Y-%m-%dT%H:%M:%SZ')
         # timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
         # "millis": record.msecs,
+        if not self.checker.log_endpoint:
+            print("Error while logging, no log endpoint specified")
+            return
+
         json = {
             "message": record.getMessage(),
             "timestamp": record.asctime,  # Todo: Might not be available everywhere (?)
@@ -96,6 +105,8 @@ class RestLogHandler(logging.Handler):
         try:
             r = self.requests.post(self.checker.log_endpoint, json=json)
             if r.status_code != 200:
-                print(f"Error while logging. Request to {r.status_code} returned: {r.text}")
+                print(
+                    f"Error while logging. Request to {r.status_code} returned: {r.text}"
+                )
         except Exception as ex:
             print(f"Error while logging: {ex}")

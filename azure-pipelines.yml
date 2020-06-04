@@ -7,6 +7,9 @@ trigger:
 - master
 - dev
 
+pr:
+- master
+
 schedules:
 - cron: "0 0 * * *"
   displayName: Daily midnight build
@@ -37,7 +40,11 @@ steps:
   displayName: 'Install dependencies'
 
 - script: |
-    pip install pytest pytest-azurepipelines
-    pip install .
-    pytest
+    pip install -r dev-requirements.txt pytest-azurepipelines
+    make test
   displayName: 'pytest'
+
+- script: |
+    pip install -r dev-requirements.txt
+    make lint
+  displayName: 'lint'

@@ -2,12 +2,12 @@ import collections
 import json
 import logging
 import sys
-from typing import TYPE_CHECKING, Callable, Type, Any, List, Union, Dict, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Type, Union
 
-from flask import Flask, Response, request, jsonify
+from flask import Flask, Response, jsonify, request
 
-from .enochecker import Result
 from .logging import exception_to_string
+from .results import Result
 from .utils import snake_caseify
 
 # from elasticapm.contrib.flask import ElasticAPM
@@ -25,17 +25,17 @@ logger.setLevel(logging.DEBUG)
 Optional = collections.namedtuple("Optional", "key type default")
 Required = collections.namedtuple("Required", "key type")
 
-CHECKER_METHODS = [
+CHECKER_METHODS: List[str] = [
     "putflag",
     "getflag",
     "putnoise",
     "getnoise",
     "havoc",
     "exploit",
-]  # type: List[str]
+]
 
 # The json spec a checker request follows.
-spec = [
+spec: List[Union[Required, Optional]] = [
     Required("method", CHECKER_METHODS),  # method to execute
     Required("address", str),  # address to check
     Optional("runId", int, 0),  # internal ID of this run inside our db
@@ -48,7 +48,7 @@ spec = [
     Optional("flagIndex", int, 0),
     Optional("timeout", int, 30),  # timeout we have for this run
     Optional("logEndpoint", str, None),  # endpoint to send runs to
-]  # type: List[Union[Required, Optional]]
+]
 
 UI_TEMPLATE = """
 
@@ -85,7 +85,7 @@ function update_pending(){
     	document.getElementById("pending_para").textContent = ""
     } else {
     	document.getElementById("pending_para").textContent = checker_pending_requests.toString() + "Requests pending"
-    }	
+    }
 }
 
 </script>
@@ -93,12 +93,11 @@ function update_pending(){
 <p>Only select one method from the given list.</p>
 <p>Values in brackets are optional, so you can delete those lines if you don't want to specify them.</p>
 <button onclick=post(document.getElementById("jsonTextbox").value)>Post</button></div>
-<p id="pending_para"></p> 
+<p id="pending_para"></p>
 """
 
 
-def check_type(name, val, expected_type):
-    # type: (str, str, Any) -> None
+def check_type(name: str, val: str, expected_type: Any) -> None:
     """
     returns and converts if necessary
     :param name: the name of the value
@@ -127,8 +126,7 @@ def check_type(name, val, expected_type):
 #        if isinstance(entry, Required):
 
 
-def stringify_spec_entry(entry):
-    # type: (Union[Optional, Required]) -> str
+def stringify_spec_entry(entry: Union[Optional, Required]) -> str:
     """Make a nice string out of it."""
     entrytype = entry.type
     if isinstance(entrytype, type):
@@ -144,8 +142,7 @@ def stringify_spec_entry(entry):
     )
 
 
-def serialize_spec(spec):
-    # type: (List[Union[Optional, Required]]) -> str
+def serialize_spec(spec: List[Union[Optional, Required]]) -> str:
     """
     Prints a checker json spec in a readable multiline format
     :param spec: a spec
@@ -159,8 +156,9 @@ def serialize_spec(spec):
     return ret + "\n}"
 
 
-def assert_types(json, spec):
-    # type: (Dict[str, Any], List[Union[Optional, Required]]) -> Dict[str, Any]
+def assert_types(
+    json: Dict[str, Any], spec: List[Union[Optional, Required]]
+) -> Dict[str, Any]:
     """
     Generates a kwargs dict from a json.
     Will copy all elements from json to the dict, rename all keys to snake_case and Index to idx.
@@ -171,8 +169,7 @@ def assert_types(json, spec):
     """
     ret = {}
 
-    def key_to_name(key):
-        # type: (str)->str
+    def key_to_name(key: str) -> str:
         key = key.replace("Index", "Idx")  # -> flagIndex -> flag_idx
         key = key.replace("relatedRoundId", "flagRound")
         return snake_caseify(key)
@@ -202,16 +199,21 @@ def assert_types(json, spec):
     return ret
 
 
-def checker_routes(checker_cls):
-    # type: (Type[BaseChecker]) -> Tuple[Callable[[],Response], Callable[[], Response]]
+def checker_routes(
+    checker_cls: Type["BaseChecker"],
+) -> Tuple[
+    Callable[[], Response],
+    Callable[[], Response],
+    Callable[[], Dict[str, Union[str, int]]],
+    Callable[[], str],
+]:
     """
     Creates a flask app for the given checker class.
     :param checker_cls: The checker class to use
     :return: A flask app that can be passed to a uWSGI server or run using .run().
     """
 
-    def index():
-        # type: () -> Response
+    def index() -> Response:
         """
         Some info about this service
         :return: Printable fun..
@@ -226,8 +228,7 @@ def checker_routes(checker_cls):
             )
         )
 
-    def serve_checker():
-        # type: () -> Response
+    def serve_checker() -> Response:
         """
         Serves a single checker request.
         The spec needs to be formed according to the spec above.
@@ -268,8 +269,7 @@ def checker_routes(checker_cls):
                 }
             )
 
-    def service_info():
-        # type: () -> Response
+    def service_info() -> Dict[str, Union[str, int]]:
         """
         Serves a single checker request.
         The spec needs to be formed according to the spec above.
@@ -277,11 +277,9 @@ def checker_routes(checker_cls):
         :return: jsonified result of the checker.
         """
         try:
-
-            if not hasattr(checker_cls, "service_name"):
-                service_name = checker_cls.__name__.split("Checker")[0]
-            else:
-                service_name = checker_cls.service_name
+            service_name: str = getattr(
+                checker_cls, "service_name", checker_cls.__name__.split("Checker")[0]
+            )
 
             info_dict = {
                 "serviceName": service_name,
@@ -294,6 +292,8 @@ def checker_routes(checker_cls):
             assert isinstance(info_dict["flagCount"], int)
             assert isinstance(info_dict["havocCount"], int)
             assert isinstance(info_dict["noiseCount"], int)
+
+            return info_dict  # type: ignore # (mypy would infer Dict[str, object] instead)
 
         except Exception:
             print("SERVICE INFO NOT SPECIFIED!!!11ELF!")
@@ -312,16 +312,13 @@ class ExampleChecker(BaseChecker):
             )
             raise AttributeError("REQUIRED SERVICE INFO FIELDS NOT SPECIFIED!")
 
-        return info_dict
-
-    def get_service_info():
+    def get_service_info() -> str:
         return jsonify(service_info())
 
     return index, serve_checker, service_info, get_service_info
 
 
-def init_service(checker):
-    # type: (Type[BaseChecker]) -> Flask
+def init_service(checker: Type["BaseChecker"]) -> Flask:
     """
     Initializes a flask app that can be used for WSGI or listen directly.
     The Engine may Communicate with it over socket.

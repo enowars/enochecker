@@ -1,39 +1,43 @@
-import datetime
-import socket
-import traceback
-
-from flask import Flask
-from future.standard_library import install_aliases
-
-install_aliases()
-
 import argparse
+import datetime
 import json
 import logging
 import os
+import socket
 import sys
-
+import traceback
 from abc import ABCMeta, abstractmethod
-from typing import Optional, Callable, Any, Dict, List, Union, Type, TYPE_CHECKING
+from concurrent.futures import TimeoutError
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 from urllib.parse import urlparse
 
-from future.utils import with_metaclass
+from flask import Flask
 
-from concurrent.futures import TimeoutError
-
-from .utils import snake_caseify, SimpleSocket
-from .useragents import random_useragent
-from .results import Result, EnoException
-from .checkerservice import init_service, CHECKER_METHODS
-from .logging import RestLogHandler, ELKFormatter
-from .storeddict import StoredDict, DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING
+from .checkerservice import CHECKER_METHODS, init_service
+from .logging import ELKFormatter, RestLogHandler
 from .nosqldict import NoSqlDict
+from .results import EnoException, Result
+from .storeddict import DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING, StoredDict
+from .useragents import random_useragent
+from .utils import SimpleSocket, snake_caseify
 
 if TYPE_CHECKING:
     # The import might fail in UWSGI, see the comments below.
     import requests
 
-TIME_BUFFER = 5  # type: int # time in seconds we try to finish earlier
+DEFAULT_TIMEOUT: int = 30
+TIME_BUFFER: int = 5  # time in seconds we try to finish earlier
 
 VALID_ARGS = [
     "method",
@@ -51,11 +55,10 @@ VALID_ARGS = [
 ]
 
 # Global cache for all stored dicts.  TODO: Prune this at some point?
-global_db_cache = {}  # type: Dict[str, Union[StoredDict, NoSqlDict]]
+global_db_cache: Dict[str, Union[StoredDict, NoSqlDict]] = {}
 
 
-def parse_args(argv=None):
-    # type: (Union[None, List[str], argparse.Namespace]) -> argparse.Namespace
+def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     """
     Returns the parsed argparser args.
     Args look like this:
@@ -124,7 +127,12 @@ def parse_args(argv=None):
         help="An id for this run. Used to find it in the DB later.",
     )
     runparser.add_argument(
-        "-r", "--round", type=int, default=1, help="The round we are in right now", dest="round_id",
+        "-r",
+        "--round",
+        type=int,
+        default=1,
+        help="The round we are in right now",
+        dest="round_id",
     )
     runparser.add_argument(
         "-R",
@@ -151,7 +159,7 @@ def parse_args(argv=None):
         "-x",
         "--timeout",
         type=int,
-        default=30,
+        default=DEFAULT_TIMEOUT,
         help="The maximum amount of time the script has to execute in seconds",
     )
     runparser.add_argument(
@@ -188,8 +196,9 @@ class _CheckerMeta(ABCMeta):
     ABCMeta is used as superclass instead of type, such that BaseChecker is declared abstract -> needs to be overridden.
     """
 
-    def __init__(cls, name, bases, clsdict):
-        # type: (Type[_CheckerMeta], str, Dict[Any]) -> None
+    def __init__(
+        cls: "_CheckerMeta", name: str, bases: Tuple[type, ...], clsdict: Dict[Any, Any]
+    ):
         """
         Called whenever this class is subclassed.
         :param name: The name of the new class
@@ -197,16 +206,20 @@ class _CheckerMeta(ABCMeta):
         :param clsdict: Contents of this class (.__dict__)
         """
         if len(cls.mro()) > 2:  # 1==BaseChecker
-            cls.service = init_service(cls)  # type: Flask
-        super(_CheckerMeta, cls).__init__(name, bases, clsdict)
+            cls.service: Flask = init_service(cast(Type[BaseChecker], cls))
+        super().__init__(name, bases, clsdict)
 
 
-class BaseChecker(with_metaclass(_CheckerMeta, object)):
+class BaseChecker(metaclass=_CheckerMeta):
     """
     All you base are belong to us. Also all your flags. And checker scripts.
     Override the methods given here, then simply init and .run().
     Magic.
     """
+
+    flag_count: int
+    havoc_count: int
+    noise_count: int
 
     def __init__(
         self,
@@ -240,41 +253,48 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
         self.requests = requests
 
-        self.time_started_at = datetime.datetime.now()  # type: datetime
-        self.run_id = run_id  # type: int
-        self.log_endpoint = log_endpoint  # type: Optional[str]
-        self.json_logging = json_logging  # type: bool
+        self.time_started_at: datetime.datetime = datetime.datetime.now()
+        self.run_id: Optional[int] = run_id
+        self.log_endpoint: Optional[str] = log_endpoint
+        self.json_logging: bool = json_logging
 
-        self.method = method  # type: str
-        self.address = address  # type: str
+        self.method: Optional[str] = method
+        if not address:
+            raise TypeError("must specify address")
+        self.address: str = address
         if team:
-            raise DeprecationWarning("Passing team as argument to BaseChecker is deprecated, use team_name instead")
+            raise DeprecationWarning(
+                "Passing team as argument to BaseChecker is deprecated, use team_name instead"
+            )
             team_name = team_name or team
-        self.team = team_name  # type: str
-        self.team_id = team_id
+        self.team: Optional[str] = team
+        self.team_id: int = team_id or -1  # TODO: make required
         if round:
-            raise DeprecationWarning("Passing round as argument to BaseChecker is deprecated, use round_id instead")
+            raise DeprecationWarning(
+                "Passing round as argument to BaseChecker is deprecated, use round_id instead"
+            )
             round_id = round_id or round
-        self.round = round_id # type: int
-        self.current_round = round_id
-        self.flag_round = flag_round  # type: int
-        self.round_length = round_length  # type: int
-        self.flag = flag  # type: str
-        self.timeout = timeout  # type: int
+        self.round: Optional[int] = round_id
+        self.current_round: Optional[int] = round_id
+        self.flag_round: Optional[int] = flag_round
+        self.round_length: int = round_length
+        self.flag: Optional[str] = flag
+        self.timeout: Optional[int] = timeout
 
-        self.flag_idx = flag_idx  # type: int
+        self.flag_idx: Optional[int] = flag_idx
+
         self.storage_dir = storage_dir
 
         self._setup_logger()
         if use_db_cache:
-            self._active_dbs = global_db_cache  # type: Dict[str, StoredDict]
+            self._active_dbs: Dict[str, Union[NoSqlDict, StoredDict]] = global_db_cache
         else:
-            self._active_dbs = {}  # type: Dict[str, Union[NoSqlDict, StoredDict]]
-        self.http_session = self.requests.session()  # type: requests.Session
+            self._active_dbs = {}
+        self.http_session: requests.Session = self.requests.session()
         self.http_useragent = random_useragent()
 
         if not hasattr(self, "service_name"):
-            self.service_name = type(self).__name__.split("Checker")[0]
+            self.service_name: str = type(self).__name__.split("Checker")[0]
             self.debug(
                 "Assuming checker Name {}. If that's not the case, please override.".format(
                     self.service_name
@@ -285,7 +305,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             self.warning("No default port defined.")
             self.port = -1
 
-        self.request_dict = request_dict  # kinda duplicate
+        self.request_dict: Optional[Dict[str, Any]] = request_dict  # kinda duplicate
         self.config = {x: getattr(self, x) for x in VALID_ARGS}
 
         self.debug(
@@ -298,21 +318,20 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             self.method = "havoc"
             self.warning("Ignoring method 'havok', calling 'havoc' instead")
 
-    def _setup_logger(self):
-        # type: () -> None
+    def _setup_logger(self) -> None:
         """
         Sets up a logger usable from inside a checker using
         self.debug, self.info, self.warning, self.error or self.logger
         A logger can have additional args as well as exc_info=ex to log an exception, stack_info=True to log trace.
         """
-        self.logger = logging.Logger(type(self).__name__)  # type: logging.Logger
+        self.logger: logging.Logger = logging.Logger(type(self).__name__)
         self.logger.setLevel(logging.DEBUG)
 
         # default handler
         handler = logging.StreamHandler(sys.stdout)
         handler.setLevel(logging.DEBUG)
         if self.json_logging:
-            formatter = ELKFormatter(self)
+            formatter: logging.Formatter = ELKFormatter(self)
         else:
             formatter = logging.Formatter(
                 "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -323,15 +342,14 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         if self.log_endpoint and self.log_endpoint.startswith("http"):
             self.logger.addHandler(RestLogHandler(self))
 
-        self.debug = self.logger.debug  # type: Callable[[str, ...], None]
-        self.info = self.logger.info  # type: Callable[[str, ...], None]
-        self.warning = self.logger.warning  # type: Callable[[str, ...], None]
-        self.error = self.logger.error  # type: Callable[[str, ...], None]
-        self.critical = self.logger.critical  # type: Callable[[str, ...], None]
+        self.debug: Callable[..., None] = self.logger.debug
+        self.info: Callable[..., None] = self.logger.info
+        self.warning: Callable[..., None] = self.logger.warning
+        self.error: Callable[..., None] = self.logger.error
+        self.critical: Callable[..., None] = self.logger.critical
 
     @property
-    def noise(self):
-        # type: () -> str
+    def noise(self) -> Optional[str]:
         """
         Pretty similar to a flag, just in a different mode (storeNoise vs storeFlag)
         :return: The noise
@@ -339,8 +357,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         return self.flag
 
     @property
-    def time_running(self):
-        # type: () -> float
+    def time_running(self) -> float:
         """
         How long this checker has been running
         :return: time this checker has been running for
@@ -348,21 +365,26 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         return (datetime.datetime.now() - self.time_started_at).total_seconds()
 
     @property
-    def time_remaining(self):
-        # type: () -> int
+    def time_remaining(self) -> int:
         """
         Returns a remaining time that is save to be used as timeout (includes a buffer of TIME_BUFFER seconds)
         :return: A save number of seconds that may still be used
         """
-        return max(int(self.timeout - self.time_running - TIME_BUFFER), 1)
+        return max(
+            int(
+                getattr(self, "timeout", DEFAULT_TIMEOUT)
+                - self.time_running
+                - TIME_BUFFER
+            ),
+            1,
+        )
 
     # def __format_internal_db_entry(name):
     #     return f"__Checker-Internals:{name}__"
 
     # ---- Basic checker functionality ---- #
 
-    def run(self, method=None):
-        # type: (Optional[str, Callable]) -> Result
+    def run(self, method: Optional[Union[str, Callable]] = None) -> Result:
         """
         Executes the checker and catches errors along the way.
         :param method: When calling run, you may call a different method than the one passed on Checker creation
@@ -393,7 +415,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                             ]
                         )
 
-                    except KeyError as ex:
+                    except KeyError:
                         self.info(
                             f"original putflag did not return successfully -- ignoring getflag for flag_round:{self.flag_round}, index: {self.flag_idx}"
                         )
@@ -409,7 +431,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                             ]
                         )
 
-                    except KeyError as ex:
+                    except KeyError:
                         self.info(
                             f"original putnoise did not return successfully -- ignoring getnoise for flag_round:{self.flag_round}, index: {self.flag_idx}"
                         )
@@ -443,9 +465,13 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             return Result.OK
 
         except EnoException as eno:
-            stacktrace = ''.join(traceback.format_exception(None, eno, eno.__traceback__))
+            stacktrace = "".join(
+                traceback.format_exception(None, eno, eno.__traceback__)
+            )
             self.info(
-                "Checker[{}] result: {}({})".format(self.method, eno.result.name, stacktrace),
+                "Checker[{}] result: {}({})".format(
+                    self.method, eno.result.name, stacktrace
+                ),
                 exc_info=eno,
             )
             return Result(eno.result)  # , eno.message
@@ -454,21 +480,22 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             return Result.MUMBLE  # , "HTTP Error" #For now
         except (
             self.requests.ConnectionError,  # requests
-            self.requests.ConnectTimeout,  # requests
+            self.requests.exceptions.ConnectTimeout,  # requests
             TimeoutError,
             socket.timeout,
             ConnectionError,
-            socket.error,
-            # ConnectionAbortedError,  # not in py2, already handled by ConnectionError.
-            # ConnectionRefusedError
+            OSError,
+            ConnectionAbortedError,
         ) as ex:
             self.info(
                 "Error in connection to service occurred: {}\n".format(ex), exc_info=ex
             )
             return Result.OFFLINE  # , ex.message
         except Exception as ex:
-            stacktrace = ''.join(traceback.format_exception(None, ex, ex.__traceback__))
-            self.error("Unhandled checker error occurred: {}\n".format(stacktrace), exc_info=ex)
+            stacktrace = "".join(traceback.format_exception(None, ex, ex.__traceback__))
+            self.error(
+                "Unhandled checker error occurred: {}\n".format(stacktrace), exc_info=ex
+            )
             return Result.INTERNAL_ERROR  # , ex.message
         finally:
             for db in self._active_dbs.values():
@@ -476,8 +503,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
                 db.persist()
 
     @abstractmethod
-    def putflag(self):
-        # type: () -> Optional[Result]
+    def putflag(self) -> Optional[Result]:
         """
         This method stores a flag in the service.
         In case multiple flags are provided, self.flag_idx gives the appropriate index.
@@ -491,8 +517,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         pass
 
     @abstractmethod
-    def getflag(self):
-        # type: () -> Optional[Result]
+    def getflag(self) -> Optional[Result]:
         """
         This method retrieves a flag from the service.
         Use self.flag to get the flag that needs to be recovered and self.roudn to get the round the flag was placed in.
@@ -505,8 +530,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         pass
 
     @abstractmethod
-    def putnoise(self):
-        # type: () -> Optional[Result]
+    def putnoise(self) -> Optional[Result]:
         """
         This method stores noise in the service. The noise should later be recoverable.
         The difference between noise and flag is that noise does not have to remain secret for other teams.
@@ -520,8 +544,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         pass
 
     @abstractmethod
-    def getnoise(self):
-        # type: () -> Optional[Result]
+    def getnoise(self) -> Optional[Result]:
         """
         This method retrieves noise in the service.
         The noise to be retrieved is inside self.flag
@@ -536,8 +559,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         pass
 
     @abstractmethod
-    def havoc(self):
-        # type: () -> Optional[Result]
+    def havoc(self) -> Optional[Result]:
         """
         This method unleashes havoc on the app -> Do whatever you must to prove the service still works. Or not.
         On error, raise an EnoException.
@@ -549,8 +571,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         pass
 
     @abstractmethod
-    def exploit(self):
-        # type: () -> Optional[Result]
+    def exploit(self) -> Optional[Result]:
         """
         This method is strictly for testing purposes and will hopefully not be called during the actual CTF.
         :raises EnoException on Error
@@ -561,8 +582,9 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         pass
 
     # ---- DB specific methods ---- #
-    def db(self, name, ignore_locks=False):
-        # type: (str, bool) -> Union[NoSqlDict, StoredDict]
+    def db(
+        self, name: str, ignore_locks: bool = False
+    ) -> Union[NoSqlDict, StoredDict]:  # TODO: use a common supertype for all backends
         """
         Get a (global) db by name
         Subsequent calls will return the same db.
@@ -574,7 +596,8 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         """
         try:
             db = self._active_dbs[name]
-            db.logger = self.logger
+            # TODO: make the NoSQLDict use the checker's logger
+            db.logger = self.logger  # type: ignore
             # TODO: Settng a new Logger backend may throw logs in the wrong direction in a multithreaded environment!
             return db
         except KeyError:
@@ -582,16 +605,19 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             self.debug("Remote DB {} was not cached.".format(name))
             if os.getenv("MONGO_ENABLED"):
                 host = os.getenv("MONGO_HOST")
-                port = int(os.getenv("MONGO_PORT"))
+                port = os.getenv("MONGO_PORT")
                 username = os.getenv("MONGO_USER")
                 password = os.getenv("MONGO_PASSWORD")
                 self.debug(
                     "Using NoSqlDict mongo://{}:{}@{}:{}".format(
-                        username, "".join(["X" for c in password]), host, port
+                        username,
+                        "".join(["X" for c in password]) if password else "None",
+                        host,
+                        port,
                     )
                 )
 
-                ret = NoSqlDict(
+                ret: Union[NoSqlDict, StoredDict] = NoSqlDict(
                     name=name,
                     checker_name=checker_name,
                     host=host,
@@ -615,8 +641,9 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             return ret
 
     @property
-    def global_db(self):
-        # type: () -> StoredDict
+    def global_db(
+        self,
+    ) -> Union[NoSqlDict, StoredDict]:  # TODO: use a common supertype for all backends
         """
         A global storage shared between all teams and rounds.
         Subsequent calls will return the same db.
@@ -626,16 +653,18 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         return self.db("global")
 
     @property
-    def team_db(self):
-        # type: () -> StoredDict
+    def team_db(
+        self,
+    ) -> Union[NoSqlDict, StoredDict]:  # TODO: use a common supertype for all backends
         """
         The database for the current team
         :return: The team local db
         """
         return self.get_team_db()
 
-    def get_team_db(self, team=None):
-        # type: (Optional[str]) -> StoredDict
+    def get_team_db(
+        self, team: Optional[str] = None
+    ) -> Union[NoSqlDict, StoredDict]:  # TODO: use a common supertype for all backends
         """
         Returns the database for a specific team.
         Subsequent calls will return the same db.
@@ -646,8 +675,9 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         return self.db("team_{}".format(team), ignore_locks=True)
 
     # ---- Networking specific methods ---- #
-    def _sanitize_url(self, route, port=None, scheme=None):
-        # type: (str, Optional[int], Optional[str]) -> str
+    def _sanitize_url(
+        self, route: str, port: Optional[int] = None, scheme: Optional[str] = None
+    ) -> str:
         if port is None:
             port = self.port
         if port is None:
@@ -664,8 +694,12 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         # noinspection PyProtectedMember
         return url._replace(netloc=netloc).geturl()
 
-    def connect(self, host=None, port=None, timeout=None):
-        # type: (Optional[str], Optional[int], Optional[int]) -> SimpleSocket
+    def connect(
+        self,
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        timeout: Optional[int] = None,
+    ) -> SimpleSocket:
         """
         Opens a socket/telnet connection to the remote host.
         Use connect(..).get_socket() for the raw socket.
@@ -674,10 +708,12 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         :param timeout: timeout on connection (defaults to self.timeout)
         :return: A connected Telnet instance
         """
-        timeout_fun = lambda: timeout
-        if timeout is None:
-            timeout = self.time_remaining / 2
-            timeout_fun = lambda: self.time_remaining / 2
+        if timeout:
+            timeout_fun: Callable[[], int] = lambda: cast(int, timeout)
+        else:
+            timeout = self.time_remaining // 2
+            timeout_fun = lambda: self.time_remaining // 2
+
         if port is None:
             port = self.port
         if host is None:
@@ -690,8 +726,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         )
 
     @property
-    def http_useragent(self):
-        # type: () -> str
+    def http_useragent(self) -> str:
         """
         The useragent for http(s) requests
         :return: the current useragent
@@ -699,8 +734,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         return self.http_session.headers["User-Agent"]
 
     @http_useragent.setter
-    def http_useragent(self, useragent):
-        # type: (str) -> None
+    def http_useragent(self, useragent) -> None:
         """
         Sets the useragent for http requests.
         Randomize using http_useragent_randomize()
@@ -721,15 +755,14 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
     def http_post(
         self,
-        route="/",
-        params=None,
-        port=None,
-        scheme="http",
-        raise_http_errors=False,
-        timeout=None,
+        route: str = "/",
+        params: Any = None,
+        port: Optional[int] = None,
+        scheme: str = "http",
+        raise_http_errors: bool = False,
+        timeout: Optional[int] = None,
         **kwargs,
-    ):
-        # type: (str, Any, Optional[int], str, bool, Optional[int], ...) -> "requests.Response"
+    ) -> "requests.Response":
         """
         Performs a (http) requests.post to the current host.
         Caches cookies in self.http_session
@@ -748,15 +781,14 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
     def http_get(
         self,
-        route="/",
-        params=None,
-        port=None,
-        scheme="http",
-        raise_http_errors=False,
-        timeout=None,
+        route: str = "/",
+        params: Any = None,
+        port: Optional[int] = None,
+        scheme: str = "http",
+        raise_http_errors: bool = False,
+        timeout: Optional[int] = None,
         **kwargs,
-    ):
-        # type: (str, Any, Optional[int], str, bool, Optional[int], ...) -> "requests.Response"
+    ) -> "requests.Response":
         """
         Performs a (http) requests.get to the current host.
         Caches cookies in self.http_session
@@ -775,16 +807,15 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
     def http(
         self,
-        method,
-        route="/",
-        params=None,
-        port=None,
-        scheme="http",
-        raise_http_errors=False,
-        timeout=None,
+        method: str,
+        route: str = "/",
+        params: Any = None,
+        port: Optional[int] = None,
+        scheme: str = "http",
+        raise_http_errors: bool = False,
+        timeout: Optional[int] = None,
         **kwargs,
-    ):
-        # type: (str, str, Any, Optional[int], str, bool, Optional[int], ...) -> "requests.Response"
+    ) -> "requests.Response":
         """
         Performs an http request (requests lib) to the current host.
         Caches cookies in self.http_session
@@ -800,7 +831,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         kwargs.setdefault("allow_redirects", False)
         url = self._sanitize_url(route, port, scheme)
         if timeout is None:
-            timeout = self.time_remaining / 2
+            timeout = self.time_remaining // 2
         self.debug(
             "Request: {} {} with params: {} and {} secs timeout.".format(
                 method, url, params, timeout
@@ -814,8 +845,9 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         return resp
 
 
-def run(checker_cls, args=None):
-    # type: (Type[BaseChecker], Union[None, List[str], argparse.Namespace]) -> None
+def run(
+    checker_cls: Type[BaseChecker], args: Optional[Sequence[str]] = None,
+) -> Optional[Result]:
     """
     # Runs a checker, either from cmdline or as uwsgi script.
     :param checker: The checker (subclass of basechecker) to run
@@ -826,6 +858,7 @@ def run(checker_cls, args=None):
     parsed = parse_args(args)
     if parsed.runmode == "listen":
         checker_cls.service.run(host="::", debug=True, port=parsed.listen_port)
+        return None
     else:
         checker_args = vars(parsed)
         del checker_args["runmode"]  # will always be 'run' at this point

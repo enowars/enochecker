@@ -1,7 +1,3 @@
-from future.standard_library import install_aliases
-
-install_aliases()
-
 import base64
 import hashlib
 import logging
@@ -11,11 +7,21 @@ import telnetlib
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Union, Any, Optional, Dict, Callable, List, Pattern, Match, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Match,
+    Optional,
+    Pattern,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 from .results import BrokenServiceException, OfflineException
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import requests
@@ -27,8 +33,7 @@ utilslogger = logging.Logger(__name__)
 utilslogger.setLevel(logging.DEBUG)
 
 
-def assert_in(o1, o2, message=None):
-    # type: (Any, Any, Optional[str]) -> None
+def assert_in(o1: Any, o2: Any, message: Optional[str] = None) -> None:
     """
     Raises an exception if o1 not in o2
     :param o1: the object that should be in o2
@@ -41,8 +46,9 @@ def assert_in(o1, o2, message=None):
         raise BrokenServiceException(message)
 
 
-def assert_equals(o1, o2, message=None, autobyteify=False):
-    # type: (Any, Any, Optional[str], bool) -> None
+def assert_equals(
+    o1: Any, o2: Any, message: Optional[str] = None, autobyteify: bool = False
+) -> None:
     """
     Raises an exception if o1 != o2
     :param o1: the first object
@@ -59,8 +65,7 @@ def assert_equals(o1, o2, message=None, autobyteify=False):
         raise BrokenServiceException(message)
 
 
-def ensure_bytes(obj):
-    # type: (Union[bytes, str, Any]) -> bytes
+def ensure_bytes(obj: Union[bytes, str, Any]) -> bytes:
     """
     Converts to bytes
     :param obj: Str or Bytes (or anything else) to convert to bytes representation
@@ -74,8 +79,7 @@ def ensure_bytes(obj):
     return str(obj).encode("utf-8")
 
 
-def ensure_unicode(obj):
-    # type: (Union[bytes, str, Any]) -> str
+def ensure_unicode(obj: Union[bytes, str, Any]) -> str:
     """Converts to utf-8"""
     if str is None:
         raise ValueError("Cannot stringify None")
@@ -86,8 +90,7 @@ def ensure_unicode(obj):
     return str(obj)
 
 
-def ensure_valid_filename(s, min_length=3):
-    # type: (str, int) -> str
+def ensure_valid_filename(s: str, min_length: int = 3) -> str:
     """
     Gets a valid file name from the input
     :param s: The input string
@@ -102,8 +105,7 @@ def ensure_valid_filename(s, min_length=3):
     return s
 
 
-def snake_caseify(camel):
-    # type: (Union[str, bytes]) -> str
+def snake_caseify(camel: Union[str, bytes]) -> str:
     """
     Turn camels into snake (-cases)
     :param camel: camelOrSnakeWhatever
@@ -114,8 +116,7 @@ def snake_caseify(camel):
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", half_snake).lower()
 
 
-def sha256ify(s):
-    # type: (Union[str, bytes]) -> str
+def sha256ify(s: Union[str, bytes]) -> str:
     """
     Calculate the sha256 hash
     :param s: the string
@@ -125,8 +126,7 @@ def sha256ify(s):
     return hashlib.sha256(s).hexdigest()
 
 
-def base64ify(s, altchars=None):
-    # type: (Union[str, bytes], Union[str, bytes, None]) -> str
+def base64ify(s: Union[str, bytes], altchars: Union[str, bytes] = None) -> str:
     """
     Calculate the base64 representation of a value
     :param s: the input string
@@ -141,8 +141,9 @@ def base64ify(s, altchars=None):
         return base64.b64encode(s).decode("utf-8")
 
 
-def debase64ify(s, altchars=None):
-    # type: (Union[str, bytes], Union[str, bytes, None]) -> str
+def debase64ify(
+    s: Union[str, bytes], altchars: Optional[Union[str, bytes]] = None
+) -> str:
     """
     Return a string out of a base64
     :param s: the string
@@ -157,8 +158,12 @@ def debase64ify(s, altchars=None):
         return base64.b64decode(s).decode("utf-8")
 
 
-def readline_expect(telnet, expected, read_until=b"\n", timeout=30):
-    # type: (telnetlib.Telnet, Union[str, bytes], Union[str, bytes], int) -> bytes
+def readline_expect(
+    telnet: Union[telnetlib.Telnet, "SimpleSocket"],
+    expected: Union[str, bytes],
+    read_until: Union[str, bytes] = b"\n",
+    timeout: int = 30,
+) -> bytes:
     """
     Reads to newline (or read_until string) and assert the presence of a string in the response.
     Will raise an exception if failed.
@@ -168,10 +173,7 @@ def readline_expect(telnet, expected, read_until=b"\n", timeout=30):
     :param timeout: a timeout
     :return read: the bytes read
     """
-    if hasattr(telnet, "logger"):
-        logger = telnet.logger
-    else:
-        logger = utilslogger
+    logger = getattr(telnet, "logger", utilslogger)
 
     if isinstance(expected, str):
         expected = expected.encode("utf-8")
@@ -180,20 +182,19 @@ def readline_expect(telnet, expected, read_until=b"\n", timeout=30):
 
     read = telnet.read_until(read_until, timeout)
     if read == b"":
-        err = "Expected {} but got nothing/timeout!".format(expected)
+        err = "Expected {!r} but got nothing/timeout!".format(expected)
         logger.error(err, stack_info=True)
         telnet.close()
         raise OfflineException(err)
     if expected not in read:
-        err = "Expected {} but got {}".format(expected, read)
+        err = "Expected {!r} but got {!r}".format(expected, read)
         logger.error(err, stack_info=True)
         telnet.close()
         raise BrokenServiceException(err)
     return read
 
 
-def start_daemon(target):
-    # type: (Callable) -> threading.Thread
+def start_daemon(target: Callable[..., Any]) -> threading.Thread:
     """
     starts a thread as daemon
     :param target: the function
@@ -206,14 +207,13 @@ def start_daemon(target):
 
 
 def serve_once(
-    html,
-    start_port=5000,
-    autoincrement_port=True,
-    content_type="text/html",
-    headers=None,
-    logger=None,
-):
-    # type: (Union[str, bytes, requests.Response], int, bool, str, Optional[Dict[str, str]], Optional[logging.Logger]) -> int
+    html: Union[str, bytes, "requests.Response"],
+    start_port: int = 5000,
+    autoincrement_port: bool = True,
+    content_type: str = "text/html",
+    headers: Optional[Dict[str, str]] = None,
+    logger: Optional[logging.Logger] = None,
+) -> int:
     """
     Render Text in the users browser
     Opens a web server that serves a HTML string once and shuts down after the first request.
@@ -258,7 +258,7 @@ def serve_once(
             start_daemon(server.serve_forever)
             time.sleep(0.1)  # some extra time thrown in for good measure. :)
             return port
-        except socket.error as ex:
+        except OSError as ex:
             if not autoincrement_port:
                 logger.info(
                     "Serve once was not set to automatically increment port {} but faced socket exception{}".format(
@@ -269,7 +269,7 @@ def serve_once(
                 )
                 break
 
-    raise socket.error(
+    raise OSError(
         "No unused port found, start_port={}, autoincrement_port={}".format(
             start_port, autoincrement_port
         )
@@ -285,13 +285,12 @@ class SimpleSocket(telnetlib.Telnet):
     # pylint:  disable=protected-access
     def __init__(
         self,
-        host=None,
-        port=0,
-        timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
-        logger=None,
-        timeout_fun=None,
-    ):
-        # type: (str, int, int, Optional[logging.Logger], Optional[Callable[[], int]]) -> None
+        host: Optional[str] = None,
+        port: int = 0,
+        timeout: int = socket._GLOBAL_DEFAULT_TIMEOUT,  # type: ignore
+        logger: Optional[logging.Logger] = None,
+        timeout_fun: Optional[Callable[[], int]] = None,
+    ) -> None:
         """
         Initializes a new SimpleSocket Object.
         :param host: the host to connect to
@@ -300,18 +299,16 @@ class SimpleSocket(telnetlib.Telnet):
         :param logger: The optional logger to use
         :param timeout_fun: function that will output the current timeout on each call.
         """
-        super(SimpleSocket, self).__init__(host, port, timeout)
-        self.telnet = super(SimpleSocket, self)  # type: telnetlib.Telnet
-        self.socket = self.telnet.get_socket()  # type: socket.socket
+        super().__init__(host, port, timeout)
+        self.socket: socket.socket = super().get_socket()
         if logger:
             self.logger = logger
         else:
             self.logger = utilslogger
-        self.timeout_fun = timeout_fun
+        self.timeout_fun: Optional[Callable[[], int]] = timeout_fun
 
     @property
-    def current_default_timeout(self):
-        # type: () -> int
+    def current_default_timeout(self) -> int:
         """
         Gets the timeout default that should currently be used.
         :return: current timeout default, either from self.timeout_fun or from timeout.
@@ -319,10 +316,14 @@ class SimpleSocket(telnetlib.Telnet):
         if self.timeout_fun:
             return self.timeout_fun()
         else:
-            return self.timeout
+            return self.timeout  # type: ignore
 
-    def readline_expect(self, expected, read_until=b"\n", timeout=None):
-        # type: (Union[str, bytes], Union[str, bytes], Optional[int]) -> bytes
+    def readline_expect(
+        self,
+        expected: Union[str, bytes],
+        read_until: Union[str, bytes] = b"\n",
+        timeout: Optional[int] = None,
+    ) -> bytes:
         """
         Reads to newline (or read_until string) and assert the presence of a string in the response.
         Will raise an exception if failed.
@@ -335,8 +336,11 @@ class SimpleSocket(telnetlib.Telnet):
             timeout = self.current_default_timeout
         return readline_expect(self, expected, read_until, timeout)
 
-    def expect(self, regexes, timeout=None):
-        # type: (List[Union[bytes, Pattern]], Optional[int])->Tuple[int, Match, bytes]
+    def expect(
+        self,
+        regexes: Sequence[Union[Pattern[bytes], bytes]],
+        timeout: Optional[int] = None,
+    ) -> Tuple[int, Optional[Match[bytes]], bytes]:
         """
         Read until one from a list of a regular expressions matches.
         Use this to search for anything.
@@ -354,13 +358,14 @@ class SimpleSocket(telnetlib.Telnet):
         # Make sure all strings are bytes, ignore compiled Regexes.
         regexes = [ensure_bytes(x) if isinstance(x, str) else x for x in regexes]
 
-        return self.telnet.expect(list=regexes, timeout=timeout)
+        return super().expect(list=regexes, timeout=timeout)
 
-    def read_until(self, match, timeout=None):
-        # type: (Union[bytes, str], Optional[int])->bytes
+    def read_until(
+        self, match: Union[bytes, str], timeout: Optional[int] = None
+    ) -> bytes:
         """
         Read until the expected string has been seen, or a timeout is hit (default is default socket timeout).
-        
+
         :param match: what to look for.
         :param timeout: default socket timeout override
         :return: Returns everything until the given math. When no match is found, return whatever is available instead,
@@ -369,10 +374,11 @@ class SimpleSocket(telnetlib.Telnet):
         """
         if timeout is None:
             timeout = self.current_default_timeout
-        return self.telnet.read_until(ensure_bytes(match), timeout)
+        return super().read_until(ensure_bytes(match), timeout)
 
-    def read_n_lines(self, line_count, delimiter=b"\n"):
-        # type: (int, Union[str, bytes]) -> List[bytes]
+    def read_n_lines(
+        self, line_count: int, delimiter: Union[str, bytes] = b"\n"
+    ) -> List[bytes]:
         """
         Read n lines from socket
         :param line_count: the amount of lines to read
@@ -381,20 +387,18 @@ class SimpleSocket(telnetlib.Telnet):
         """
         return [self.read_until(ensure_bytes(delimiter)) for _ in range(line_count)]
 
-    def read_all(self):
-        # type: () -> bytes
+    def read_all(self) -> bytes:
         """
         Read all data until EOF; block until connection closed.
         :return: the complete content until EOF
         """
-        return self.telnet.read_all()
+        return super().read_all()
 
-    def write(self, buffer):
-        # type: (Union[str, bytes]) -> None
+    def write(self, buffer: Union[str, bytes]) -> None:
         """
         Write a string to the socket.
         Can block if the connection is blocked.
         May raise socket.error if the connection is closed.
         :param buffer: The buffer to write
         """
-        self.telnet.write(ensure_bytes(buffer))
+        super().write(ensure_bytes(buffer))
