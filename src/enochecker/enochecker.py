@@ -433,8 +433,9 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             return Result.OK
 
         except EnoException as eno:
+            stacktrace = ''.join(traceback.format_exception(None, eno, eno.__traceback__))
             self.info(
-                "Checker[{}] result: {}({})".format(self.method, eno.result.name, eno),
+                "Checker[{}] result: {}({})".format(self.method, eno.result.name, stacktrace),
                 exc_info=eno,
             )
             return Result(eno.result)  # , eno.message
@@ -456,7 +457,8 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
             )
             return Result.OFFLINE  # , ex.message
         except Exception as ex:
-            self.error("Unhandled checker error occurred: {}\n".format(ex), exc_info=ex)
+            stacktrace = ''.join(traceback.format_exception(None, ex, ex.__traceback__))
+            self.error("Unhandled checker error occurred: {}\n".format(stacktrace), exc_info=ex)
             return Result.INTERNAL_ERROR  # , ex.message
         finally:
             for db in self._active_dbs.values():

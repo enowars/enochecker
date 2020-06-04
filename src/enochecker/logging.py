@@ -29,16 +29,6 @@ class ELKFormatter(logging.Formatter):
         record.stack = self.formatStack(record.stack_info)
         record.asctime = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-        if record.exc_info is not None:
-            exception_info = {
-                "type": record.exc_info[0].__name__,
-                "message": str(record.exc_info[1]),
-                "traceback": "".join(x.encode().decode("unicode_escape") for x in traceback.format_tb(record.exc_info[2], 20)),
-            }
-            exception_info["traceback"] = exception_info["traceback"].enocode().decode("unicode_escape")
-        else:
-            exception_info = None
-
         message = record.getMessage()
         if record.exc_info:
             eno = record.exc_info
@@ -51,7 +41,6 @@ class ELKFormatter(logging.Formatter):
             "tool": type(self.checker).__name__,
             "type": "infrastructure",
             "severity": record.levelname,
-            # TODO:
             "severityLevel": record.levelno,
             "timestamp": record.asctime,
             "module": record.module,
@@ -65,8 +54,6 @@ class ELKFormatter(logging.Formatter):
             "message": message,
             "teamName": self.checker.team,
             "teamId": self.checker.team_id,
-            # "exception": exception_info,
-            # "stacktrace": record.stack_info,
             "serviceName": self.checker.service_name,
             "method": self.checker.method
         }
