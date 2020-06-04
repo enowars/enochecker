@@ -212,7 +212,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
         run_id: int = None,
         method: str = None,
         address: str = None,
-        team: str = None,
+        team_name: str = None,
         team_id: int = None,
         round: int = None,
         flag_round: int = None,
@@ -243,7 +243,7 @@ class BaseChecker(with_metaclass(_CheckerMeta, object)):
 
         self.method = method  # type: str
         self.address = address  # type: str
-        self.team = team  # type: str
+        self.team = team_name  # type: str
         self.team_id = team_id
         self.round = round  # type: int
         self.current_round = round
