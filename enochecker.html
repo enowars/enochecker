@@ -785,22 +785,27 @@ using this optional param.</p>
 </div>
 <div class="section" id="module-enochecker.logging">
 <span id="enochecker-logging-module"></span><h2>enochecker.logging module<a class="headerlink" href="#module-enochecker.logging" title="Permalink to this headline">¶</a></h2>
+<p>Utilities for sending log messages to a central ELK.</p>
 <dl class="py class">
 <dt id="enochecker.logging.ELKFormatter">
 <em class="property">class </em><code class="sig-prename descclassname">enochecker.logging.</code><code class="sig-name descname">ELKFormatter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">checker</span></em>, <em class="sig-param"><span class="n">fmt</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">datefmt</span><span class="o">=</span><span class="default_value">'%Y-%m-%dT%H:%M:%S%z'</span></em>, <em class="sig-param"><span class="n">style</span><span class="o">=</span><span class="default_value">'%'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.logging.ELKFormatter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">logging.Formatter</span></code></p>
+<p>Format log messages for a central ELK.</p>
 <dl class="py method">
 <dt id="enochecker.logging.ELKFormatter.format">
 <code class="sig-name descname">format</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">record</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.logging.ELKFormatter.format" title="Permalink to this definition">¶</a></dt>
-<dd><p>Format the specified record as text.</p>
-<p>The record’s attribute dictionary is used as the operand to a
-string formatting operation which yields the returned string.
-Before formatting the dictionary, a couple of preparatory steps
-are carried out. The message attribute of the record is computed
-using LogRecord.getMessage(). If the formatting string uses the
-time (as determined by a call to usesTime(), formatTime() is
-called to format the event time. If there is exception information,
-it is formatted using formatException() and appended to the message.</p>
+<dd><p>Format a LogRecord as a string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param</dt>
+<dd class="field-odd"><p>record: the record to format</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the formatted string</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -810,6 +815,7 @@ it is formatted using formatException() and appended to the message.</p>
 <em class="property">class </em><code class="sig-prename descclassname">enochecker.logging.</code><code class="sig-name descname">RestLogHandler</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">checker</span></em>, <em class="sig-param"><span class="n">level</span><span class="o">=</span><span class="default_value">10</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.logging.RestLogHandler" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">logging.Handler</span></code></p>
 <p>Simple handler class to send Checker logs off to the logging backend Service.</p>
+<p>TODO: check if this is deprecated (see issue #44)</p>
 <dl class="py method">
 <dt id="enochecker.logging.RestLogHandler.emit">
 <code class="sig-name descname">emit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">record</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.logging.RestLogHandler.emit" title="Permalink to this definition">¶</a></dt>
@@ -828,7 +834,12 @@ raises a NotImplementedError.</p>
 <dl class="py function">
 <dt id="enochecker.logging.exception_to_string">
 <code class="sig-prename descclassname">enochecker.logging.</code><code class="sig-name descname">exception_to_string</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">excp</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.logging.exception_to_string" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Format an exception as a string.</p>
+<p>Limits the length of the traceback to 3.
+:param: ecxp: the exception to format
+:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
+:return: The formatted string</p>
+</dd></dl>
 
 </div>
 <div class="section" id="module-enochecker.nosqldict">
