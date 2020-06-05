@@ -166,6 +166,7 @@
 </div>
 <div class="section" id="module-enochecker.checkerservice">
 <span id="enochecker-checkerservice-module"></span><h2>enochecker.checkerservice module<a class="headerlink" href="#module-enochecker.checkerservice" title="Permalink to this headline">¶</a></h2>
+<p>Flask service to run a checker as HTTP service.</p>
 <dl class="py class">
 <dt id="enochecker.checkerservice.Optional">
 <em class="property">class </em><code class="sig-prename descclassname">enochecker.checkerservice.</code><code class="sig-name descname">Optional</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em>, <em class="sig-param"><span class="n">type</span></em>, <em class="sig-param"><span class="n">default</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.checkerservice.Optional" title="Permalink to this definition">¶</a></dt>
@@ -211,30 +212,39 @@
 <dl class="py function">
 <dt id="enochecker.checkerservice.assert_types">
 <code class="sig-prename descclassname">enochecker.checkerservice.</code><code class="sig-name descname">assert_types</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">json</span></em>, <em class="sig-param"><span class="n">spec</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.checkerservice.assert_types" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates a kwargs dict from a json.
-Will copy all elements from json to the dict, rename all keys to snake_case and Index to idx.
-In case the spec fails, errors out with ValueError.
-:type json: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]
-:param json:  the json
-:type spec: <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="#enochecker.checkerservice.Required" title="enochecker.checkerservice.Required"><code class="xref py py-class docutils literal notranslate"><span class="pre">Required</span></code></a>, <a class="reference internal" href="#enochecker.checkerservice.Optional" title="enochecker.checkerservice.Optional"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>]]
-:param spec: the spec
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]
-:return: kwargs dict.</p>
+<dd><p>Generate a kwargs dict from a json.</p>
+<p>Will copy all elements from json to the dict, rename all keys to snake_case and Index to idx.
+In case the spec fails, errors out with ValueError.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>json</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]) – the json object</p></li>
+<li><p><strong>spec</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="#enochecker.checkerservice.Required" title="enochecker.checkerservice.Required"><code class="xref py py-class docutils literal notranslate"><span class="pre">Required</span></code></a>, <a class="reference internal" href="#enochecker.checkerservice.Optional" title="enochecker.checkerservice.Optional"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>]]) – the specification</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>kwargs dict.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="enochecker.checkerservice.check_type">
 <code class="sig-prename descclassname">enochecker.checkerservice.</code><code class="sig-name descname">check_type</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">val</span></em>, <em class="sig-param"><span class="n">expected_type</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.checkerservice.check_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns and converts if necessary
-:type name: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
-:param name: the name of the value
-:type val: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
-:param val: the value to check
-:type expected_type: <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>
-:param expected_type: the expected type</p>
+<dd><p>Return and convert the value if necessary.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – the name of the value</p></li>
+<li><p><strong>val</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – the value to check</p></li>
+<li><p><strong>expected_type</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>) – the expected type</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -242,41 +252,68 @@ In case the spec fails, errors out with ValueError.
 <dl class="py function">
 <dt id="enochecker.checkerservice.checker_routes">
 <code class="sig-prename descclassname">enochecker.checkerservice.</code><code class="sig-name descname">checker_routes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">checker_cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.checkerservice.checker_routes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a flask app for the given checker class.
-:type checker_cls: <code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code>]
-:param checker_cls: The checker class to use
-:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]], <code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]
-:return: A flask app that can be passed to a uWSGI server or run using .run().</p>
+<dd><p>Create a flask app for the given checker class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>checker_cls</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code>]) – The checker class to use</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]], <code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A flask app that can be passed to a uWSGI server or run using .run().</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="enochecker.checkerservice.init_service">
 <code class="sig-prename descclassname">enochecker.checkerservice.</code><code class="sig-name descname">init_service</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">checker</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.checkerservice.init_service" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initializes a flask app that can be used for WSGI or listen directly.
-The Engine may Communicate with it over socket.
-:type checker: <code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code>]
-:param checker: the checker class to use for check requests.
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">Flask</span></code>
-:return: a flask app with post and get routes set, ready for checking.</p>
+<dd><p>Initialize a flask app that can be used for WSGI or listen directly.</p>
+<p>The Engine may communicate with it over socket.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>checker</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code>]) – the checker class to use for check requests.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Flask</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a flask app with post and get routes set, ready for checking.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="enochecker.checkerservice.serialize_spec">
 <code class="sig-prename descclassname">enochecker.checkerservice.</code><code class="sig-name descname">serialize_spec</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">spec</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.checkerservice.serialize_spec" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prints a checker json spec in a readable multiline format
-:type spec: <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="#enochecker.checkerservice.Required" title="enochecker.checkerservice.Required"><code class="xref py py-class docutils literal notranslate"><span class="pre">Required</span></code></a>, <a class="reference internal" href="#enochecker.checkerservice.Optional" title="enochecker.checkerservice.Optional"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>]]
-:param spec: a spec
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
-:return: formatted string</p>
+<dd><p>Return a checker json spec in a readable multiline format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>spec</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="#enochecker.checkerservice.Required" title="enochecker.checkerservice.Required"><code class="xref py py-class docutils literal notranslate"><span class="pre">Required</span></code></a>, <a class="reference internal" href="#enochecker.checkerservice.Optional" title="enochecker.checkerservice.Optional"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>]]) – a spec</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>formatted string</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="enochecker.checkerservice.stringify_spec_entry">
 <code class="sig-prename descclassname">enochecker.checkerservice.</code><code class="sig-name descname">stringify_spec_entry</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">entry</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.checkerservice.stringify_spec_entry" title="Permalink to this definition">¶</a></dt>
-<dd><p>Make a nice string out of it.</p>
+<dd><p>Make a nice string out of a spec entry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>entry</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="#enochecker.checkerservice.Optional" title="enochecker.checkerservice.Optional"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>, <a class="reference internal" href="#enochecker.checkerservice.Required" title="enochecker.checkerservice.Required"><code class="xref py py-class docutils literal notranslate"><span class="pre">Required</span></code></a>]) – the spec entry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>string representation of the entry</p>
 </dd>
 </dl>
 </dd></dl>
