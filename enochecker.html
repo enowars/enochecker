@@ -844,6 +844,7 @@ raises a NotImplementedError.</p>
 </div>
 <div class="section" id="module-enochecker.nosqldict">
 <span id="enochecker-nosqldict-module"></span><h2>enochecker.nosqldict module<a class="headerlink" href="#module-enochecker.nosqldict" title="Permalink to this headline">¶</a></h2>
+<p>Backend for team_db based on MongoDB.</p>
 <dl class="py class">
 <dt id="enochecker.nosqldict.NoSqlDict">
 <em class="property">class </em><code class="sig-prename descclassname">enochecker.nosqldict.</code><code class="sig-name descname">NoSqlDict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">'default'</span></em>, <em class="sig-param"><span class="n">checker_name</span><span class="o">=</span><span class="default_value">'BaseChecker'</span></em>, <em class="sig-param"><span class="n">host</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">port</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">username</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">password</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.nosqldict.NoSqlDict" title="Permalink to this definition">¶</a></dt>
@@ -857,7 +858,7 @@ raises a NotImplementedError.</p>
 <dl class="py method">
 <dt id="enochecker.nosqldict.NoSqlDict.get_client">
 <em class="property">classmethod </em><code class="sig-name descname">get_client</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">host</span></em>, <em class="sig-param"><span class="n">port</span></em>, <em class="sig-param"><span class="n">username</span></em>, <em class="sig-param"><span class="n">password</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.nosqldict.NoSqlDict.get_client" title="Permalink to this definition">¶</a></dt>
-<dd><p>Lazily tries to get the mongo db connection or creates a new one.</p>
+<dd><p>Lazily try to get the mongo db connection or creates a new one.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -879,7 +880,10 @@ raises a NotImplementedError.</p>
 <dl class="py method">
 <dt id="enochecker.nosqldict.NoSqlDict.persist">
 <code class="sig-name descname">persist</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.nosqldict.NoSqlDict.persist" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Persist the changes in the backend.</p>
+<p>Currently this function does nothing since every access queries the database already.
+In the future changes to the DB might be cached until they are explicitly persisted.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
@@ -891,7 +895,20 @@ raises a NotImplementedError.</p>
 <dl class="py function">
 <dt id="enochecker.nosqldict.to_keyfmt">
 <code class="sig-prename descclassname">enochecker.nosqldict.</code><code class="sig-name descname">to_keyfmt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.nosqldict.to_keyfmt" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Convert a string to a key used in the MongoDB.</p>
+<p>Currently this only returns the string representation of the key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param</dt>
+<dd class="field-odd"><p>key: the key to format</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>string representation of the key</p>
+</dd>
+</dl>
+</dd></dl>
 
 </div>
 <div class="section" id="module-enochecker.results">
