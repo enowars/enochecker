@@ -1,3 +1,5 @@
+"""Flask service to run a checker as HTTP service."""
+
 import collections
 import json
 import logging
@@ -99,7 +101,8 @@ function update_pending(){
 
 def check_type(name: str, val: str, expected_type: Any) -> None:
     """
-    returns and converts if necessary
+    Return and convert the value if necessary.
+
     :param name: the name of the value
     :param val: the value to check
     :param expected_type: the expected type
@@ -120,14 +123,13 @@ def check_type(name: str, val: str, expected_type: Any) -> None:
         )
 
 
-# def generate_form(spec):
-#    form = "<form class=\"json-form\">\n"
-#    for entry in spec:
-#        if isinstance(entry, Required):
-
-
 def stringify_spec_entry(entry: Union[Optional, Required]) -> str:
-    """Make a nice string out of it."""
+    """
+    Make a nice string out of a spec entry.
+
+    :param entry: the spec entry
+    :returns: string representation of the entry
+    """
     entrytype = entry.type
     if isinstance(entrytype, type):
         entrytype = entrytype.__name__
@@ -144,7 +146,8 @@ def stringify_spec_entry(entry: Union[Optional, Required]) -> str:
 
 def serialize_spec(spec: List[Union[Optional, Required]]) -> str:
     """
-    Prints a checker json spec in a readable multiline format
+    Return a checker json spec in a readable multiline format.
+
     :param spec: a spec
     :return: formatted string
     """
@@ -160,11 +163,13 @@ def assert_types(
     json: Dict[str, Any], spec: List[Union[Optional, Required]]
 ) -> Dict[str, Any]:
     """
-    Generates a kwargs dict from a json.
+    Generate a kwargs dict from a json.
+
     Will copy all elements from json to the dict, rename all keys to snake_case and Index to idx.
     In case the spec fails, errors out with ValueError.
-    :param json:  the json
-    :param spec: the spec
+
+    :param json: the json object
+    :param spec: the specification
     :return: kwargs dict.
     """
     ret = {}
@@ -208,15 +213,19 @@ def checker_routes(
     Callable[[], str],
 ]:
     """
-    Creates a flask app for the given checker class.
+    Create a flask app for the given checker class.
+
     :param checker_cls: The checker class to use
     :return: A flask app that can be passed to a uWSGI server or run using .run().
     """
 
     def index() -> Response:
         """
-        Some info about this service
-        :return: Printable fun..
+        Display general info about this service.
+
+        Includes a web interface for manually sending requests to the service.
+
+        :return: HTML page with info about this service
         """
         logging.info("Request on /")
 
@@ -230,8 +239,10 @@ def checker_routes(
 
     def serve_checker() -> Response:
         """
-        Serves a single checker request.
+        Serve a single checker request.
+
         The spec needs to be formed according to the spec above.
+
         :param method: the method to run in a checker.
         :return: jsonified result of the checker.
         """
@@ -271,10 +282,11 @@ def checker_routes(
 
     def service_info() -> Dict[str, Union[str, int]]:
         """
-        Serves a single checker request.
-        The spec needs to be formed according to the spec above.
-        :param method: the method to run in a checker.
-        :return: jsonified result of the checker.
+        Return technical information about this service.
+
+        Includes the name and desired number of flags, havoc and noise per round.
+
+        :return: dictionary with information
         """
         try:
             service_name: str = getattr(
@@ -313,6 +325,11 @@ class ExampleChecker(BaseChecker):
             raise AttributeError("REQUIRED SERVICE INFO FIELDS NOT SPECIFIED!")
 
     def get_service_info() -> str:
+        """
+        Return JSON representation of the information from :func:`service_info`.
+
+        :return: JSON representation of the service info
+        """
         return jsonify(service_info())
 
     return index, serve_checker, service_info, get_service_info
@@ -320,8 +337,10 @@ class ExampleChecker(BaseChecker):
 
 def init_service(checker: Type["BaseChecker"]) -> Flask:
     """
-    Initializes a flask app that can be used for WSGI or listen directly.
-    The Engine may Communicate with it over socket.
+    Initialize a flask app that can be used for WSGI or listen directly.
+
+    The Engine may communicate with it over socket.
+
     :param checker: the checker class to use for check requests.
     :return: a flask app with post and get routes set, ready for checking.
     """
