@@ -913,12 +913,13 @@ In the future changes to the DB might be cached until they are explicitly persis
 </div>
 <div class="section" id="module-enochecker.results">
 <span id="enochecker-results-module"></span><h2>enochecker.results module<a class="headerlink" href="#module-enochecker.results" title="Permalink to this headline">¶</a></h2>
+<p>Collection of Exception classes to signal the status of the service being checked.</p>
 <dl class="py exception">
 <dt id="enochecker.results.BrokenCheckerException">
 <em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">BrokenCheckerException</code><a class="headerlink" href="#enochecker.results.BrokenCheckerException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#enochecker.results.EnoException" title="enochecker.results.EnoException"><code class="xref py py-class docutils literal notranslate"><span class="pre">enochecker.results.EnoException</span></code></a></p>
-<p>Shouldn’t be raised ever since we catch all abstract Errors
-Used internally if something goes horribly wrong</p>
+<p>Shouldn’t be raised ever since we catch all abstract Errors.</p>
+<p>Used internally if something goes horribly wrong.</p>
 <dl class="py attribute">
 <dt id="enochecker.results.BrokenCheckerException.result">
 <code class="sig-name descname">result</code><em class="property">: enochecker.results.Result</em><em class="property"> = -1</em><a class="headerlink" href="#enochecker.results.BrokenCheckerException.result" title="Permalink to this definition">¶</a></dt>
@@ -930,7 +931,7 @@ Used internally if something goes horribly wrong</p>
 <dt id="enochecker.results.BrokenServiceException">
 <em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">BrokenServiceException</code><a class="headerlink" href="#enochecker.results.BrokenServiceException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#enochecker.results.EnoException" title="enochecker.results.EnoException"><code class="xref py py-class docutils literal notranslate"><span class="pre">enochecker.results.EnoException</span></code></a></p>
-<p>Indicates a broken Service</p>
+<p>Indicates a broken Service.</p>
 <dl class="py attribute">
 <dt id="enochecker.results.BrokenServiceException.result">
 <code class="sig-name descname">result</code><em class="property">: enochecker.results.Result</em><em class="property"> = 1</em><a class="headerlink" href="#enochecker.results.BrokenServiceException.result" title="Permalink to this definition">¶</a></dt>
@@ -954,7 +955,7 @@ Used internally if something goes horribly wrong</p>
 <dt id="enochecker.results.OfflineException">
 <em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">OfflineException</code><a class="headerlink" href="#enochecker.results.OfflineException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#enochecker.results.EnoException" title="enochecker.results.EnoException"><code class="xref py py-class docutils literal notranslate"><span class="pre">enochecker.results.EnoException</span></code></a></p>
-<p>Service was not reachable (at least once) during our checks</p>
+<p>Service was not reachable (at least once) during our checks.</p>
 <dl class="py attribute">
 <dt id="enochecker.results.OfflineException.result">
 <code class="sig-name descname">result</code><em class="property">: enochecker.results.Result</em><em class="property"> = 2</em><a class="headerlink" href="#enochecker.results.OfflineException.result" title="Permalink to this definition">¶</a></dt>
@@ -966,35 +967,42 @@ Used internally if something goes horribly wrong</p>
 <dt id="enochecker.results.Result">
 <em class="property">class </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">Result</code><a class="headerlink" href="#enochecker.results.Result" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.IntEnum</span></code></p>
-<p>Result Values to be returned from a Checker</p>
+<p>Result Values to be returned from a Checker.</p>
 <dl class="py attribute">
 <dt id="enochecker.results.Result.INTERNAL_ERROR">
-<code class="sig-name descname">INTERNAL_ERROR</code><em class="property"> = -1</em><a class="headerlink" href="#enochecker.results.Result.INTERNAL_ERROR" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">INTERNAL_ERROR</code><em class="property">: int</em><em class="property"> = -1</em><a class="headerlink" href="#enochecker.results.Result.INTERNAL_ERROR" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="enochecker.results.Result.MUMBLE">
-<code class="sig-name descname">MUMBLE</code><em class="property"> = 1</em><a class="headerlink" href="#enochecker.results.Result.MUMBLE" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">MUMBLE</code><em class="property">: int</em><em class="property"> = 1</em><a class="headerlink" href="#enochecker.results.Result.MUMBLE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="enochecker.results.Result.OFFLINE">
-<code class="sig-name descname">OFFLINE</code><em class="property"> = 2</em><a class="headerlink" href="#enochecker.results.Result.OFFLINE" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">OFFLINE</code><em class="property">: int</em><em class="property"> = 2</em><a class="headerlink" href="#enochecker.results.Result.OFFLINE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="enochecker.results.Result.OK">
-<code class="sig-name descname">OK</code><em class="property"> = 0</em><a class="headerlink" href="#enochecker.results.Result.OK" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">OK</code><em class="property">: int</em><em class="property"> = 0</em><a class="headerlink" href="#enochecker.results.Result.OK" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="enochecker.results.Result.is_valid">
 <em class="property">classmethod </em><code class="sig-name descname">is_valid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.Result.is_valid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns if the value is part of this Enum
-:type value: <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>
-:param value: the value
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
-:return: True, if value is part of this Enum</p>
+<dd><p>Return if the value is part of this Enum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the value</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True, if value is part of this Enum</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
