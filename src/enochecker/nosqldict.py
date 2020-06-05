@@ -58,6 +58,7 @@ class NoSqlDict(MutableMapping):
     ) -> "MongoClient":
         """
         Lazily tries to get the mongo db connection or creates a new one.
+
         :param host: mongo host
         :param port: mongo port
         :param username: the username to connect to

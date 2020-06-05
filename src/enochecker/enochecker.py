@@ -72,6 +72,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         "$MaxRunningTime",
         "$CallIdx" [index of this task (for each type) in the current round]
     ]
+
     :param argv: argv. Custom argvs. Will default to sys.argv if not provided.
     :return: args object
     """
@@ -245,6 +246,7 @@ class BaseChecker(metaclass=_CheckerMeta):
     ) -> None:
         """
         Inits the Checker, filling the params, according to:
+
         :param: run_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
         :param: method: The method to run
         """
@@ -355,6 +357,7 @@ class BaseChecker(metaclass=_CheckerMeta):
     def noise(self) -> Optional[str]:
         """
         Pretty similar to a flag, just in a different mode (storeNoise vs storeFlag)
+
         :return: The noise
         """
         return self.flag
@@ -363,6 +366,7 @@ class BaseChecker(metaclass=_CheckerMeta):
     def time_running(self) -> float:
         """
         How long this checker has been running
+
         :return: time this checker has been running for
         """
         return (datetime.datetime.now() - self.time_started_at).total_seconds()
@@ -371,6 +375,7 @@ class BaseChecker(metaclass=_CheckerMeta):
     def time_remaining(self) -> int:
         """
         Returns a remaining time that is save to be used as timeout (includes a buffer of TIME_BUFFER seconds)
+
         :return: A save number of seconds that may still be used
         """
         return max(
@@ -390,6 +395,7 @@ class BaseChecker(metaclass=_CheckerMeta):
     def run(self, method: Optional[Union[str, Callable]] = None) -> Result:
         """
         Executes the checker and catches errors along the way.
+
         :param method: When calling run, you may call a different method than the one passed on Checker creation
                         using this optional param.
         :return: the Result code as int, as per the Result enum.
@@ -512,8 +518,9 @@ class BaseChecker(metaclass=_CheckerMeta):
         In case multiple flags are provided, self.flag_idx gives the appropriate index.
         The flag itself can be retrieved from self.flag.
         On error, raise an Eno Exception.
-        :raises EnoException on error
-        :return this function can return a result if it wants
+
+        :raises: EnoException on error
+        :return: this function can return a result if it wants
                 if nothing is returned, the service status is considered okay.
                 the preferred way to report errors in the service is by raising an appropriate enoexception
         """
@@ -525,8 +532,9 @@ class BaseChecker(metaclass=_CheckerMeta):
         This method retrieves a flag from the service.
         Use self.flag to get the flag that needs to be recovered and self.roudn to get the round the flag was placed in.
         On error, raise an EnoException.
-        :raises EnoException on error
-        :return this function can return a result if it wants
+
+        :raises: EnoException on error
+        :return: this function can return a result if it wants
                 if nothing is returned, the service status is considered okay.
                 the preferred way to report errors in the service is by raising an appropriate enoexception
         """
@@ -539,8 +547,9 @@ class BaseChecker(metaclass=_CheckerMeta):
         The difference between noise and flag is that noise does not have to remain secret for other teams.
         This method can be called many times per round. Check how often using self.flag_idx.
         On error, raise an EnoException.
-        :raises EnoException on error
-        :return this function can return a result if it wants
+
+        :raises: EnoException on error
+        :return: this function can return a result if it wants
                 if nothing is returned, the service status is considered okay.
                 the preferred way to report errors in the service is by raising an appropriate enoexception
         """
@@ -554,8 +563,9 @@ class BaseChecker(metaclass=_CheckerMeta):
         The difference between noise and flag is, tht noise does not have to remain secret for other teams.
         This method can be called many times per round. Check how often using flag_idx.
         On error, raise an EnoException.
-        :raises EnoException on error
-        :return this function can return a result if it wants
+
+        :raises: EnoException on error
+        :return: this function can return a result if it wants
                 if nothing is returned, the service status is considered okay.
                 the preferred way to report errors in the service is by raising an appropriate enoexception
         """
@@ -566,8 +576,9 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         This method unleashes havoc on the app -> Do whatever you must to prove the service still works. Or not.
         On error, raise an EnoException.
-        :raises EnoException on Error
-        :return This function can return a result if it wants
+
+        :raises: EnoException on Error
+        :return: This function can return a result if it wants
                 If nothing is returned, the service status is considered okay.
                 The preferred way to report Errors in the service is by raising an appropriate EnoException
         """
@@ -577,8 +588,9 @@ class BaseChecker(metaclass=_CheckerMeta):
     def exploit(self) -> Optional[Result]:
         """
         This method is strictly for testing purposes and will hopefully not be called during the actual CTF.
-        :raises EnoException on Error
-        :return This function can return a result if it wants
+
+        :raises: EnoException on Error
+        :return: This function can return a result if it wants
                 If nothing is returned, the service status is considered okay.
                 The preferred way to report Errors in the service is by raising an appropriate EnoException
         """
@@ -592,6 +604,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         Get a (global) db by name
         Subsequent calls will return the same db.
         Names can be anything, for example the team name, round numbers etc.
+
         :param name: The name of the DB
         :param ignore_locks: Should only be set if you're sure-ish keys are never shared between instances.
                 Manual locking ist still possible.
@@ -651,6 +664,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         A global storage shared between all teams and rounds.
         Subsequent calls will return the same db.
         Prefer db_team_local or db_round_local
+
         :return: The global db
         """
         return self.db("global")
@@ -661,6 +675,7 @@ class BaseChecker(metaclass=_CheckerMeta):
     ) -> Union[NoSqlDict, StoredDict]:  # TODO: use a common supertype for all backends
         """
         The database for the current team
+
         :return: The team local db
         """
         return self.get_team_db()
@@ -671,6 +686,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         Returns the database for a specific team.
         Subsequent calls will return the same db.
+
         :param team: Return a db for an other team. If none, the db for the local team will be returned.
         :return: The team local db
         """
@@ -706,6 +722,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         Opens a socket/telnet connection to the remote host.
         Use connect(..).get_socket() for the raw socket.
+
         :param host: the host to connect to (defaults to self.address)
         :param port: the port to connect to (defaults to self.port)
         :param timeout: timeout on connection (defaults to self.timeout)
@@ -732,6 +749,7 @@ class BaseChecker(metaclass=_CheckerMeta):
     def http_useragent(self) -> str:
         """
         The useragent for http(s) requests
+
         :return: the current useragent
         """
         return self.http_session.headers["User-Agent"]
@@ -741,6 +759,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         Sets the useragent for http requests.
         Randomize using http_useragent_randomize()
+
         :param useragent: the useragent
         """
         self.http_session.headers["User-Agent"] = useragent
@@ -750,6 +769,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         Choses a new random http useragent.
         Note that http requests will be initialized with a random user agent already.
         To retrieve a random useragent without setting it, use random instead.
+
         :return: the new useragent
         """
         new_agent = random_useragent()
@@ -769,6 +789,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         Performs a (http) requests.post to the current host.
         Caches cookies in self.http_session
+
         :param params: The parameter
         :param route: The route
         :param port: The remote port in case it has not been specified at creation
@@ -795,6 +816,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         Performs a (http) requests.get to the current host.
         Caches cookies in self.http_session
+
         :param params: The parameter
         :param route: The route
         :param port: The remote port in case it has not been specified at creation
@@ -822,6 +844,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         Performs an http request (requests lib) to the current host.
         Caches cookies in self.http_session
+
         :param method: The request method
         :param params: The parameter
         :param route: The route
@@ -852,7 +875,8 @@ def run(
     checker_cls: Type[BaseChecker], args: Optional[Sequence[str]] = None,
 ) -> Optional[Result]:
     """
-    # Runs a checker, either from cmdline or as uwsgi script.
+    Runs a checker, either from cmdline or as uwsgi script.
+
     :param checker: The checker (subclass of basechecker) to run
     :param force_service: if True (non-default), the server will skip arg parsing and immediately spawn the web service.
     :param args: optional parameter, providing parameters
