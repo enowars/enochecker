@@ -1,4 +1,0 @@
-Testing the checker
-*******************
-
-TODO
