@@ -1010,33 +1010,42 @@ In the future changes to the DB might be cached until they are explicitly persis
 </div>
 <div class="section" id="module-enochecker.storeddict">
 <span id="enochecker-storeddict-module"></span><h2>enochecker.storeddict module<a class="headerlink" href="#module-enochecker.storeddict" title="Permalink to this headline">¶</a></h2>
+<p>Backend for team_db based on a local filesystem directory.</p>
 <dl class="py class">
 <dt id="enochecker.storeddict.StoredDict">
 <em class="property">class </em><code class="sig-prename descclassname">enochecker.storeddict.</code><code class="sig-name descname">StoredDict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">'default'</span></em>, <em class="sig-param"><span class="n">base_path</span><span class="o">=</span><span class="default_value">'/home/runner/work/enochecker/enochecker/docs/.data'</span></em>, <em class="sig-param"><span class="n">persist_secs</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">ignore_locks</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.storeddict.StoredDict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">collections.abc.MutableMapping</span></code></p>
-<p>A dictionary that is filesystem backed.
-It will write to disk every few seconds and at exit.
+<p>A dictionary that is filesystem backed.</p>
+<p>It will write to disk every few seconds and at exit.
 In case python crashes, changes may be gone. :/
 Note: Complex won’t be tracked.</p>
 <dl class="py method">
 <dt id="enochecker.storeddict.StoredDict.is_locked">
 <code class="sig-name descname">is_locked</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.storeddict.StoredDict.is_locked" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns if the key is currently locked by this process
-:type key: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
-:param key: The key
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
-:return: True if locked by this process, False otherwise</p>
+<dd><p>Return if the key is currently locked by this process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The key</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if locked by this process, False otherwise</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt id="enochecker.storeddict.StoredDict.lock">
 <code class="sig-name descname">lock</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.storeddict.StoredDict.lock" title="Permalink to this definition">¶</a></dt>
-<dd><p>Waits for a lock
-:type key: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
-:param key: the key to lock</p>
+<dd><p>Wait for a lock.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – the key to lock</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1044,18 +1053,25 @@ Note: Complex won’t be tracked.</p>
 <dl class="py method">
 <dt id="enochecker.storeddict.StoredDict.mark_dirty">
 <code class="sig-name descname">mark_dirty</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.storeddict.StoredDict.mark_dirty" title="Permalink to this definition">¶</a></dt>
-<dd><p>Manually mark an entry as dirty. It will be updated on disk on the next occasion
-:type key: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
-:param key: the key that needs to be stored
-:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>
-:return: the value contained in the key</p>
+<dd><p>Manually mark an entry as dirty. It will be updated on disk on the next occasion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – the key that needs to be stored</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the value contained in the key</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt id="enochecker.storeddict.StoredDict.persist">
 <code class="sig-name descname">persist</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.storeddict.StoredDict.persist" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores all dirty data to disk.
-If no data is to be stored, it’s basically free to call.</p>
+<dd><p>Store all dirty data to disk.</p>
+<p>If no data is to be stored, it’s basically free to call.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
@@ -1066,12 +1082,13 @@ If no data is to be stored, it’s basically free to call.</p>
 <dl class="py method">
 <dt id="enochecker.storeddict.StoredDict.release">
 <code class="sig-name descname">release</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">locked_key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.storeddict.StoredDict.release" title="Permalink to this definition">¶</a></dt>
-<dd><p>Release a file lock
-:type locked_key: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
-:param locked_key: the key we locked</p>
+<dd><p>Release a file lock.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>locked_key</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – the key we locked</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1079,8 +1096,8 @@ If no data is to be stored, it’s basically free to call.</p>
 <dl class="py method">
 <dt id="enochecker.storeddict.StoredDict.reload">
 <code class="sig-name descname">reload</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.storeddict.StoredDict.reload" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reloads stored values from disk.
-There is usually no reason to call this.
+<dd><p>Reload stored values from disk.</p>
+<p>There is usually no reason to call this.
 Non persisted changes might be lost.
 Only reason would be if another process fiddles with our data concurrently.</p>
 <dl class="field-list simple">
@@ -1095,8 +1112,9 @@ Only reason would be if another process fiddles with our data concurrently.</p>
 <dl class="py function">
 <dt id="enochecker.storeddict.makedirs">
 <code class="sig-prename descclassname">enochecker.storeddict.</code><code class="sig-name descname">makedirs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">exist_ok</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.storeddict.makedirs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Python2 ready
-param path: the path to create
+<dd><p>Create a directory.</p>
+<p>Creates the parent directories if necessary.</p>
+<p>param path: the path to create
 param exist_ok: ignore already existing path and do nothing</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
