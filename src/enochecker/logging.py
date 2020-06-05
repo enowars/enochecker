@@ -56,18 +56,16 @@ class ELKFormatter(logging.Formatter):
         :param record: the record to format
         :return: the formatted string
         """
-        record.stack = self.formatStack(record.stack_info)
         record.asctime = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
         message = record.getMessage()
         if record.exc_info:
             eno = record.exc_info
-            stacktrace = "".join(
-                traceback.format_exception(None, eno, eno.__traceback__)
-            )
+            stacktrace = "".join(traceback.format_exception(None, eno[1], eno[2]))
             message += f" excp: {stacktrace}"
         if record.stack_info:
-            message += f" trace: {record.stack}"
+            stack = self.formatStack(record.stack_info)
+            message += f" trace: {stack}"
 
         log_output = {
             "tool": type(self.checker).__name__,
