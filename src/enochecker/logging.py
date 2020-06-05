@@ -18,7 +18,7 @@ def exception_to_string(excp: Exception) -> str:
     Format an exception as a string.
 
     Limits the length of the traceback to 3.
-    :param: ecxp: the exception to format
+    :param ecxp: the exception to format
     :return: The formatted string
     """
     stack = traceback.extract_stack()[:-3] + traceback.extract_tb(
@@ -41,10 +41,10 @@ class ELKFormatter(logging.Formatter):
         """
         Initialize a new formatter.
 
-        :param: checker: The checker instance to which this formatter belongs, needed to include information about the service in the messages.
-        :param: fmt: format string passed to :class:`logging.Formatter`
-        :param: datefmt: date format string passed to :class:`logging.Formatter`
-        :param: style: style string passed to :class:`logging.Formatter`
+        :param checker: The checker instance to which this formatter belongs, needed to include information about the service in the messages.
+        :param fmt: format string passed to :class:`logging.Formatter`
+        :param datefmt: date format string passed to :class:`logging.Formatter`
+        :param style: style string passed to :class:`logging.Formatter`
         """
         super().__init__(fmt, datefmt, style)
         self.checker: "BaseChecker" = checker
@@ -53,7 +53,7 @@ class ELKFormatter(logging.Formatter):
         """
         Format a LogRecord as a string.
 
-        :param: record: the record to format
+        :param record: the record to format
         :return: the formatted string
         """
         record.stack = self.formatStack(record.stack_info)

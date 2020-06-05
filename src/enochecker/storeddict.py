@@ -57,8 +57,8 @@ def _locked(func: Callable[..., Any]) -> Callable[..., Any]:
 
         First acquires a lock and then releases it later.
 
-        :param: args: positional arguments passed to the wrapped function
-        :param: kwargs: kwargs to pass to the wrapped function
+        :param args: positional arguments passed to the wrapped function
+        :param kwargs: kwargs to pass to the wrapped function
         :return: the wrapped function
         """
         self.logger.debug("Locking {} db".format(self.name))
@@ -158,7 +158,7 @@ class StoredDict(MutableMapping):
         """
         Return the path where data for this key is stored.
 
-        :param: key: the key to look up
+        :param key: the key to look up
         :return: string representation of the file path
         """
         return os.path.join(self.path, DB_PREFIX + base64ify(key, b"+-"))
@@ -211,8 +211,8 @@ class StoredDict(MutableMapping):
         Create new lock file, waiting up to retrycount seconds.
 
         :raises: :class:`TimeoutError` if failed.
-        :param: path: path of the lock file
-        :param: retrycount: number of tries until raising an Exception
+        :param path: path of the lock file
+        :param retrycount: number of tries until raising an Exception
         """
         for i in range(0, retrycount):
             try:

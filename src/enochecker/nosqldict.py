@@ -33,7 +33,7 @@ def to_keyfmt(key: Any) -> str:
 
     Currently this only returns the string representation of the key.
 
-    :param: key: the key to format
+    :param key: the key to format
     :return: string representation of the key
     """
     return str(key)  # + type(key).__name__
@@ -108,12 +108,12 @@ class NoSqlDict(MutableMapping):
         """
         Initialize a NoSqlDict with specified MongoDB backend.
 
-        :param: name: name of the backend
-        :param: checker_name: name of the checker
-        :param: host: MongoDB host
-        :param: port: MongoDB port
-        :param: username: MongoDB username
-        :param: password: MongoDB password
+        :param name: name of the backend
+        :param checker_name: name of the checker
+        :param host: MongoDB host
+        :param port: MongoDB port
+        :param username: MongoDB username
+        :param password: MongoDB password
         """
         self.dict_name = base64ify(name, altchars=b"-_")
         self.checker_name = checker_name
@@ -142,8 +142,8 @@ class NoSqlDict(MutableMapping):
 
         Caches the value for future gets and stores it in the MongoDB.
 
-        :param: key: key in the dictionary
-        :param: value: value in the dictionary
+        :param key: key in the dictionary
+        :param value: value in the dictionary
         """
         self.cache[key] = value
 
@@ -169,8 +169,8 @@ class NoSqlDict(MutableMapping):
 
         Returns values from cache when they were inserted in the same checker execution.
 
-        :param: key: key of the value to retrieve
-        :param: print_result: TODO
+        :param key: key of the value to retrieve
+        :param print_result: TODO
         :return: retrieved value
         """
         if key in self.cache.items():
@@ -199,7 +199,7 @@ class NoSqlDict(MutableMapping):
 
         Also deletes the value from the cache in addition to the MongoDB backend.
 
-        :param: key: key to delete
+        :param key: key to delete
         """
         if key in self.cache:
             del self.cache[key]

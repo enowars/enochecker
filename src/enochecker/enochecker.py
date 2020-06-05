@@ -253,19 +253,19 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         Init the Checker, fill the params.
 
-        :param: request_dict: Dictionary containing the original request params
-        :param: run_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
-        :param: method: The method to run (e.g. getflag, putflag)
-        :param: address: The address to target (e.g. team1.enowars.com)
-        :param: team_name: The name of the team being targeted
-        :param: team_id: The numerical ID of the team being targeted
-        :param: round_id: The numerical round ID in which this checker is called
-        :param: flag_round: The round in which the flag should be/was deployed
-        :param: round_length: The length of a round in seconds
-        :param: flag: The contents of the flag or noise
-        :param: flag_idx: The index of the flag starting at 0, used for storing multiple flags per round
-        :param: timeout: The timeout for the execution of this checker
-        :param: storage_dir: The directory to store persistent data in (used by StoredDict)
+        :param request_dict: Dictionary containing the original request params
+        :param run_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
+        :param method: The method to run (e.g. getflag, putflag)
+        :param address: The address to target (e.g. team1.enowars.com)
+        :param team_name: The name of the team being targeted
+        :param team_id: The numerical ID of the team being targeted
+        :param round_id: The numerical round ID in which this checker is called
+        :param flag_round: The round in which the flag should be/was deployed
+        :param round_length: The length of a round in seconds
+        :param flag: The contents of the flag or noise
+        :param flag_idx: The index of the flag starting at 0, used for storing multiple flags per round
+        :param timeout: The timeout for the execution of this checker
+        :param storage_dir: The directory to store persistent data in (used by StoredDict)
         """
         # We import requests after startup global imports may deadlock, see
         # https://github.com/psf/requests/issues/2925
