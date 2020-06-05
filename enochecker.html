@@ -796,8 +796,8 @@ using this optional param.</p>
 <code class="sig-name descname">format</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">record</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.logging.ELKFormatter.format" title="Permalink to this definition">¶</a></dt>
 <dd><p>Format a LogRecord as a string.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Param</dt>
-<dd class="field-odd"><p>record: the record to format</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>record</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">LogRecord</span></code>) – the record to format</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
@@ -836,7 +836,7 @@ raises a NotImplementedError.</p>
 <code class="sig-prename descclassname">enochecker.logging.</code><code class="sig-name descname">exception_to_string</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">excp</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.logging.exception_to_string" title="Permalink to this definition">¶</a></dt>
 <dd><p>Format an exception as a string.</p>
 <p>Limits the length of the traceback to 3.
-:param: ecxp: the exception to format
+:param ecxp: the exception to format
 :rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
 :return: The formatted string</p>
 </dd></dl>
@@ -898,8 +898,8 @@ In the future changes to the DB might be cached until they are explicitly persis
 <dd><p>Convert a string to a key used in the MongoDB.</p>
 <p>Currently this only returns the string representation of the key.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Param</dt>
-<dd class="field-odd"><p>key: the key to format</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>) – the key to format</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
@@ -1144,68 +1144,81 @@ param exist_ok: ignore already existing path and do nothing</p>
 </div>
 <div class="section" id="module-enochecker.utils">
 <span id="enochecker-utils-module"></span><h2>enochecker.utils module<a class="headerlink" href="#module-enochecker.utils" title="Permalink to this headline">¶</a></h2>
+<p>Collection of utilities for checker development.</p>
 <dl class="py class">
 <dt id="enochecker.utils.SimpleSocket">
 <em class="property">class </em><code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">SimpleSocket</code><span class="sig-paren">(</span><em class="sig-param">host=None</em>, <em class="sig-param">port=0</em>, <em class="sig-param">timeout=&lt;object object&gt;</em>, <em class="sig-param">logger=None</em>, <em class="sig-param">timeout_fun=None</em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.SimpleSocket" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">telnetlib.Telnet</span></code></p>
-<p>Telnetlib with some additions.
-Read Telnetlib doku for more.</p>
+<p>Telnetlib with some additions.</p>
+<p>Read Telnetlib doku for more.</p>
 <dl class="py method">
 <dt id="enochecker.utils.SimpleSocket.current_default_timeout">
 <em class="property">property </em><code class="sig-name descname">current_default_timeout</code><a class="headerlink" href="#enochecker.utils.SimpleSocket.current_default_timeout" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets the timeout default that should currently be used.
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>
-:return: current timeout default, either from self.timeout_fun or from timeout.</p>
+<dd><p>Get the timeout default that should currently be used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>current timeout default, either from self.timeout_fun or from timeout.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt id="enochecker.utils.SimpleSocket.expect">
 <code class="sig-name descname">expect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">regexes</span></em>, <em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.SimpleSocket.expect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read until one from a list of a regular expressions matches.
-Use this to search for anything.</p>
+<dd><p>Read until one from a list of a regular expressions matches.</p>
+<p>Use this to search for anything.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>regexes</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Pattern</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]]) – The first argument is a list of regular expressions, either</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>regexes</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Pattern</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]]) – The first argument is a list of regular expressions, either
+compiled (re.Pattern instances) or uncompiled (strings).</p></li>
+<li><p><strong>timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – Timeout in seconds. If none, default will be taken.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Match</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]], <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Return a tuple of three items: the index in the list of the
+first regular expression that matches; the re.Match object
+returned; and the text read up till and including the match.</p>
 </dd>
 </dl>
-<p>compiled (re.Pattern instances) or uncompiled (strings).
-:type timeout: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]
-:param timeout: Timeout in seconds. If none, default will be taken.
-:rtype: <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Match</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]], <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]
-:return: Return a tuple of three items: the index in the list of the</p>
-<blockquote>
-<div><p>first regular expression that matches; the re.Match object
-returned; and the text read up till and including the match.</p>
-</div></blockquote>
 </dd></dl>
 
 <dl class="py method">
 <dt id="enochecker.utils.SimpleSocket.read_all">
 <code class="sig-name descname">read_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.SimpleSocket.read_all" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read all data until EOF; block until connection closed.
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>
-:return: the complete content until EOF</p>
+<dd><p>Read all data until EOF; block until connection closed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the complete content until EOF</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt id="enochecker.utils.SimpleSocket.read_n_lines">
 <code class="sig-name descname">read_n_lines</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">line_count</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="o">=</span><span class="default_value">b'\\n'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.SimpleSocket.read_n_lines" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Read n lines from socket
-:param line_count: the amount of lines to read
-:param delimiter: what delimeter to use for splitting (could also be non-</p>
-</div></blockquote>
-<dl class="simple">
-<dt>)</dt><dd><dl class="field-list simple">
-<dt class="field-odd">return</dt>
-<dd class="field-odd"><p>a list of lines</p>
-</dd>
-</dl>
-</dd>
-</dl>
+<dd><p>Read n lines from socket.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>line_count</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the amount of lines to read</p></li>
+<li><p><strong>delimiter</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]) – what delimeter to use for splitting (could also be non-n)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a list of lines</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1225,26 +1238,29 @@ returned; and the text read up till and including the match.</p>
 <dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Returns everything until the given math. When no match is found, return whatever is available instead,</p>
+<dd class="field-odd"><p>Returns everything until the given math. When no match is found, return whatever is available instead,
+possibly the empty string.  Raise EOFError if the connection
+is closed and no cooked data is available.</p>
 </dd>
 </dl>
-<p>possibly the empty string.  Raise EOFError if the connection
-is closed and no cooked data is available.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="enochecker.utils.SimpleSocket.readline_expect">
 <code class="sig-name descname">readline_expect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">expected</span></em>, <em class="sig-param"><span class="n">read_until</span><span class="o">=</span><span class="default_value">b'\\n'</span></em>, <em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.SimpleSocket.readline_expect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reads to newline (or read_until string) and assert the presence of a string in the response.
-Will raise an exception if failed.
-:type read_until: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]
-:param read_until: Which parameter to read until
-:type expected: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]
-:param expected: the expected String to search for in the response
-:type timeout: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]
-:param timeout: The timeout (uses Telnet default if not passed in)
-:return read: the bytes read</p>
+<dd><p>Read to newline (or read_until string) and assert the presence of a string in the response.</p>
+<p>Will raise an exception if failed.</p>
 <dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>read_until</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]) – Which parameter to read until</p></li>
+<li><p><strong>expected</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]) – the expected String to search for in the response</p></li>
+<li><p><strong>timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – The timeout (uses Telnet default if not passed in)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return read</dt>
+<dd class="field-even"><p>the bytes read</p>
+</dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
 </dd>
@@ -1254,14 +1270,15 @@ Will raise an exception if failed.
 <dl class="py method">
 <dt id="enochecker.utils.SimpleSocket.write">
 <code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">buffer</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.SimpleSocket.write" title="Permalink to this definition">¶</a></dt>
-<dd><p>Write a string to the socket.
-Can block if the connection is blocked.
-May raise socket.error if the connection is closed.
-:type buffer: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]
-:param buffer: The buffer to write</p>
+<dd><p>Write a string to the socket.</p>
+<p>Can block if the connection is blocked.
+May raise socket.error if the connection is closed.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>buffer</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]) – The buffer to write</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1271,18 +1288,18 @@ May raise socket.error if the connection is closed.
 <dl class="py function">
 <dt id="enochecker.utils.assert_equals">
 <code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">assert_equals</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">o1</span></em>, <em class="sig-param"><span class="n">o2</span></em>, <em class="sig-param"><span class="n">message</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">autobyteify</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.assert_equals" title="Permalink to this definition">¶</a></dt>
-<dd><p>Raises an exception if o1 != o2
-:type o1: <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>
-:param o1: the first object
-:type o2: <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>
-:param o2: the second object
-:type message: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]
-:param message: The exception message in case of an error (optional)
-:type autobyteify: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
-:param autobyteify: will call ensure_bytes on both parameters.</p>
+<dd><p>Raise an exception if o1 != o2.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>o1</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>) – the first object</p></li>
+<li><p><strong>o2</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>) – the second object</p></li>
+<li><p><strong>message</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – The exception message in case of an error (optional)</p></li>
+<li><p><strong>autobyteify</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – will call ensure_bytes on both parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1290,16 +1307,17 @@ May raise socket.error if the connection is closed.
 <dl class="py function">
 <dt id="enochecker.utils.assert_in">
 <code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">assert_in</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">o1</span></em>, <em class="sig-param"><span class="n">o2</span></em>, <em class="sig-param"><span class="n">message</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.assert_in" title="Permalink to this definition">¶</a></dt>
-<dd><p>Raises an exception if o1 not in o2
-:type o1: <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>
-:param o1: the object that should be in o2
-:type o2: <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>
-:param o2: the object to look in
-:type message: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]
-:param message: An optional message that will be part of the error</p>
+<dd><p>Raise an exception if o1 not in o2.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>o1</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>) – the object that should be in o2</p></li>
+<li><p><strong>o2</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>) – the object to look in</p></li>
+<li><p><strong>message</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – An optional message that will be part of the error</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1307,36 +1325,57 @@ May raise socket.error if the connection is closed.
 <dl class="py function">
 <dt id="enochecker.utils.base64ify">
 <code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">base64ify</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">s</span></em>, <em class="sig-param"><span class="n">altchars</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.base64ify" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate the base64 representation of a value
-:type s: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]
-:param s: the input string
-:type altchars: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="docutils literal notranslate"><span class="pre">None</span></code>]
-:param altchars: base64 encodes using the given altchars (or not, if None)
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
-:return: base64 representation</p>
+<dd><p>Calculate the base64 representation of a value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>s</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]) – the input string</p></li>
+<li><p><strong>altchars</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="docutils literal notranslate"><span class="pre">None</span></code>]) – base64 encodes using the given altchars (or not, if None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>base64 representation</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="enochecker.utils.debase64ify">
 <code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">debase64ify</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">s</span></em>, <em class="sig-param"><span class="n">altchars</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.debase64ify" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a string out of a base64
-:type s: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]
-:param s: the string
-:type altchars: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="docutils literal notranslate"><span class="pre">None</span></code>]
-:param altchars: base64 decodes using the given altchars (or not, if None)
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
-:return: the original value</p>
+<dd><p>Decode a base64-encoded string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>s</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]) – the base64-encoded string</p></li>
+<li><p><strong>altchars</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="docutils literal notranslate"><span class="pre">None</span></code>]) – base64 decodes using the given altchars (or not, if None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the decoded value</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="enochecker.utils.ensure_bytes">
 <code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">ensure_bytes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.ensure_bytes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts to bytes
-:type obj: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]
-:param obj: Str or Bytes (or anything else) to convert to bytes representation</p>
+<dd><p>Convert an object to bytes.</p>
+<p>If the input is bytes, the value remains unchanged.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>obj</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]) – str or bytes (or anything else) to convert to bytes representation</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the bytes representation of the object</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1344,10 +1383,16 @@ May raise socket.error if the connection is closed.
 <dl class="py function">
 <dt id="enochecker.utils.ensure_unicode">
 <code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">ensure_unicode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.ensure_unicode" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts to utf-8</p>
+<dd><p>Convert an object to an utf-8-encoded string.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>obj</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]) – str or bytes (or anything else) to convert to string representation</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the string representation of the object</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1355,32 +1400,42 @@ May raise socket.error if the connection is closed.
 <dl class="py function">
 <dt id="enochecker.utils.ensure_valid_filename">
 <code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">ensure_valid_filename</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">s</span></em>, <em class="sig-param"><span class="n">min_length</span><span class="o">=</span><span class="default_value">3</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.ensure_valid_filename" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets a valid file name from the input
-:type s: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
-:param s: The input string
-:type min_length: <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>
-:param min_length: if the result is smaller than this, the method will fall back to base64.
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
-:return: all illegal chars stripped or base64ified if it gets too small</p>
+<dd><p>Get a valid file name from the input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>s</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The input string</p></li>
+<li><p><strong>min_length</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – if the result is smaller than this, the method will fall back to base64.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>all illegal chars stripped or base64ified if it gets too small</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="enochecker.utils.readline_expect">
 <code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">readline_expect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">telnet</span></em>, <em class="sig-param"><span class="n">expected</span></em>, <em class="sig-param"><span class="n">read_until</span><span class="o">=</span><span class="default_value">b'\\n'</span></em>, <em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">30</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.readline_expect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reads to newline (or read_until string) and assert the presence of a string in the response.
-Will raise an exception if failed.
-:type telnet: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Telnet</span></code>, <a class="reference internal" href="#enochecker.utils.SimpleSocket" title="enochecker.utils.SimpleSocket"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimpleSocket</span></code></a>]
-:param telnet: Connected telnet instance (the result of self.telnet(..))
-:type expected: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]
-:param expected: the expected String to search for in the response
-:type read_until: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]
-:param read_until: Which char to read until.
-:type timeout: <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>
-:param timeout: a timeout
-:return read: the bytes read</p>
+<dd><p>Read to newline (or read_until string) and assert the presence of a string in the response.</p>
+<p>Will raise an exception if failed.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>telnet</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Telnet</span></code>, <a class="reference internal" href="#enochecker.utils.SimpleSocket" title="enochecker.utils.SimpleSocket"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimpleSocket</span></code></a>]) – Connected telnet instance (the result of self.telnet(..))</p></li>
+<li><p><strong>expected</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]) – the expected String to search for in the response</p></li>
+<li><p><strong>read_until</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]) – Which char to read until.</p></li>
+<li><p><strong>timeout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – a timeout</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the bytes read</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1388,53 +1443,79 @@ Will raise an exception if failed.
 <dl class="py function">
 <dt id="enochecker.utils.serve_once">
 <code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">serve_once</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">html</span></em>, <em class="sig-param"><span class="n">start_port</span><span class="o">=</span><span class="default_value">5000</span></em>, <em class="sig-param"><span class="n">autoincrement_port</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">content_type</span><span class="o">=</span><span class="default_value">'text/html'</span></em>, <em class="sig-param"><span class="n">headers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.serve_once" title="Permalink to this definition">¶</a></dt>
-<dd><p>Render Text in the users browser
-Opens a web server that serves a HTML string once and shuts down after the first request.
-The port will be open when this function returns. (though serving the request may take a few mils)
-:type html: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code>]
-:param html: The html code to deliver on the initial request
-:type start_port: <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>
-:param start_port: The port it should try to listen on first.
-:type autoincrement_port: <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>
-:param autoincrement_port: If the port should be increased if the server cannot listen on the provided start_port
-:type content_type: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
-:param content_type: The content type this server should report (change it if you want json, for example)
-:type headers: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]
-:param headers: Additional headers as {header_key: value} dict.
-:type logger: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Logger</span></code>]
-:param logger: the optional logger to redirect logs to.
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>
-:return: The port the server started listening on</p>
+<dd><p>Render Text in the users browser.</p>
+<p>Opens a web server that serves a HTML string once and shuts down after the first request.
+The port will be open when this function returns. (though serving the request may take a few mils)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>html</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code>]) – The html code to deliver on the initial request</p></li>
+<li><p><strong>start_port</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – The port it should try to listen on first.</p></li>
+<li><p><strong>autoincrement_port</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If the port should be increased if the server cannot listen on the provided start_port</p></li>
+<li><p><strong>content_type</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The content type this server should report (change it if you want json, for example)</p></li>
+<li><p><strong>headers</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]) – Additional headers as {header_key: value} dict.</p></li>
+<li><p><strong>logger</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Logger</span></code>]) – the optional logger to redirect logs to.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The port the server started listening on</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="enochecker.utils.sha256ify">
 <code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">sha256ify</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">s</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.sha256ify" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate the sha256 hash
-:type s: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]
-:param s: the string
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
-:return: the hash in hex representation</p>
+<dd><p>Calculate the sha256 hash.</p>
+<p>Converts the input to bytes if it is a string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>s</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]) – the string</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the hash in hex representation</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="enochecker.utils.snake_caseify">
 <code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">snake_caseify</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">camel</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.snake_caseify" title="Permalink to this definition">¶</a></dt>
-<dd><p>Turn camels into snake (-cases)
-:type camel: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]
-:param camel: camelOrSnakeWhatever
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
-:return: camel_or_snake_whatever</p>
+<dd><p>Turn camels into snake (-cases).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>camel</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]) – camelOrSnakeWhatever</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>camel_or_snake_whatever</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="enochecker.utils.start_daemon">
 <code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">start_daemon</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">target</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.start_daemon" title="Permalink to this definition">¶</a></dt>
-<dd><p>starts a thread as daemon
-:type target: <code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[…, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]
-:param target: the function
-:rtype: <code class="xref py py-class docutils literal notranslate"><span class="pre">Thread</span></code>
-:return: the started thread</p>
+<dd><p>Start a thread as daemon.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>target</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[…, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]) – the function</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Thread</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the started thread</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
