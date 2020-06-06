@@ -49,7 +49,6 @@ class CheckerExampleImpl(BaseChecker):
             round_length=round_length,
             flag_idx=flag_idx,
             storage_dir=storage_dir,
-            log_endpoint=log_endpoint,
             use_db_cache=use_db_cache,
             json_logging=json_logging,
             round_id=round_id,
