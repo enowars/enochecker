@@ -51,7 +51,7 @@ def _locked(func: Callable[..., Any]) -> Callable[..., Any]:
     """
 
     @wraps(func)
-    def locked(self: "StoredDict", *args: str, **kwargs: int) -> Callable[..., Any]:
+    def locked(self: "StoredDict", *args: str, **kwargs: int) -> Any:
         """
         Wrap the function.
 

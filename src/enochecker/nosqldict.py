@@ -41,7 +41,7 @@ def to_keyfmt(key: Any) -> str:
 
 def _try_n_times(func: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(func)
-    def try_n_times(*args: Any, **kwargs: Any) -> Callable[..., Any]:
+    def try_n_times(*args: Any, **kwargs: Any) -> Any:
         from pymongo.errors import PyMongoError
 
         for i in range(RETRY_COUNT):
