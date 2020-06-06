@@ -324,7 +324,7 @@ In case the spec fails, errors out with ValueError.</p>
 <p>Contains the BaseChecker to be used as base for all checkers.</p>
 <dl class="py class">
 <dt id="enochecker.enochecker.BaseChecker">
-<em class="property">class </em><code class="sig-prename descclassname">enochecker.enochecker.</code><code class="sig-name descname">BaseChecker</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">run_id</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">address</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">team</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">team_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">team_id</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">round</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">round_id</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">flag_round</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">round_length</span><span class="o">=</span><span class="default_value">300</span></em>, <em class="sig-param"><span class="n">flag</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">flag_idx</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">storage_dir</span><span class="o">=</span><span class="default_value">'/home/runner/work/enochecker/enochecker/docs/.data'</span></em>, <em class="sig-param"><span class="n">log_endpoint</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">use_db_cache</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">json_logging</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.enochecker.BaseChecker" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">enochecker.enochecker.</code><code class="sig-name descname">BaseChecker</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">run_id</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">address</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">team</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">team_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">team_id</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">round</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">round_id</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">flag_round</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">round_length</span><span class="o">=</span><span class="default_value">300</span></em>, <em class="sig-param"><span class="n">flag</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">flag_idx</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">storage_dir</span><span class="o">=</span><span class="default_value">'/home/runner/work/enochecker/enochecker/docs/.data'</span></em>, <em class="sig-param"><span class="n">use_db_cache</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">json_logging</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.enochecker.BaseChecker" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>All you base are belong to us. Also all your flags. And checker scripts.</p>
 <p>Override the methods given here, then simply init and .run().
@@ -804,27 +804,6 @@ using this optional param.</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the formatted string</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt id="enochecker.logging.RestLogHandler">
-<em class="property">class </em><code class="sig-prename descclassname">enochecker.logging.</code><code class="sig-name descname">RestLogHandler</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">checker</span></em>, <em class="sig-param"><span class="n">level</span><span class="o">=</span><span class="default_value">10</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.logging.RestLogHandler" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">logging.Handler</span></code></p>
-<p>Simple handler class to send Checker logs off to the logging backend Service.</p>
-<p>TODO: check if this is deprecated (see issue #44)</p>
-<dl class="py method">
-<dt id="enochecker.logging.RestLogHandler.emit">
-<code class="sig-name descname">emit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">record</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.logging.RestLogHandler.emit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Do whatever it takes to actually log the specified logging record.</p>
-<p>This version is intended to be implemented by subclasses and so
-raises a NotImplementedError.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
