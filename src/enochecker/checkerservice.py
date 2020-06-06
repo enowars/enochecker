@@ -49,7 +49,6 @@ spec: List[Union[Required, Optional]] = [
     Optional("flag", str, "ENOTESTFLAG"),  # the flag or noise to drop or get
     Optional("flagIndex", int, 0),
     Optional("timeout", int, 30),  # timeout we have for this run
-    Optional("logEndpoint", str, None),  # endpoint to send runs to
 ]
 
 UI_TEMPLATE = """

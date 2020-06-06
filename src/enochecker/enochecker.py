@@ -28,7 +28,7 @@ from urllib.parse import urlparse
 from flask import Flask
 
 from .checkerservice import CHECKER_METHODS, init_service
-from .logging import ELKFormatter, RestLogHandler
+from .logging import ELKFormatter
 from .nosqldict import NoSqlDict
 from .results import EnoException, Result
 from .storeddict import DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING, StoredDict
@@ -53,7 +53,6 @@ VALID_ARGS = [
     "timeout",
     "flag_idx",
     "json_logging",
-    "log_endpoint",
     "round_length",
 ]
 
@@ -177,13 +176,6 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         "decide which flag to place.",
     )
     runparser.add_argument(
-        "-l",
-        "--log_endpoint",
-        type=str,
-        default="",
-        help="URI to an optional RESTlike service accepting log jsons via POST.",
-    )
-    runparser.add_argument(
         "-j",
         "--json_logging",
         dest="json_logging",
@@ -246,7 +238,6 @@ class BaseChecker(metaclass=_CheckerMeta):
         flag_idx: int = None,
         timeout: int = None,
         storage_dir: str = DB_DEFAULT_DIR,
-        log_endpoint: Optional[str] = None,  # TODO: remove
         use_db_cache: bool = DB_GLOBAL_CACHE_SETTING,
         json_logging: bool = True,
     ) -> None:
@@ -275,7 +266,6 @@ class BaseChecker(metaclass=_CheckerMeta):
 
         self.time_started_at: datetime.datetime = datetime.datetime.now()
         self.run_id: Optional[int] = run_id
-        self.log_endpoint: Optional[str] = log_endpoint
         self.json_logging: bool = json_logging
 
         self.method: Optional[str] = method
@@ -361,9 +351,6 @@ class BaseChecker(metaclass=_CheckerMeta):
             )
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
-
-        if self.log_endpoint and self.log_endpoint.startswith("http"):
-            self.logger.addHandler(RestLogHandler(self))
 
         self.debug: Callable[..., None] = self.logger.debug
         self.info: Callable[..., None] = self.logger.info
