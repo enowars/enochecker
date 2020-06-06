@@ -3,7 +3,6 @@
 import collections
 import json
 import logging
-import sys
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Type, Union
 
 from flask import Flask, Response, jsonify, request
@@ -12,17 +11,12 @@ from .logging import exception_to_string
 from .results import Result
 from .utils import snake_caseify
 
-# from elasticapm.contrib.flask import ElasticAPM
-
 if TYPE_CHECKING:
     from .enochecker import BaseChecker
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.Logger(__name__)
 logger.setLevel(logging.DEBUG)
-
-# ElasticSearch performance monitoring
-# apm = ElasticAPM()
 
 Optional = collections.namedtuple("Optional", "key type default")
 Required = collections.namedtuple("Required", "key type")
@@ -351,10 +345,5 @@ def init_service(checker: Type["BaseChecker"]) -> Flask:
     app.route("/service", methods=["GET"])(get_service_info)
 
     print(service_info())
-
-    if "run" not in sys.argv:
-        # ElasticSearch Performance Monitoring (disabled on commandline)
-        # apm.init_app(app, service_name=checker.__name__.split("Checker")[0])  # secret_token=SECRET)
-        pass
 
     return app  # Start service using service.run(host="0.0.0.0")
