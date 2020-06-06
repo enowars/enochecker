@@ -48,3 +48,10 @@ steps:
     pip install -r dev-requirements.txt
     make lint
   displayName: 'lint'
+
+- script: |
+    mkdir /tmp/test_sdist
+    python setup.py sdist -d /tmp/test_sdist
+    cd /tmp/test_sdist
+    pip install enochecker-*.tar.gz
+  displayName: 'test sdist'
