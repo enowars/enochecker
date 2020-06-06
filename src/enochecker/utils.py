@@ -254,38 +254,38 @@ def serve_once(
     # see https://github.com/psf/requests/issues/2925
     import requests
 
-    if logger is None:
-        logger = utilslogger
-    if headers is None:
-        headers = {}
+    logger_: logging.Logger = logger or utilslogger
+    headers_: Dict[str, str] = headers or {}
     if isinstance(html, requests.Response):
-        html = html.text
-    if isinstance(html, str):
-        html = html.encode("UTF-8")
+        payload: bytes = html.text.encode("UTF-8")
+    elif isinstance(html, str):
+        payload = html.encode("UTF-8")
+    else:
+        payload = html
 
     class OutputHandler(BaseHTTPRequestHandler):
 
         # noinspection PyPep8Naming
-        def do_GET(self):
+        def do_GET(self) -> None:
             self.send_response(200)
             self.send_header("Content-type", content_type)
-            for key, value in headers.items():
+            for key, value in headers_.items():
                 self.send_header(key, value)
             self.end_headers()
-            self.wfile.write(html)
-            logger.info("Served HTTP once. Stopping.")
+            self.wfile.write(payload)
+            logger_.info("Served HTTP once. Stopping.")
             start_daemon(self.server.shutdown)
 
     for port in range(start_port, PORT_MAX):
         try:
             server = HTTPServer(("", port), OutputHandler)
-            logging.debug("Serving {} bytes on port {}".format(len(html), port))
+            logging.debug("Serving {} bytes on port {}".format(len(payload), port))
             start_daemon(server.serve_forever)
             time.sleep(0.1)  # some extra time thrown in for good measure. :)
             return port
         except OSError as ex:
             if not autoincrement_port:
-                logger.info(
+                logger_.info(
                     "Serve once was not set to automatically increment port {} but faced socket exception{}".format(
                         start_port, ex
                     ),
@@ -368,7 +368,7 @@ class SimpleSocket(telnetlib.Telnet):
 
     def expect(
         self,
-        regexes: Sequence[Union[Pattern[bytes], bytes]],
+        regexes: Sequence[Union[Pattern[bytes], bytes, str]],
         timeout: Optional[int] = None,
     ) -> Tuple[int, Optional[Match[bytes]], bytes]:
         """
@@ -387,9 +387,11 @@ class SimpleSocket(telnetlib.Telnet):
             timeout = self.current_default_timeout
 
         # Make sure all strings are bytes, ignore compiled Regexes.
-        regexes = [ensure_bytes(x) if isinstance(x, str) else x for x in regexes]
+        regexes_: List[Union[Pattern[bytes], bytes]] = [
+            ensure_bytes(x) if isinstance(x, str) else x for x in regexes
+        ]
 
-        return super().expect(list=regexes, timeout=timeout)
+        return super().expect(list=regexes_, timeout=timeout)
 
     def read_until(
         self, match: Union[bytes, str], timeout: Optional[int] = None

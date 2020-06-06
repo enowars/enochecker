@@ -783,7 +783,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         self.http_session.headers["User-Agent"] = useragent
 
-    def http_useragent_randomize(self):
+    def http_useragent_randomize(self) -> str:
         """
         Choose a new random http useragent.
 
@@ -804,7 +804,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         scheme: str = "http",
         raise_http_errors: bool = False,
         timeout: Optional[int] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> "requests.Response":
         """
         Perform a (http) requests.post to the current host.
@@ -832,7 +832,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         scheme: str = "http",
         raise_http_errors: bool = False,
         timeout: Optional[int] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> "requests.Response":
         """
         Perform a (http) requests.get to the current host.
@@ -861,7 +861,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         scheme: str = "http",
         raise_http_errors: bool = False,
         timeout: Optional[int] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> "requests.Response":
         """
         Perform an http request (requests lib) to the current host.
