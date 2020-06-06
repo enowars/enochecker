@@ -89,8 +89,8 @@ class StoredDict(MutableMapping):
         persist_secs: int = 3,
         ignore_locks: bool = False,
         logger: Optional[logging.Logger] = None,
-        *args,
-        **kwargs
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """
         Create a new File System backed Store.
@@ -134,7 +134,7 @@ class StoredDict(MutableMapping):
         """Spawn a thread persisting all changes, if necessary."""
         if self.persist_secs > 0 and not self._persist_thread:
 
-            def persist_async():
+            def persist_async() -> None:
                 time.sleep(self.persist_secs)
                 self.logger.debug("Persisting db {} from background.".format(self.name))
                 self.persist()

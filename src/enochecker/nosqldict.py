@@ -4,7 +4,7 @@ import logging
 from collections.abc import MutableMapping
 from functools import wraps
 from threading import RLock, current_thread
-from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Optional, Union
 
 from . import utils
 from .utils import base64ify
@@ -39,9 +39,9 @@ def to_keyfmt(key: Any) -> str:
     return str(key)  # + type(key).__name__
 
 
-def _try_n_times(func):
+def _try_n_times(func: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(func)
-    def try_n_times(*args, **kwargs):
+    def try_n_times(*args: Any, **kwargs: Any) -> Callable[..., Any]:
         from pymongo.errors import PyMongoError
 
         for i in range(RETRY_COUNT):
@@ -51,6 +51,7 @@ def _try_n_times(func):
                 dictlogger.error("noSQLdict_Error, Try {}".format(str(i)), exc_info=ex)
                 if i == RETRY_COUNT:
                     raise
+        assert False  # this should never happen
 
     return try_n_times
 
@@ -102,8 +103,8 @@ class NoSqlDict(MutableMapping):
         port: Union[int, str, None] = None,
         username: Optional[str] = None,
         password: Optional[str] = None,
-        *args,
-        **kwargs
+        *args: Any,
+        **kwargs: Any,
     ):
         """
         Initialize a NoSqlDict with specified MongoDB backend.
