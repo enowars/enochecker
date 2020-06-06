@@ -13,34 +13,35 @@ class AwesomeChecker(BaseChecker):
         self.debug("flag is {}".format(self.flag))
         self.http_post("/putflaghere", params={"flag": self.flag})
         # ...
-        
+
     def getflag(self):  # type: () -> None
         # tTODO: Get the flag.
         if not self.http_get("/getflag") == self.flag:
             raise BrokenServiceException("Ooops, wrong Flag")
-        
+
     def putnoise(self):
         # put some noise
         with self.connect() as telnet:
-            telnet.write(self.noise) 
-    
+            telnet.write(self.noise)
+
     def getnoise(self):
         with self.connect() as telnet:
             telnet.write("gimmeflag\n")
             telnet.read_expect(self.noise)
-        
+
     def havoc(self):
         self.http("FUNFUN").text == "FUNFUN"
-        
-        
+
+
 if __name__ == "__main__":
     run(AwesomeChecker)
 ```
 
 A full example, including helpful comments, can be found in [examplechecker.py](example/examplechecker.py).
 
-The full API specification can be found [docs/api.md](docs/api.md).
-(Generated from docstring using `pydocmd simple ...`).
+The full documentation (still in progress) is available on [enowars.github.io/enochecker](https://enowars.github.io/enochecker/).
+
+(There is some not yet ported information in the old [docs/usage.md](docs/usage.md).)
 
 ## Installation
 The latest stable version of the library is available on pip: `pip install enochecker`
@@ -49,7 +50,7 @@ To access the development version, the library can be installed using pip/git, l
 `pip install git+https://github.com/enowars/enochecker`
 
 ## Launch Checker
-The goal is to have checkers launched via uSWGI and the Engine talking to it via http. 
+The goal is to have checkers launched via uSWGI and the Engine talking to it via http.
 For testing, however, you can use the commandline instead:
 
 ```

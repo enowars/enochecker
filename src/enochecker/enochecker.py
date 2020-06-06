@@ -1,3 +1,5 @@
+"""Contains the BaseChecker to be used as base for all checkers."""
+
 import argparse
 import datetime
 import json
@@ -61,7 +63,8 @@ global_db_cache: Dict[str, Union[StoredDict, NoSqlDict]] = {}
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     """
-    Returns the parsed argparser args.
+    Return the parsed argparser args.
+
     Args look like this:
     [
         "StoreFlag|RetrieveFlag|StoreNoise|RetrieveNoise|Havoc", [Task type]
@@ -72,6 +75,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         "$MaxRunningTime",
         "$CallIdx" [index of this task (for each type) in the current round]
     ]
+
     :param argv: argv. Custom argvs. Will default to sys.argv if not provided.
     :return: args object
     """
@@ -193,6 +197,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
 class _CheckerMeta(ABCMeta):
     """
     Some python magic going on right here.
+
     Each time we subclass BaseChecker, this __init__ is called.
     ABCMeta is used as superclass instead of type, such that BaseChecker is declared abstract -> needs to be overridden.
     """
@@ -202,6 +207,7 @@ class _CheckerMeta(ABCMeta):
     ):
         """
         Called whenever this class is subclassed.
+
         :param name: The name of the new class
         :param bases: Bases classes this class inherits from.
         :param clsdict: Contents of this class (.__dict__)
@@ -214,6 +220,7 @@ class _CheckerMeta(ABCMeta):
 class BaseChecker(metaclass=_CheckerMeta):
     """
     All you base are belong to us. Also all your flags. And checker scripts.
+
     Override the methods given here, then simply init and .run().
     Magic.
     """
@@ -239,14 +246,26 @@ class BaseChecker(metaclass=_CheckerMeta):
         flag_idx: int = None,
         timeout: int = None,
         storage_dir: str = DB_DEFAULT_DIR,
-        log_endpoint: Optional[str] = None,
+        log_endpoint: Optional[str] = None,  # TODO: remove
         use_db_cache: bool = DB_GLOBAL_CACHE_SETTING,
         json_logging: bool = True,
     ) -> None:
         """
-        Inits the Checker, filling the params, according to:
-        :param: run_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
-        :param: method: The method to run
+        Init the Checker, fill the params.
+
+        :param request_dict: Dictionary containing the original request params
+        :param run_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
+        :param method: The method to run (e.g. getflag, putflag)
+        :param address: The address to target (e.g. team1.enowars.com)
+        :param team_name: The name of the team being targeted
+        :param team_id: The numerical ID of the team being targeted
+        :param round_id: The numerical round ID in which this checker is called
+        :param flag_round: The round in which the flag should be/was deployed
+        :param round_length: The length of a round in seconds
+        :param flag: The contents of the flag or noise
+        :param flag_idx: The index of the flag starting at 0, used for storing multiple flags per round
+        :param timeout: The timeout for the execution of this checker
+        :param storage_dir: The directory to store persistent data in (used by StoredDict)
         """
         # We import requests after startup global imports may deadlock, see
         # https://github.com/psf/requests/issues/2925
@@ -323,7 +342,8 @@ class BaseChecker(metaclass=_CheckerMeta):
 
     def _setup_logger(self) -> None:
         """
-        Sets up a logger usable from inside a checker using
+        Set up a logger usable from inside a checker using.
+
         self.debug, self.info, self.warning, self.error or self.logger
         A logger can have additional args as well as exc_info=ex to log an exception, stack_info=True to log trace.
         """
@@ -354,7 +374,8 @@ class BaseChecker(metaclass=_CheckerMeta):
     @property
     def noise(self) -> Optional[str]:
         """
-        Pretty similar to a flag, just in a different mode (storeNoise vs storeFlag)
+        Pretty similar to a flag, just in a different mode (storeNoise vs storeFlag).
+
         :return: The noise
         """
         return self.flag
@@ -362,7 +383,8 @@ class BaseChecker(metaclass=_CheckerMeta):
     @property
     def time_running(self) -> float:
         """
-        How long this checker has been running
+        How long this checker has been running for.
+
         :return: time this checker has been running for
         """
         return (datetime.datetime.now() - self.time_started_at).total_seconds()
@@ -370,8 +392,11 @@ class BaseChecker(metaclass=_CheckerMeta):
     @property
     def time_remaining(self) -> int:
         """
-        Returns a remaining time that is save to be used as timeout (includes a buffer of TIME_BUFFER seconds)
-        :return: A save number of seconds that may still be used
+        Return a remaining time that is safe to be used as timeout.
+
+        Includes a buffer of TIME_BUFFER seconds.
+
+        :return: A safe number of seconds that may still be used
         """
         return max(
             int(
@@ -389,12 +414,12 @@ class BaseChecker(metaclass=_CheckerMeta):
 
     def run(self, method: Optional[Union[str, Callable]] = None) -> Result:
         """
-        Executes the checker and catches errors along the way.
+        Execute the checker and catch errors along the way.
+
         :param method: When calling run, you may call a different method than the one passed on Checker creation
                         using this optional param.
         :return: the Result code as int, as per the Result enum.
         """
-
         try:
             if callable(method):
                 ret = method()
@@ -508,12 +533,14 @@ class BaseChecker(metaclass=_CheckerMeta):
     @abstractmethod
     def putflag(self) -> Optional[Result]:
         """
-        This method stores a flag in the service.
+        Store a flag in the service.
+
         In case multiple flags are provided, self.flag_idx gives the appropriate index.
         The flag itself can be retrieved from self.flag.
         On error, raise an Eno Exception.
-        :raises EnoException on error
-        :return this function can return a result if it wants
+
+        :raises: EnoException on error
+        :return: this function can return a result if it wants
                 if nothing is returned, the service status is considered okay.
                 the preferred way to report errors in the service is by raising an appropriate enoexception
         """
@@ -522,11 +549,13 @@ class BaseChecker(metaclass=_CheckerMeta):
     @abstractmethod
     def getflag(self) -> Optional[Result]:
         """
-        This method retrieves a flag from the service.
+        Retrieve a flag from the service.
+
         Use self.flag to get the flag that needs to be recovered and self.roudn to get the round the flag was placed in.
         On error, raise an EnoException.
-        :raises EnoException on error
-        :return this function can return a result if it wants
+
+        :raises: EnoException on error
+        :return: this function can return a result if it wants
                 if nothing is returned, the service status is considered okay.
                 the preferred way to report errors in the service is by raising an appropriate enoexception
         """
@@ -535,12 +564,15 @@ class BaseChecker(metaclass=_CheckerMeta):
     @abstractmethod
     def putnoise(self) -> Optional[Result]:
         """
-        This method stores noise in the service. The noise should later be recoverable.
+        Store noise in the service.
+
+        The noise should later be recoverable.
         The difference between noise and flag is that noise does not have to remain secret for other teams.
         This method can be called many times per round. Check how often using self.flag_idx.
         On error, raise an EnoException.
-        :raises EnoException on error
-        :return this function can return a result if it wants
+
+        :raises: EnoException on error
+        :return: this function can return a result if it wants
                 if nothing is returned, the service status is considered okay.
                 the preferred way to report errors in the service is by raising an appropriate enoexception
         """
@@ -549,13 +581,15 @@ class BaseChecker(metaclass=_CheckerMeta):
     @abstractmethod
     def getnoise(self) -> Optional[Result]:
         """
-        This method retrieves noise in the service.
+        Retrieve noise in the service.
+
         The noise to be retrieved is inside self.flag
         The difference between noise and flag is, tht noise does not have to remain secret for other teams.
         This method can be called many times per round. Check how often using flag_idx.
         On error, raise an EnoException.
-        :raises EnoException on error
-        :return this function can return a result if it wants
+
+        :raises: EnoException on error
+        :return: this function can return a result if it wants
                 if nothing is returned, the service status is considered okay.
                 the preferred way to report errors in the service is by raising an appropriate enoexception
         """
@@ -564,10 +598,12 @@ class BaseChecker(metaclass=_CheckerMeta):
     @abstractmethod
     def havoc(self) -> Optional[Result]:
         """
-        This method unleashes havoc on the app -> Do whatever you must to prove the service still works. Or not.
+        Unleash havoc on the app -> Do whatever you must to prove the service still works. Or not.
+
         On error, raise an EnoException.
-        :raises EnoException on Error
-        :return This function can return a result if it wants
+
+        :raises: EnoException on Error
+        :return: This function can return a result if it wants
                 If nothing is returned, the service status is considered okay.
                 The preferred way to report Errors in the service is by raising an appropriate EnoException
         """
@@ -576,9 +612,12 @@ class BaseChecker(metaclass=_CheckerMeta):
     @abstractmethod
     def exploit(self) -> Optional[Result]:
         """
-        This method is strictly for testing purposes and will hopefully not be called during the actual CTF.
-        :raises EnoException on Error
-        :return This function can return a result if it wants
+        Use this method strictly for testing purposes.
+
+        Will hopefully not be called during the actual CTF.
+
+        :raises: EnoException on Error
+        :return: This function can return a result if it wants
                 If nothing is returned, the service status is considered okay.
                 The preferred way to report Errors in the service is by raising an appropriate EnoException
         """
@@ -589,9 +628,11 @@ class BaseChecker(metaclass=_CheckerMeta):
         self, name: str, ignore_locks: bool = False
     ) -> Union[NoSqlDict, StoredDict]:  # TODO: use a common supertype for all backends
         """
-        Get a (global) db by name
+        Get a (global) db by name.
+
         Subsequent calls will return the same db.
         Names can be anything, for example the team name, round numbers etc.
+
         :param name: The name of the DB
         :param ignore_locks: Should only be set if you're sure-ish keys are never shared between instances.
                 Manual locking ist still possible.
@@ -648,9 +689,11 @@ class BaseChecker(metaclass=_CheckerMeta):
         self,
     ) -> Union[NoSqlDict, StoredDict]:  # TODO: use a common supertype for all backends
         """
-        A global storage shared between all teams and rounds.
+        Get a global storage shared between all teams and rounds.
+
         Subsequent calls will return the same db.
         Prefer db_team_local or db_round_local
+
         :return: The global db
         """
         return self.db("global")
@@ -660,7 +703,8 @@ class BaseChecker(metaclass=_CheckerMeta):
         self,
     ) -> Union[NoSqlDict, StoredDict]:  # TODO: use a common supertype for all backends
         """
-        The database for the current team
+        Return the database for the current team.
+
         :return: The team local db
         """
         return self.get_team_db()
@@ -669,8 +713,10 @@ class BaseChecker(metaclass=_CheckerMeta):
         self, team: Optional[str] = None
     ) -> Union[NoSqlDict, StoredDict]:  # TODO: use a common supertype for all backends
         """
-        Returns the database for a specific team.
+        Return the database for a specific team.
+
         Subsequent calls will return the same db.
+
         :param team: Return a db for an other team. If none, the db for the local team will be returned.
         :return: The team local db
         """
@@ -704,8 +750,10 @@ class BaseChecker(metaclass=_CheckerMeta):
         timeout: Optional[int] = None,
     ) -> SimpleSocket:
         """
-        Opens a socket/telnet connection to the remote host.
+        Open a socket/telnet connection to the remote host.
+
         Use connect(..).get_socket() for the raw socket.
+
         :param host: the host to connect to (defaults to self.address)
         :param port: the port to connect to (defaults to self.port)
         :param timeout: timeout on connection (defaults to self.timeout)
@@ -731,7 +779,8 @@ class BaseChecker(metaclass=_CheckerMeta):
     @property
     def http_useragent(self) -> str:
         """
-        The useragent for http(s) requests
+        Return the useragent for http(s) requests.
+
         :return: the current useragent
         """
         return self.http_session.headers["User-Agent"]
@@ -739,17 +788,21 @@ class BaseChecker(metaclass=_CheckerMeta):
     @http_useragent.setter
     def http_useragent(self, useragent: str) -> None:
         """
-        Sets the useragent for http requests.
+        Set the useragent for http requests.
+
         Randomize using http_useragent_randomize()
+
         :param useragent: the useragent
         """
         self.http_session.headers["User-Agent"] = useragent
 
     def http_useragent_randomize(self):
         """
-        Choses a new random http useragent.
+        Choose a new random http useragent.
+
         Note that http requests will be initialized with a random user agent already.
         To retrieve a random useragent without setting it, use random instead.
+
         :return: the new useragent
         """
         new_agent = random_useragent()
@@ -767,8 +820,10 @@ class BaseChecker(metaclass=_CheckerMeta):
         **kwargs,
     ) -> "requests.Response":
         """
-        Performs a (http) requests.post to the current host.
+        Perform a (http) requests.post to the current host.
+
         Caches cookies in self.http_session
+
         :param params: The parameter
         :param route: The route
         :param port: The remote port in case it has not been specified at creation
@@ -793,8 +848,10 @@ class BaseChecker(metaclass=_CheckerMeta):
         **kwargs,
     ) -> "requests.Response":
         """
-        Performs a (http) requests.get to the current host.
+        Perform a (http) requests.get to the current host.
+
         Caches cookies in self.http_session
+
         :param params: The parameter
         :param route: The route
         :param port: The remote port in case it has not been specified at creation
@@ -820,8 +877,10 @@ class BaseChecker(metaclass=_CheckerMeta):
         **kwargs,
     ) -> "requests.Response":
         """
-        Performs an http request (requests lib) to the current host.
+        Perform an http request (requests lib) to the current host.
+
         Caches cookies in self.http_session
+
         :param method: The request method
         :param params: The parameter
         :param route: The route
@@ -852,7 +911,8 @@ def run(
     checker_cls: Type[BaseChecker], args: Optional[Sequence[str]] = None,
 ) -> Optional[Result]:
     """
-    # Runs a checker, either from cmdline or as uwsgi script.
+    Run a checker, either from cmdline or as uwsgi script.
+
     :param checker: The checker (subclass of basechecker) to run
     :param force_service: if True (non-default), the server will skip arg parsing and immediately spawn the web service.
     :param args: optional parameter, providing parameters

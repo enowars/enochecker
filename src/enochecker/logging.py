@@ -1,3 +1,5 @@
+"""Utilities for sending log messages to a central ELK."""
+
 import datetime
 import json
 import logging
@@ -11,7 +13,14 @@ if TYPE_CHECKING:
     from .enochecker import BaseChecker
 
 
-def exception_to_string(excp):
+def exception_to_string(excp: Exception) -> str:
+    """
+    Format an exception as a string.
+
+    Limits the length of the traceback to 3.
+    :param ecxp: the exception to format
+    :return: The formatted string
+    """
     stack = traceback.extract_stack()[:-3] + traceback.extract_tb(
         excp.__traceback__
     )  # add limit=??
@@ -20,6 +29,8 @@ def exception_to_string(excp):
 
 
 class ELKFormatter(logging.Formatter):
+    """Format log messages for a central ELK."""
+
     def __init__(
         self,
         checker: "BaseChecker",
@@ -27,22 +38,34 @@ class ELKFormatter(logging.Formatter):
         datefmt: str = "%Y-%m-%dT%H:%M:%S%z",
         style: str = "%",
     ) -> None:
+        """
+        Initialize a new formatter.
+
+        :param checker: The checker instance to which this formatter belongs, needed to include information about the service in the messages.
+        :param fmt: format string passed to :class:`logging.Formatter`
+        :param datefmt: date format string passed to :class:`logging.Formatter`
+        :param style: style string passed to :class:`logging.Formatter`
+        """
         super().__init__(fmt, datefmt, style)
         self.checker: "BaseChecker" = checker
 
-    def format(self, record):
-        record.stack = self.formatStack(record.stack_info)
+    def format(self, record: LogRecord) -> str:
+        """
+        Format a LogRecord as a string.
+
+        :param record: the record to format
+        :return: the formatted string
+        """
         record.asctime = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
         message = record.getMessage()
         if record.exc_info:
             eno = record.exc_info
-            stacktrace = "".join(
-                traceback.format_exception(None, eno, eno.__traceback__)
-            )
+            stacktrace = "".join(traceback.format_exception(None, eno[1], eno[2]))
             message += f" excp: {stacktrace}"
         if record.stack_info:
-            message += f" trace: {record.stack}"
+            stack = self.formatStack(record.stack_info)
+            message += f" trace: {stack}"
 
         log_output = {
             "tool": type(self.checker).__name__,
@@ -70,11 +93,14 @@ class ELKFormatter(logging.Formatter):
 class RestLogHandler(logging.Handler):
     """
     Simple handler class to send Checker logs off to the logging backend Service.
+
+    TODO: check if this is deprecated (see issue #44)
     """
 
     def __init__(self, checker: "BaseChecker", level: int = logging.DEBUG) -> None:
         """
         Create a new handler.
+
         :param checker: The checker to use
         :param level: the Level
         """

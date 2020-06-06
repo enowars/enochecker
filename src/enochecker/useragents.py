@@ -1,3 +1,5 @@
+"""Collection of random usernames to make fingerprinting checker traffic harder."""
+
 from random import sample
 from typing import List
 
@@ -94,7 +96,8 @@ useragents: List[str] = [
 
 def random_useragent() -> str:
     """
-    Returns a random useragent
+    Return a random useragent.
+
     :return: A seemingly valid useragent.
     """
     return sample(useragents, 1)[0]
