@@ -15,6 +15,11 @@ class ExampleChecker(BaseChecker):
     When using an HTTP client (requests) or a plain TCP connection (telnetlib) use the
     built-in functions of the BaseChecker that include some basic error-handling.
 
+    https://enowars.github.io/enochecker/enochecker.html#enochecker.enochecker.BaseChecker.connect
+    https://enowars.github.io/enochecker/enochecker.html#enochecker.enochecker.BaseChecker.http
+    https://enowars.github.io/enochecker/enochecker.html#enochecker.enochecker.BaseChecker.http_get
+    https://enowars.github.io/enochecker/enochecker.html#enochecker.enochecker.BaseChecker.http_post
+
     The full documentation is available at https://enowars.github.io/enochecker/
     """
 
@@ -43,7 +48,6 @@ class ExampleChecker(BaseChecker):
             "username": secrets.token_urlsafe(12),
             "password": secrets.token_urlsafe(16),
         }
-        self.team_db[self.flag] = credentials
         return credentials
 
     def putflag(self) -> None:
@@ -56,12 +60,14 @@ class ExampleChecker(BaseChecker):
         """
         if self.flag_idx == 0:
             credentials = self.generate_credentials()
+            self.team_db[self.flag] = credentials
             self.register_and_login(credentials)
 
             res = self.http_post("/notes", json={"note": self.flag})
             assert_equals(res.status_code, 200)
         elif self.flag_idx == 1:
             credentials = self.generate_credentials()
+            self.team_db[self.flag] = credentials
             self.register_and_login(credentials)
 
             res = self.http_post("/profile/status", json={"status": self.flag})
@@ -123,6 +129,7 @@ class ExampleChecker(BaseChecker):
         :raises EnoException on error
         """
         credentials = self.generate_credentials()
+        self.team_db[self.flag] = credentials
         self.register_and_login(credentials)
 
         category = secrets.choice(
