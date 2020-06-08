@@ -50,7 +50,7 @@ To access the development version, the library can be installed using pip/git, l
 `pip install git+https://github.com/enowars/enochecker`
 
 ## Launch Checker
-The goal is to have checkers launched via uSWGI and the Engine talking to it via http.
+The goal is to have checkers launched via gunicorn or uSWGI and the Engine talking to it via http.
 For testing, however, you can use the commandline instead:
 
 ```
