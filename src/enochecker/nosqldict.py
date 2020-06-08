@@ -41,14 +41,14 @@ def to_keyfmt(key: Any) -> str:
 
 def _try_n_times(func: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(func)
-    def try_n_times(*args: Any, **kwargs: Any) -> Any:
+    def try_n_times(self: "NoSqlDict", *args: Any, **kwargs: Any) -> Any:
         from pymongo.errors import PyMongoError
 
         for i in range(RETRY_COUNT):
             try:
-                return func(*args, **kwargs)
+                return func(self, *args, **kwargs)
             except PyMongoError as ex:
-                dictlogger.error("noSQLdict_Error, Try {}".format(str(i)), exc_info=ex)
+                self.logger.error("noSQLdict_Error, Try {}".format(str(i)), exc_info=ex)
                 if i == RETRY_COUNT:
                     raise
         assert False  # this should never happen
@@ -63,7 +63,12 @@ class NoSqlDict(MutableMapping):
 
     @classmethod
     def get_client(
-        cls, host: str, port: int, username: Optional[str], password: Optional[str]
+        cls,
+        host: str,
+        port: int,
+        username: Optional[str],
+        password: Optional[str],
+        logger: logging.Logger,
     ) -> "MongoClient":
         """
         Lazily try to get the mongo db connection or creates a new one.
@@ -90,7 +95,7 @@ class NoSqlDict(MutableMapping):
                 host=host, port=port, username=username, password=password
             )
             setattr(cls, mongo_name, mongo)
-        dictlogger.debug(
+        logger.debug(
             "MONGO CLIENT INITIALIZED for thread {}: {}".format(current_thread(), mongo)
         )
         return mongo
@@ -103,6 +108,7 @@ class NoSqlDict(MutableMapping):
         port: Union[int, str, None] = None,
         username: Optional[str] = None,
         password: Optional[str] = None,
+        logger: Optional[logging.Logger] = None,
         *args: Any,
         **kwargs: Any,
     ):
@@ -116,6 +122,11 @@ class NoSqlDict(MutableMapping):
         :param username: MongoDB username
         :param password: MongoDB password
         """
+        if logger:
+            self.logger = logger
+        else:
+            self.logger = dictlogger
+
         self.dict_name = base64ify(name, altchars=b"-_")
         self.checker_name = checker_name
         self.cache: Dict[Any, Any] = {}
@@ -126,9 +137,9 @@ class NoSqlDict(MutableMapping):
             port_ = int(port or DB_DEFAULT_PORT)
         username_: Optional[str] = username or DB_DEFAULT_USER
         password_: Optional[str] = password or DB_DEFAULT_PASS
-        self.db = self.get_client(host_, port_, username_, password_)[checker_name][
-            self.dict_name
-        ]
+        self.db = self.get_client(host_, port_, username_, password_, self.logger)[
+            checker_name
+        ][self.dict_name]
         try:
             self.db.index_information()["checker_key"]
         except KeyError:
@@ -186,7 +197,7 @@ class NoSqlDict(MutableMapping):
         result = self.db.find_one(to_extract)
 
         if print_result:
-            dictlogger.debug(result)
+            self.logger.debug(result)
 
         if result:
             self.cache[key] = result["value"]

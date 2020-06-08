@@ -627,8 +627,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         try:
             db = self._active_dbs[name]
-            # TODO: make the NoSQLDict use the checker's logger
-            db.logger = self.logger  # type: ignore
+            db.logger = self.logger
             # TODO: Settng a new Logger backend may throw logs in the wrong direction in a multithreaded environment!
             return db
         except KeyError:
@@ -655,6 +654,7 @@ class BaseChecker(metaclass=_CheckerMeta):
                     port=port,
                     username=username,
                     password=password,
+                    logger=self.logger,
                 )
             else:
                 self.debug(
