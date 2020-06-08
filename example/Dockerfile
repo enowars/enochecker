@@ -1,7 +1,7 @@
 FROM python:3.8
 LABEL maintainer="ENOFLAG <mail@enoflag.de>"
 
-# Install python3 and uswgi
+# Install python3
 RUN apt-get update
 RUN apt-get install -y git
 
