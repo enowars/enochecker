@@ -154,7 +154,7 @@ def base64ify(s: Union[str, bytes], altchars: Union[str, bytes] = None) -> str:
     :return: base64 representation
     """
     s = ensure_bytes(s)
-    if altchars != None:
+    if altchars:
         altchars = ensure_bytes(altchars)
         return base64.b64encode(s, altchars).decode("utf-8")
     else:
@@ -172,7 +172,7 @@ def debase64ify(
     :return: the decoded value
     """
     s = ensure_bytes(s)
-    if altchars != None:
+    if altchars:
         altchars = ensure_bytes(altchars)
         return base64.b64decode(s, altchars).decode("utf-8")
     else:

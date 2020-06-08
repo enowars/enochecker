@@ -4,6 +4,7 @@ from enochecker.utils import (
     assert_equals,
     assert_in,
     base64ify,
+    debase64ify,
     ensure_bytes,
     ensure_unicode,
     ensure_valid_filename,
@@ -118,3 +119,15 @@ def test_base64ify():
     assert base64ify(b"\xfftes\xee") == "/3Rlc+4="
     assert base64ify(b"\xfftes\xee", "_-") == "-3Rlc_4="
     assert base64ify(b"\xfftes\xee", "-_") == "_3Rlc-4="
+
+
+def test_debase64ify():
+    assert debase64ify(b"dGVzdA==") == "test"
+    assert debase64ify("dGVzdA==") == "test"
+
+    assert debase64ify("8J+dgQ==") == b"\xf0\x9f\x9d\x81".decode()
+    assert debase64ify("MdW/") == b"\x31\xd5\xbf".decode()
+    assert debase64ify("8J-dgQ==", "-_") == b"\xf0\x9f\x9d\x81".decode()
+    assert debase64ify("MdW_", "-_") == b"\x31\xd5\xbf".decode()
+    assert debase64ify("8J_dgQ==", "_-") == b"\xf0\x9f\x9d\x81".decode()
+    assert debase64ify("MdW-", "_-") == b"\x31\xd5\xbf".decode()
