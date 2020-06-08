@@ -25,7 +25,7 @@ from typing import (
 
 from .results import BrokenServiceException, OfflineException
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import requests
 
 PORT_MAX = 65535

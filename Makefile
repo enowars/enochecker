@@ -10,4 +10,5 @@ format:
 
 test:
 	pip install .
-	python -m pytest
+	coverage run --source=enochecker -m pytest
+	coverage report -m

@@ -11,7 +11,7 @@ from .logging import exception_to_string
 from .results import Result
 from .utils import snake_caseify
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from .enochecker import BaseChecker
 
 logging.basicConfig(level=logging.DEBUG)

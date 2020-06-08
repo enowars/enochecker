@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Optional, Union
 from . import utils
 from .utils import base64ify
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     # We do these things as late as possible to avoid strange deadlocks when forking in UWSGI
     from pymongo import MongoClient
 

@@ -35,7 +35,7 @@ from .storeddict import DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING, StoredDict
 from .useragents import random_useragent
 from .utils import SimpleSocket, snake_caseify
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     # The import might fail in UWSGI, see the comments below.
     import requests
 

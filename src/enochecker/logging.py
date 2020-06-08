@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 LOGGING_PREFIX = "##ENOLOGMESSAGE "
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from .enochecker import BaseChecker
 
 
