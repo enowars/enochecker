@@ -1,12 +1,44 @@
 #!/usr/bin/env python3
+import functools
 import sys
+import tempfile
 import time
 from logging import DEBUG
 
-import pytest
-
 import enochecker
-from enochecker import *
+import pytest
+from enochecker import (
+    CHECKER_METHODS,
+    BaseChecker,
+    BrokenServiceException,
+    OfflineException,
+    Result,
+    assert_equals,
+    assert_in,
+    ensure_bytes,
+    ensure_unicode,
+    parse_args,
+    readline_expect,
+    run,
+    serve_once,
+    snake_caseify,
+)
+
+STORAGE_DIR: str = "/tmp/enochecker_test"
+
+
+def temp_storage_dir(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        global STORAGE_DIR
+        try:
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                STORAGE_DIR = tmpdirname
+                return func(*args, **kwargs)
+        finally:
+            STORAGE_DIR = "/tmp/enochecker_test"
+
+    return wrapper
 
 
 class CheckerExampleImpl(BaseChecker):
@@ -25,7 +57,7 @@ class CheckerExampleImpl(BaseChecker):
         flag_round=None,
         round_length=300,
         flag_idx=None,
-        storage_dir=".data",
+        storage_dir=None,
         log_endpoint=None,
         use_db_cache=True,
         json_logging=True,
@@ -48,7 +80,7 @@ class CheckerExampleImpl(BaseChecker):
             flag_round=flag_round,
             round_length=round_length,
             flag_idx=flag_idx,
-            storage_dir=storage_dir,
+            storage_dir=storage_dir or STORAGE_DIR,
             use_db_cache=use_db_cache,
             json_logging=json_logging,
             round_id=round_id,
@@ -96,7 +128,7 @@ def test_assert_equals():
     with pytest.raises(BrokenServiceException):
         assert_equals(1, 2)
     assert_equals(1, 1)
-    assert_equals(u"test", b"test", autobyteify=True)
+    assert_equals("test", b"test", autobyteify=True)
     if "test" == b"test":  # We ignore unicode stuff for python2...
         return
     with pytest.raises(BrokenServiceException) as ex:
@@ -107,9 +139,9 @@ def test_assert_equals():
 def test_conversions():
     assert isinstance(ensure_bytes("test"), bytes)
     assert isinstance(ensure_bytes(b"test"), bytes)
-    assert isinstance(ensure_unicode("test"), type(u""))
-    assert isinstance(ensure_unicode(b"test"), type(u""))
-    assert ensure_unicode(ensure_bytes("test")) == u"test"
+    assert isinstance(ensure_unicode("test"), type(""))
+    assert isinstance(ensure_unicode(b"test"), type(""))
+    assert ensure_unicode(ensure_bytes("test")) == "test"
 
 
 def test_assert_in():
@@ -123,10 +155,11 @@ def test_snake_caseify():
     assert snake_caseify("ThisIsATest") == "this_is_a_test"
 
 
+@temp_storage_dir
 def test_dict():
-    db = enochecker.StoredDict(name="test")
+    db = enochecker.storeddict.StoredDict(name="test", base_path=STORAGE_DIR)
     with pytest.raises(KeyError):
-        test = db["THIS_KEY_WONT_EXIST"]
+        _ = db["THIS_KEY_WONT_EXIST"]
 
     db["test"] = "test"
     assert not db.is_locked("fun")
@@ -140,7 +173,7 @@ def test_dict():
     db.reload()
     assert db["test"] == "test"
 
-    db2 = enochecker.StoredDict(name="test")
+    db2 = enochecker.storeddict.StoredDict(name="test", base_path=STORAGE_DIR)
     assert db2["test"] == "test"
 
     assert len(db) > 0
@@ -180,7 +213,7 @@ def test_args():
         # "-p", "1337"
     ]
     args = parse_args(argv)
-    print(args)
+
     assert args.method == argv[1]
     assert args.address == argv[3]
     assert args.team_name == argv[5]
@@ -196,12 +229,13 @@ def test_args():
     # port should be specified in the basechecker as a constant, so this test isn't neccesary
 
 
+@temp_storage_dir
 def test_checker_connections():
     # TODO: Check timeouts?
     text = "ECHO :)"
-    port = serve_once(text, 9999)
+    _ = serve_once(text, 9999)
     checker = CheckerExampleImpl(
-        CHECKER_METHODS[0]
+        CHECKER_METHODS[0],
     )  # Conflict between logging and enochecker.logging because of wildcart import
     assert (
         checker.http_get("/").text == text
@@ -210,7 +244,7 @@ def test_checker_connections():
     # Give server time to shut down
     time.sleep(0.2)
 
-    port = serve_once(text, 9999)
+    _ = serve_once(text, 9999)
     checker = CheckerExampleImpl(CHECKER_METHODS[0])
     t = checker.connect()
     t.write(b"GET / HTTP/1.0\r\n\r\n")
@@ -218,22 +252,24 @@ def test_checker_connections():
     t.close()
 
 
+@temp_storage_dir
 def test_checker():
     flag = "ENOFLAG"
     noise = "buzzzz! :)"
 
     CheckerExampleImpl(method="putflag").run()
-    return
+
     assert CheckerExampleImpl().team_db["flag"] == flag
     CheckerExampleImpl(method="getflag", flag=flag).run()
 
-    CheckerExampleImpl(method="putflag", flag=noise).run()
+    CheckerExampleImpl(method="putnoise", flag=noise).run()
     assert CheckerExampleImpl().team_db["noise"] == noise
-    CheckerExampleImpl(method="getflag", flag=noise).run()
+    CheckerExampleImpl(method="getnoise", flag=noise).run()
 
     assert CheckerExampleImpl(method="havoc").run() == Result.OFFLINE
 
 
+@temp_storage_dir
 def test_useragents():
     flag = "ENOFLAG"
     checker = CheckerExampleImpl(method="putflag", flag=flag)
@@ -248,7 +284,7 @@ def test_useragents():
     assert first_agent != checker.http_useragent
 
 
-
+@temp_storage_dir
 def test_exceptionHandling(capsys):
     # CheckerExampleImpl(method="putflag", call_idx=2).run()
     run(CheckerExampleImpl, args=["run", "putflag", "-i", "2"])
