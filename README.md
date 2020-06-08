@@ -1,4 +1,4 @@
-# EnoChecker
+# EnoChecker [![PyPI version](https://badge.fury.io/py/enochecker.svg)](https://pypi.org/project/enochecker) [![Build Status](https://dev.azure.com/ENOFLAG/ENOWARS/_apis/build/status/enochecker%20CI?branchName=master)](https://dev.azure.com/ENOFLAG/ENOWARS/_build) ![](https://tokei.rs/b1/github/enowars/enochecker)
 
 This is the checker lib that shall be used by all checkers in ENOWARS3 and ENOWARS4.
 
