@@ -94,7 +94,7 @@ def ensure_unicode(obj: Union[bytes, str, Any]) -> str:
     :param obj: str or bytes (or anything else) to convert to string representation
     :return: the string representation of the object
     """
-    if str is None:
+    if obj is None:
         raise ValueError("Cannot stringify None")
     if isinstance(obj, bytes):
         return obj.decode("utf-8")
@@ -111,11 +111,12 @@ def ensure_valid_filename(s: str, min_length: int = 3) -> str:
     :param min_length: if the result is smaller than this, the method will fall back to base64.
     :return: all illegal chars stripped or base64ified if it gets too small
     """
-    orig = s
     s = str(s).strip().replace(" ", "_")
     s = re.sub(r"(?u)[^-\w.]", "", s)
-    if len(s) < min_length:
-        s = base64ify(orig, "+-")
+    if not s:
+        s = "_"
+    while len(s) < min_length:
+        s = base64ify(s, "+-")
     return s
 
 
