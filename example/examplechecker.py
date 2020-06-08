@@ -58,7 +58,7 @@ class ExampleChecker(BaseChecker):
             credentials = self.generate_credentials()
             self.register_and_login(credentials)
 
-            res = self.http_post("/notes", json={"note": self.flag,})
+            res = self.http_post("/notes", json={"note": self.flag})
             assert_equals(res.status_code, 200)
         elif self.flag_idx == 1:
             credentials = self.generate_credentials()
@@ -145,7 +145,7 @@ class ExampleChecker(BaseChecker):
 
         res = self.http_post(
             "/posts",
-            json={"content": self.noise, "category": category, "public": True,},
+            json={"content": self.noise, "category": category, "public": True},
         )
         assert_equals(res.status_code, 200)
 
@@ -160,7 +160,7 @@ class ExampleChecker(BaseChecker):
         """
         category = self.team_db[self.noise]
 
-        res = self.http_get("/posts", json={"category": category,})
+        res = self.http_get("/posts", json={"category": category})
         assert_equals(res.status_code, 200)
 
         try:
