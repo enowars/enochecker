@@ -419,32 +419,21 @@ class BaseChecker(metaclass=_CheckerMeta):
                 "Method {} not supported! Supported: {}".format(method, CHECKER_METHODS)
             )
 
-        ignore_run = False
+        # handle the cases where the original putflag/putnoise wasn't successful
         if method == "getflag":
             key = f"__Checker-internals-RESULT:putflag,{self.flag_round},{self.flag_idx}__"
-            if key not in self.team_db:
+            if key not in self.team_db or self.team_db[key] != "OK":
                 self.info(
                     f"original putflag did not return successfully -- ignoring getflag for flag_round:{self.flag_round}, index: {self.flag_idx}"
                 )
-                ignore_run = True
-
-            # ignore the case where putting the flag failed
-            ignore_run = "OK" != self.team_db[key]
-
+                return Result.OK
         elif method == "getnoise":
             key = f"__Checker-internals-RESULT:putnoise,{self.flag_round},{self.flag_idx}__"
-            if key not in self.team_db:
+            if key not in self.team_db or self.team_db[key] != "OK":
                 self.info(
                     f"original putnoise did not return successfully -- ignoring getnoise for flag_round:{self.flag_round}, index: {self.flag_idx}"
                 )
-                ignore_run = True
-
-            # ignore the case where putting the noise failed
-            ignore_run = "OK" != self.team_db[key]
-
-        if ignore_run:
-            self.debug("run ignored -- preemptively returned OK")
-            return Result.OK
+                return Result.OK
 
         return getattr(self, snake_caseify(method))()
 
