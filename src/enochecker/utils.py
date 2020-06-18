@@ -53,7 +53,7 @@ def assert_equals(
     o1: Any, o2: Any, message: Optional[str] = None, autobyteify: bool = False
 ) -> None:
     """
-    Raise an exception if o1 != o2.
+    Raise an BrokenServiceException if o1 != o2.
 
     :param o1: the first object
     :param o2: the second object
