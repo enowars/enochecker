@@ -37,7 +37,7 @@ utilslogger.setLevel(logging.DEBUG)
 
 def assert_in(o1: Any, o2: Any, message: Optional[str] = None) -> None:
     """
-    Raise an exception if o1 not in o2.
+    Raise a BrokenServiceException if o1 not in o2.
 
     :param o1: the object that should be in o2
     :param o2: the object to look in
@@ -53,7 +53,7 @@ def assert_equals(
     o1: Any, o2: Any, message: Optional[str] = None, autobyteify: bool = False
 ) -> None:
     """
-    Raise an BrokenServiceException if o1 != o2.
+    Raise a BrokenServiceException if o1 != o2.
 
     :param o1: the first object
     :param o2: the second object
