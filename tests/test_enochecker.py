@@ -266,7 +266,7 @@ def test_checker():
     assert CheckerExampleImpl().team_db["noise"] == noise
     CheckerExampleImpl(method="getnoise", flag=noise).run()
 
-    assert CheckerExampleImpl(method="havoc").run() == Result.OFFLINE
+    assert CheckerExampleImpl(method="havoc").run().result == Result.OFFLINE
 
 
 @temp_storage_dir

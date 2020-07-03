@@ -917,5 +917,5 @@ def run(
         checker_args = vars(parsed)
         del checker_args["runmode"]  # will always be 'run' at this point
         result = checker_cls(**vars(parsed)).run()
-        print("Checker run resulted in Result.{}".format(result.name))
+        print(f"Checker run resulted in Result. {result.result.name}")
         return result
