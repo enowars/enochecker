@@ -456,6 +456,7 @@ class BaseChecker(metaclass=_CheckerMeta):
                     self.debug("run ignored -- preemptively returned OK")
                     return Result.OK
 
+                # call the function with the name method ""
                 ret = getattr(self, snake_caseify(method))()
             if Result.is_valid(ret):
                 ret = Result(

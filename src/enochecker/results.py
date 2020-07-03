@@ -2,6 +2,8 @@
 
 from abc import ABC
 from enum import IntEnum
+from flask import jsonify, Response
+from typing import Dict, Any
 
 
 class Result(IntEnum):
@@ -22,6 +24,41 @@ class Result(IntEnum):
         :return: True, if value is part of this Enum
         """
         return any(value == item.value for item in cls)
+
+
+class CheckerResult():
+    def __init__(self, result: Result, message: str) -> None:
+        self.result = result
+        self.message = message
+
+    @staticmethod
+    def from_exception(e: Exception) -> 'CheckerResult':
+        """ Converts a given Exception to an extended CheckerResult including Message"""
+
+        message = str(e)
+
+        if isinstance(e, EnoException):
+            return CheckerResult(
+                result=e.result,
+                message=message
+            )
+
+        else:
+            return CheckerResult(
+                Result.INTERNAL_ERROR,
+                message
+            )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """ Returns a dictionary representation of a given CheckerResult """
+        return {
+            'result': self.result.name,
+            'message': self.message,
+        }
+
+    def jsonify(self) -> Response:
+        """ Converts a Checkerresult to a valid json response (hopefully) according to spec """
+        return jsonify(self.to_dict())
 
 
 class EnoException(Exception, ABC):
