@@ -63,6 +63,15 @@ class EnoException(Exception, ABC):
 
     result: Result = Result.INTERNAL_ERROR
 
+    def __init__(
+        self,
+        *args: Any,
+        scoreboard_message: Optional[str] = None,
+        **kwargs: Dict[Any, Any]
+    ):
+        super().__init__(*args)
+        self.message = scoreboard_message
+
 
 class BrokenServiceException(EnoException):
     """Indicates a broken Service."""
