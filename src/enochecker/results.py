@@ -2,8 +2,9 @@
 
 from abc import ABC
 from enum import IntEnum
-from flask import jsonify, Response
 from typing import Dict, Optional
+
+from flask import Response, jsonify
 
 
 class Result(IntEnum):
