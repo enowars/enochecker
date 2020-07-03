@@ -40,7 +40,8 @@ class CheckerResult:
         public_message isn't used anywhere yet"""
 
         if isinstance(e, EnoException):
-            return CheckerResult(result=e.result, message=e.message)
+            message = str(e)
+            return CheckerResult(result=e.result, message=message)
 
         else:
             return CheckerResult(Result.INTERNAL_ERROR, message=None)
