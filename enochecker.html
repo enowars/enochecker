@@ -682,10 +682,10 @@ the preferred way to report errors in the service is by raising an appropriate e
 using this optional param.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference internal" href="#enochecker.results.Result" title="enochecker.results.Result"><code class="xref py py-class docutils literal notranslate"><span class="pre">Result</span></code></a></p>
+<dd class="field-even"><p><a class="reference internal" href="#enochecker.results.CheckerResult" title="enochecker.results.CheckerResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">CheckerResult</span></code></a></p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the Result code as int, as per the Result enum.</p>
+<dd class="field-odd"><p>A CheckerResult as a representation of the CheckerResult response as definded in the Spec.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -777,7 +777,7 @@ using this optional param.</p>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#enochecker.results.Result" title="enochecker.results.Result"><code class="xref py py-class docutils literal notranslate"><span class="pre">Result</span></code></a>]</p>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#enochecker.results.CheckerResult" title="enochecker.results.CheckerResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">CheckerResult</span></code></a>]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Never returns.</p>
@@ -898,7 +898,7 @@ In the future changes to the DB might be cached until they are explicitly persis
 <p>Collection of Exception classes to signal the status of the service being checked.</p>
 <dl class="py exception">
 <dt id="enochecker.results.BrokenCheckerException">
-<em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">BrokenCheckerException</code><a class="headerlink" href="#enochecker.results.BrokenCheckerException" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">BrokenCheckerException</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">scoreboard_message</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.BrokenCheckerException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#enochecker.results.EnoException" title="enochecker.results.EnoException"><code class="xref py py-class docutils literal notranslate"><span class="pre">enochecker.results.EnoException</span></code></a></p>
 <p>Shouldn’t be raised ever since we catch all abstract Errors.</p>
 <p>Used internally if something goes horribly wrong.</p>
@@ -911,7 +911,7 @@ In the future changes to the DB might be cached until they are explicitly persis
 
 <dl class="py exception">
 <dt id="enochecker.results.BrokenServiceException">
-<em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">BrokenServiceException</code><a class="headerlink" href="#enochecker.results.BrokenServiceException" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">BrokenServiceException</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">scoreboard_message</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.BrokenServiceException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#enochecker.results.EnoException" title="enochecker.results.EnoException"><code class="xref py py-class docutils literal notranslate"><span class="pre">enochecker.results.EnoException</span></code></a></p>
 <p>Indicates a broken Service.</p>
 <dl class="py attribute">
@@ -921,9 +921,49 @@ In the future changes to the DB might be cached until they are explicitly persis
 
 </dd></dl>
 
+<dl class="py class">
+<dt id="enochecker.results.CheckerResult">
+<em class="property">class </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">CheckerResult</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">result</span></em>, <em class="sig-param"><span class="n">message</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.CheckerResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt id="enochecker.results.CheckerResult.from_exception">
+<em class="property">static </em><code class="sig-name descname">from_exception</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">e</span></em>, <em class="sig-param"><span class="n">public_message</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.CheckerResult.from_exception" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a given Exception to an extended CheckerResult including Message
+public_message isn’t used anywhere yet</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#enochecker.results.CheckerResult" title="enochecker.results.CheckerResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">CheckerResult</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="enochecker.results.CheckerResult.jsonify">
+<code class="sig-name descname">jsonify</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.CheckerResult.jsonify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a Checkerresult to a valid json response (hopefully) according to spec</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="enochecker.results.CheckerResult.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.CheckerResult.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dictionary representation of a given CheckerResult</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py exception">
 <dt id="enochecker.results.EnoException">
-<em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">EnoException</code><a class="headerlink" href="#enochecker.results.EnoException" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">EnoException</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">scoreboard_message</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.EnoException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
 <p>Base error including the Result. Raise a subclass of me once we know what to do.</p>
 <dl class="py attribute">
@@ -935,7 +975,7 @@ In the future changes to the DB might be cached until they are explicitly persis
 
 <dl class="py exception">
 <dt id="enochecker.results.OfflineException">
-<em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">OfflineException</code><a class="headerlink" href="#enochecker.results.OfflineException" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">OfflineException</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">scoreboard_message</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.OfflineException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#enochecker.results.EnoException" title="enochecker.results.EnoException"><code class="xref py py-class docutils literal notranslate"><span class="pre">enochecker.results.EnoException</span></code></a></p>
 <p>Service was not reachable (at least once) during our checks.</p>
 <dl class="py attribute">
