@@ -33,7 +33,9 @@ class CheckerResult:
         self.message = message
 
     @staticmethod
-    def from_exception(e: Exception, public_message: Optional[str] = None) -> "CheckerResult":
+    def from_exception(
+        e: Exception, public_message: Optional[str] = None
+    ) -> "CheckerResult":
         """ Converts a given Exception to an extended CheckerResult including Message
         public_message isn't used anywhere yet"""
 
@@ -60,7 +62,12 @@ class EnoException(Exception, ABC):
 
     result: Result = Result.INTERNAL_ERROR
 
-    def __init__(self, *args: Any, scoreboard_message: Optional[str] = None, **kwargs: Dict[Any, Any]):
+    def __init__(
+        self,
+        *args: Any,
+        scoreboard_message: Optional[str] = None,
+        **kwargs: Dict[Any, Any]
+    ):
         super().__init__(*args)
         self.message = scoreboard_message
 
