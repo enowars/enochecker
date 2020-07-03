@@ -27,33 +27,27 @@ class Result(IntEnum):
         return any(value == item.value for item in cls)
 
 
-class CheckerResult():
+class CheckerResult:
     def __init__(self, result: Result, message: Optional[str] = None) -> None:
         self.result = result
         self.message = message
 
     @staticmethod
-    def from_exception(e: Exception, public_message=None) -> 'CheckerResult':
+    def from_exception(e: Exception, public_message=None) -> "CheckerResult":
         """ Converts a given Exception to an extended CheckerResult including Message
         public_message isn't used anywhere yet"""
 
         if isinstance(e, EnoException):
-            return CheckerResult(
-                result=e.result,
-                message=e.message
-            )
+            return CheckerResult(result=e.result, message=e.message)
 
         else:
-            return CheckerResult(
-                Result.INTERNAL_ERROR,
-                message=None
-            )
+            return CheckerResult(Result.INTERNAL_ERROR, message=None)
 
     def to_dict(self) -> Dict[str, Optional[str]]:
         """ Returns a dictionary representation of a given CheckerResult """
         return {
-            'result': self.result.name,
-            'message': self.message,
+            "result": self.result.name,
+            "message": self.message,
         }
 
     def jsonify(self) -> Response:
