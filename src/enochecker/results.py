@@ -66,6 +66,7 @@ class EnoException(Exception, ABC):
     result: Result = Result.INTERNAL_ERROR
 
     def __init__(self, *args, scoreboard_message=None, **kwargs):
+        super(Exception).__init__(*args, **kwargs)
         self.message = scoreboard_message
 
 
