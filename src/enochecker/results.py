@@ -40,7 +40,8 @@ class CheckerResult:
         public_message isn't used anywhere yet"""
 
         if isinstance(e, EnoException):
-            return CheckerResult(result=e.result, message=e.message)
+            message = str(e)
+            return CheckerResult(result=e.result, message=message)
 
         else:
             return CheckerResult(Result.INTERNAL_ERROR, message=None)
@@ -61,15 +62,6 @@ class EnoException(Exception, ABC):
     """Base error including the Result. Raise a subclass of me once we know what to do."""
 
     result: Result = Result.INTERNAL_ERROR
-
-    def __init__(
-        self,
-        *args: Any,
-        scoreboard_message: Optional[str] = None,
-        **kwargs: Dict[Any, Any]
-    ):
-        super().__init__(*args)
-        self.message = scoreboard_message
 
 
 class BrokenServiceException(EnoException):
