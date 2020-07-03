@@ -77,9 +77,9 @@ function post(str) {
 
 function update_pending(){
     if (checker_pending_requests === 0) {
-    	document.getElementById("pending_para").textContent = ""
+        document.getElementById("pending_para").textContent = ""
     } else {
-    	document.getElementById("pending_para").textContent = checker_pending_requests.toString() + "Requests pending"
+        document.getElementById("pending_para").textContent = checker_pending_requests.toString() + "Requests pending"
     }
 }
 
@@ -248,15 +248,17 @@ def checker_routes(
             checker = checker_cls(request_dict=kwargs, **kwargs)
 
             checker.logger.info(request.json)
-            res = checker.run().name
+            res = checker.run()
 
-            req_json["result"] = res
+            req_json["result"] = res.result.name
+            req_json["message"] = res.message
             req_json = json.dumps(req_json)
 
             # checker.logger.info("Run resulted in {}: {}".format(res, request.json))
             checker.logger.info("{}".format(req_json))
 
-            return jsonify({"result": res})
+            return res.jsonify()
+
         except Exception as ex:
             print(ex)
             logger.error(
@@ -268,7 +270,7 @@ def checker_routes(
             return jsonify(
                 {
                     "result": Result.INTERNAL_ERROR.name,
-                    "message": str(ex),
+                    "message": "Critical checker error occured",
                     "traceback": exception_to_string(ex),
                 }
             )

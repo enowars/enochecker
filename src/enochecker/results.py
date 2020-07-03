@@ -2,6 +2,9 @@
 
 from abc import ABC
 from enum import IntEnum
+from typing import Any, Dict, Optional
+
+from flask import Response, jsonify
 
 
 class Result(IntEnum):
@@ -24,10 +27,49 @@ class Result(IntEnum):
         return any(value == item.value for item in cls)
 
 
+class CheckerResult:
+    def __init__(self, result: Result, message: Optional[str] = None) -> None:
+        self.result = result
+        self.message = message
+
+    @staticmethod
+    def from_exception(
+        e: Exception, public_message: Optional[str] = None
+    ) -> "CheckerResult":
+        """ Converts a given Exception to an extended CheckerResult including Message
+        public_message isn't used anywhere yet"""
+
+        if isinstance(e, EnoException):
+            return CheckerResult(result=e.result, message=e.message)
+
+        else:
+            return CheckerResult(Result.INTERNAL_ERROR, message=None)
+
+    def to_dict(self) -> Dict[str, Optional[str]]:
+        """ Returns a dictionary representation of a given CheckerResult """
+        return {
+            "result": self.result.name,
+            "message": self.message,
+        }
+
+    def jsonify(self) -> Response:
+        """ Converts a Checkerresult to a valid json response (hopefully) according to spec """
+        return jsonify(self.to_dict())
+
+
 class EnoException(Exception, ABC):
     """Base error including the Result. Raise a subclass of me once we know what to do."""
 
     result: Result = Result.INTERNAL_ERROR
+
+    def __init__(
+        self,
+        *args: Any,
+        scoreboard_message: Optional[str] = None,
+        **kwargs: Dict[Any, Any]
+    ):
+        super().__init__(*args)
+        self.message = scoreboard_message
 
 
 class BrokenServiceException(EnoException):
