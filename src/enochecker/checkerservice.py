@@ -77,9 +77,9 @@ function post(str) {
 
 function update_pending(){
     if (checker_pending_requests === 0) {
-    	document.getElementById("pending_para").textContent = ""
+        document.getElementById("pending_para").textContent = ""
     } else {
-    	document.getElementById("pending_para").textContent = checker_pending_requests.toString() + "Requests pending"
+        document.getElementById("pending_para").textContent = checker_pending_requests.toString() + "Requests pending"
     }
 }
 
