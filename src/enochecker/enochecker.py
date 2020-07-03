@@ -30,7 +30,7 @@ from flask import Flask
 from .checkerservice import CHECKER_METHODS, init_service
 from .logging import ELKFormatter
 from .nosqldict import NoSqlDict
-from .results import EnoException, Result
+from .results import EnoException, CheckerResult, Result
 from .storeddict import DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING, StoredDict
 from .useragents import random_useragent
 from .utils import SimpleSocket, snake_caseify
@@ -399,13 +399,13 @@ class BaseChecker(metaclass=_CheckerMeta):
 
     # ---- Basic checker functionality ---- #
 
-    def run(self, method: Optional[Union[str, Callable]] = None) -> Result:
+    def run(self, method: Optional[Union[str, Callable]] = None) -> CheckerResult:
         """
         Execute the checker and catch errors along the way.
 
         :param method: When calling run, you may call a different method than the one passed on Checker creation
                         using this optional param.
-        :return: the Result code as int, as per the Result enum.
+        :return: A CheckerResult as a representation of the CheckerResult response as definded in the Spec.
         """
         try:
             if callable(method):
@@ -454,7 +454,7 @@ class BaseChecker(metaclass=_CheckerMeta):
 
                 if ignore_run:
                     self.debug("run ignored -- preemptively returned OK")
-                    return Result.OK
+                    return CheckerResult(Result.OK)
 
                 # call the function with the name method ""
                 ret = getattr(self, snake_caseify(method))()
@@ -466,10 +466,10 @@ class BaseChecker(metaclass=_CheckerMeta):
                 self.team_db[
                     f"__Checker-internals-RESULT:{str(method)},{self.flag_round},{self.flag_idx}__"
                 ] = ret.name
-                return ret
+                return CheckerResult(ret)
             if ret is not None:
                 self.error("Illegal return value from {}: {}".format(self.method, ret))
-                return (
+                return CheckerResult(
                     Result.INTERNAL_ERROR
                 )  # , "Illegal return value from {}: {}".format(self.method, ret)
 
@@ -478,7 +478,7 @@ class BaseChecker(metaclass=_CheckerMeta):
             self.team_db[
                 f"__Checker-internals-RESULT:{str(method)},{self.flag_round},{self.flag_idx}__"
             ] = "OK"
-            return Result.OK
+            return CheckerResult(Result.OK, None)
 
         except EnoException as eno:
             stacktrace = "".join(
@@ -490,10 +490,13 @@ class BaseChecker(metaclass=_CheckerMeta):
                 ),
                 exc_info=eno,
             )
-            return Result(eno.result)  # , eno.message
+            return CheckerResult.from_exception(eno)  # , eno.message
         except self.requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
-            return Result.MUMBLE  # , "HTTP Error" #For now
+            return CheckerResult(
+                Result.MUMBLE,
+                "Service returned HTTP Error",
+            )
         except (
             self.requests.ConnectionError,  # requests
             self.requests.exceptions.ConnectTimeout,  # requests
@@ -506,13 +509,13 @@ class BaseChecker(metaclass=_CheckerMeta):
             self.info(
                 "Error in connection to service occurred: {}\n".format(ex), exc_info=ex
             )
-            return Result.OFFLINE  # , ex.message
+            return CheckerResult(Result.OFFLINE, message="Error in connection to service occured")  # , ex.message
         except Exception as ex:
             stacktrace = "".join(traceback.format_exception(None, ex, ex.__traceback__))
             self.error(
                 "Unhandled checker error occurred: {}\n".format(stacktrace), exc_info=ex
             )
-            return Result.INTERNAL_ERROR  # , ex.message
+            return CheckerResult.from_exception(ex)  # , ex.message
         finally:
             for db in self._active_dbs.values():
                 # A bit of cleanup :)
@@ -897,7 +900,7 @@ class BaseChecker(metaclass=_CheckerMeta):
 
 def run(
     checker_cls: Type[BaseChecker], args: Optional[Sequence[str]] = None,
-) -> Optional[Result]:
+) -> Optional[CheckerResult]:
     """
     Run a checker, either from cmdline or as uwsgi script.
 
