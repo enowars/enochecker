@@ -34,7 +34,7 @@ class CheckerResult:
 
     @staticmethod
     def from_exception(
-        e: Exception, public_message: Optional[str] = None
+        e: Exception
     ) -> "CheckerResult":
         """ Converts a given Exception to an extended CheckerResult including Message
         public_message isn't used anywhere yet"""
@@ -67,10 +67,18 @@ class EnoException(Exception, ABC):
         self,
         *args: Any,
         scoreboard_message: Optional[str] = None,
+        internal_message: Optional[str] = None,
         **kwargs: Dict[Any, Any]
     ):
-        super().__init__(*args)
-        self.message = scoreboard_message
+        super().__init__(*args, **kwargs)
+        if scoreboard_message:
+            import warnings
+            warnings.warn(
+                "scoreboard_message is deprecated. Use the normal message.",
+                DeprecationWarning
+            )
+            self.message = scoreboard_message
+        self.internal_message = internal_message
 
 
 class BrokenServiceException(EnoException):

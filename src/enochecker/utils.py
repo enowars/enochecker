@@ -44,9 +44,10 @@ def assert_in(o1: Any, o2: Any, message: Optional[str] = None) -> None:
     :param message: An optional message that will be part of the error
     """
     if message is None:
-        message = "{} is not in {}".format(o1, o2)
+        message = "Did not receive expected response"
+    internal_message = "{} is not in {}".format(o1, o2)
     if not o2 or o1 not in o2:
-        raise BrokenServiceException(message)
+        raise BrokenServiceException(message, internal_message=internal_message)
 
 
 def assert_equals(
@@ -61,12 +62,13 @@ def assert_equals(
     :param autobyteify: will call ensure_bytes on both parameters.
     """
     if message is None:
-        message = "{} is not equal to {}".format(o1, o2)
+        message = "Did not receive expected response"
+    internal_message = "{} is not equal to {}".format(o1, o2)
     if autobyteify:
         o1 = ensure_bytes(o1)
         o2 = ensure_bytes(o2)
     if o1 != o2:
-        raise BrokenServiceException(message)
+        raise BrokenServiceException(message, internal_message=internal_message)
 
 
 def ensure_bytes(obj: Union[bytes, str, Any]) -> bytes:

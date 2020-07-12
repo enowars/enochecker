@@ -491,7 +491,14 @@ class BaseChecker(metaclass=_CheckerMeta):
                 ),
                 exc_info=eno,
             )
-            return CheckerResult.from_exception(eno)  # , eno.message
+
+            if self.flag in eno.message:
+                self.error(f"EnoMessage contained flag! (Exception was {eno}")
+                eno.message = None
+            if eno.internal_message:
+                self.info(f"Internal info for return: {eno.internal_message}")
+
+            return CheckerResult.from_exception(eno)
         except self.requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
             return CheckerResult(Result.MUMBLE, "Service returned HTTP Error", )
@@ -508,7 +515,7 @@ class BaseChecker(metaclass=_CheckerMeta):
                 "Error in connection to service occurred: {}\n".format(ex), exc_info=ex
             )
             return CheckerResult(
-                Result.OFFLINE, message="Error in connection to service occured"
+                Result.OFFLINE, message="Error in connection to service occurred"
             )  # , ex.message
         except Exception as ex:
             stacktrace = "".join(traceback.format_exception(None, ex, ex.__traceback__))
