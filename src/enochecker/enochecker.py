@@ -291,7 +291,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.flag_round: Optional[int] = flag_round
         self.round_length: int = round_length
         self.flag: Optional[str] = flag
-        self.timeout: Optional[int] = timeout
+        self.timeout: Optional[int] = timeout // 1000
 
         self.flag_idx: Optional[int] = flag_idx
 

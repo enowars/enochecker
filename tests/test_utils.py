@@ -1,4 +1,5 @@
 import pytest
+
 from enochecker import BrokenServiceException
 from enochecker.utils import (
     assert_equals,
