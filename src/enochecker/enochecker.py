@@ -750,7 +750,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         :return: A connected Telnet instance
         """
         if timeout:
-            timeout_fun: Callable[[], float] = lambda: cast(float, timeout/1000)
+            timeout_fun: Callable[[], float] = lambda: cast(float, timeout / 1000)
         else:
             timeout = self.time_remaining / 2000
             timeout_fun = lambda: self.time_remaining / 2000
@@ -763,7 +763,11 @@ class BaseChecker(metaclass=_CheckerMeta):
             "Opening socket to {}:{} (timeout {} ms).".format(host, port, timeout)
         )
         return SimpleSocket(
-            host, port, timeout=timeout/1000, logger=self.logger, timeout_fun=timeout_fun
+            host,
+            port,
+            timeout=timeout / 1000,
+            logger=self.logger,
+            timeout_fun=timeout_fun,
         )
 
     @property
@@ -890,7 +894,7 @@ class BaseChecker(metaclass=_CheckerMeta):
             )
         )
         resp = self.http_session.request(
-            method, url, params=params, timeout=(timeout/1000), **kwargs
+            method, url, params=params, timeout=(timeout / 1000), **kwargs
         )
         if raise_http_errors:
             resp.raise_for_status()
