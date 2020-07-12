@@ -7,7 +7,6 @@ from logging import DEBUG
 
 import enochecker
 import pytest
-
 from enochecker import (
     CHECKER_METHODS,
     BaseChecker,
