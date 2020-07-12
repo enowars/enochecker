@@ -7,6 +7,7 @@ import logging
 import os
 import socket
 import sys
+import time
 import traceback
 import warnings
 from abc import ABCMeta, abstractmethod
@@ -30,7 +31,7 @@ from flask import Flask
 from .checkerservice import CHECKER_METHODS, init_service
 from .logging import ELKFormatter
 from .nosqldict import NoSqlDict
-from .results import CheckerResult, EnoException, Result
+from .results import CheckerResult, EnoException, Result, OfflineException
 from .storeddict import DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING, StoredDict
 from .useragents import random_useragent
 from .utils import SimpleSocket, snake_caseify
@@ -172,8 +173,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         type=int,
         default=0,
         help="Unique numerical index per round. Each id only occurs once and is tighly packed, "
-        "starting with 0. In a service supporting multiple flags, this would be used to "
-        "decide which flag to place.",
+             "starting with 0. In a service supporting multiple flags, this would be used to "
+             "decide which flag to place.",
     )
     runparser.add_argument(
         "-j",
@@ -195,7 +196,7 @@ class _CheckerMeta(ABCMeta):
     """
 
     def __init__(
-        cls: "_CheckerMeta", name: str, bases: Tuple[type, ...], clsdict: Dict[Any, Any]
+            cls: "_CheckerMeta", name: str, bases: Tuple[type, ...], clsdict: Dict[Any, Any]
     ):
         """
         Called whenever this class is subclassed.
@@ -222,24 +223,24 @@ class BaseChecker(metaclass=_CheckerMeta):
     noise_count: int
 
     def __init__(
-        self,
-        request_dict: Dict[str, Any] = None,
-        run_id: int = None,
-        method: str = None,
-        address: str = None,
-        team: str = None,  # deprecated!
-        team_name: str = None,
-        team_id: int = None,
-        round: int = None,  # deprecated!
-        round_id: int = None,
-        flag_round: int = None,
-        round_length: int = 300,
-        flag: str = None,
-        flag_idx: int = None,
-        timeout: int = None,
-        storage_dir: str = DB_DEFAULT_DIR,
-        use_db_cache: bool = DB_GLOBAL_CACHE_SETTING,
-        json_logging: bool = True,
+            self,
+            request_dict: Dict[str, Any] = None,
+            run_id: int = None,
+            method: str = None,
+            address: str = None,
+            team: str = None,  # deprecated!
+            team_name: str = None,
+            team_id: int = None,
+            round: int = None,  # deprecated!
+            round_id: int = None,
+            flag_round: int = None,
+            round_length: int = 300,
+            flag: str = None,
+            flag_idx: int = None,
+            timeout: int = None,
+            storage_dir: str = DB_DEFAULT_DIR,
+            use_db_cache: bool = DB_GLOBAL_CACHE_SETTING,
+            json_logging: bool = True,
     ) -> None:
         """
         Init the Checker, fill the params.
@@ -424,10 +425,10 @@ class BaseChecker(metaclass=_CheckerMeta):
                 if method == "getflag":
                     try:
                         ignore_run = not (
-                            "OK"
-                            == self.team_db[
-                                f"__Checker-internals-RESULT:putflag,{self.flag_round},{self.flag_idx}__"
-                            ]
+                                "OK"
+                                == self.team_db[
+                                    f"__Checker-internals-RESULT:putflag,{self.flag_round},{self.flag_idx}__"
+                                ]
                         )
 
                     except KeyError:
@@ -440,10 +441,10 @@ class BaseChecker(metaclass=_CheckerMeta):
                     try:
 
                         ignore_run = not (
-                            "OK"
-                            == self.team_db[
-                                f"__Checker-internals-RESULT:putnoise,{self.flag_round},{self.flag_idx}__"
-                            ]
+                                "OK"
+                                == self.team_db[
+                                    f"__Checker-internals-RESULT:putnoise,{self.flag_round},{self.flag_idx}__"
+                                ]
                         )
 
                     except KeyError:
@@ -493,15 +494,15 @@ class BaseChecker(metaclass=_CheckerMeta):
             return CheckerResult.from_exception(eno)  # , eno.message
         except self.requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
-            return CheckerResult(Result.MUMBLE, "Service returned HTTP Error",)
+            return CheckerResult(Result.MUMBLE, "Service returned HTTP Error", )
         except (
-            self.requests.ConnectionError,  # requests
-            self.requests.exceptions.ConnectTimeout,  # requests
-            TimeoutError,
-            socket.timeout,
-            ConnectionError,
-            OSError,
-            ConnectionAbortedError,
+                self.requests.ConnectionError,  # requests
+                self.requests.exceptions.ConnectTimeout,  # requests
+                TimeoutError,
+                socket.timeout,
+                ConnectionError,
+                OSError,
+                ConnectionAbortedError,
         ) as ex:
             self.info(
                 "Error in connection to service occurred: {}\n".format(ex), exc_info=ex
@@ -615,7 +616,7 @@ class BaseChecker(metaclass=_CheckerMeta):
 
     # ---- DB specific methods ---- #
     def db(
-        self, name: str, ignore_locks: bool = False
+            self, name: str, ignore_locks: bool = False
     ) -> Union[NoSqlDict, StoredDict]:  # TODO: use a common supertype for all backends
         """
         Get a (global) db by name.
@@ -676,7 +677,7 @@ class BaseChecker(metaclass=_CheckerMeta):
 
     @property
     def global_db(
-        self,
+            self,
     ) -> Union[NoSqlDict, StoredDict]:  # TODO: use a common supertype for all backends
         """
         Get a global storage shared between all teams and rounds.
@@ -690,7 +691,7 @@ class BaseChecker(metaclass=_CheckerMeta):
 
     @property
     def team_db(
-        self,
+            self,
     ) -> Union[NoSqlDict, StoredDict]:  # TODO: use a common supertype for all backends
         """
         Return the database for the current team.
@@ -700,7 +701,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         return self.get_team_db()
 
     def get_team_db(
-        self, team: Optional[str] = None
+            self, team: Optional[str] = None
     ) -> Union[NoSqlDict, StoredDict]:  # TODO: use a common supertype for all backends
         """
         Return the database for a specific team.
@@ -715,7 +716,7 @@ class BaseChecker(metaclass=_CheckerMeta):
 
     # ---- Networking specific methods ---- #
     def _sanitize_url(
-        self, route: str, port: Optional[int] = None, scheme: Optional[str] = None
+            self, route: str, port: Optional[int] = None, scheme: Optional[str] = None
     ) -> str:
         if port is None:
             port = self.port
@@ -734,10 +735,11 @@ class BaseChecker(metaclass=_CheckerMeta):
         return url._replace(netloc=netloc).geturl()
 
     def connect(
-        self,
-        host: Optional[str] = None,
-        port: Optional[int] = None,
-        timeout: Optional[int] = None,
+            self,
+            host: Optional[str] = None,
+            port: Optional[int] = None,
+            timeout: Optional[int] = None,
+            retries: Optional[int] = 1,
     ) -> SimpleSocket:
         """
         Open a socket/telnet connection to the remote host.
@@ -747,13 +749,21 @@ class BaseChecker(metaclass=_CheckerMeta):
         :param host: the host to connect to (defaults to self.address)
         :param port: the port to connect to (defaults to self.port)
         :param timeout: timeout on connection (defaults to self.timeout)
+        :param retries: how often establishing the connection should be retries
         :return: A connected Telnet instance
         """
         if timeout:
             timeout_fun: Callable[[], int] = lambda: cast(int, timeout)
         else:
             timeout = self.time_remaining // 2
-            timeout_fun = lambda: self.time_remaining // 2
+
+            # PEP8 wants this to be a function, not a lambda...
+            def timeout_fun():
+                return self.time_remaining // 2
+
+        if retries < 1:
+            self.info(f"Max connection retries for {host}:{port} reached, giving up.")
+            raise OfflineException(f"Connection to service failed.")
 
         if port is None:
             port = self.port
@@ -762,9 +772,16 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.debug(
             "Opening socket to {}:{} (timeout {} secs).".format(host, port, timeout)
         )
-        return SimpleSocket(
-            host, port, timeout=timeout, logger=self.logger, timeout_fun=timeout_fun
-        )
+        try:
+            sock = SimpleSocket(
+                host, port, timeout=timeout, logger=self.logger, timeout_fun=timeout_fun
+            )
+            return sock
+        except Exception as ex:
+            self.debug(f"Connection to {host}:{port} failed, retrying... {ex}")
+
+        # Not putting this in the exception block - else the stack trace gets looong.
+        return self.connect(host, port, timeout, retries - 1)
 
     @property
     def http_useragent(self) -> str:
@@ -800,14 +817,14 @@ class BaseChecker(metaclass=_CheckerMeta):
         return new_agent
 
     def http_post(
-        self,
-        route: str = "/",
-        params: Any = None,
-        port: Optional[int] = None,
-        scheme: str = "http",
-        raise_http_errors: bool = False,
-        timeout: Optional[int] = None,
-        **kwargs: Any,
+            self,
+            route: str = "/",
+            params: Any = None,
+            port: Optional[int] = None,
+            scheme: str = "http",
+            raise_http_errors: bool = False,
+            timeout: Optional[int] = None,
+            **kwargs: Any,
     ) -> "requests.Response":
         """
         Perform a (http) requests.post to the current host.
@@ -828,14 +845,14 @@ class BaseChecker(metaclass=_CheckerMeta):
         )
 
     def http_get(
-        self,
-        route: str = "/",
-        params: Any = None,
-        port: Optional[int] = None,
-        scheme: str = "http",
-        raise_http_errors: bool = False,
-        timeout: Optional[int] = None,
-        **kwargs: Any,
+            self,
+            route: str = "/",
+            params: Any = None,
+            port: Optional[int] = None,
+            scheme: str = "http",
+            raise_http_errors: bool = False,
+            timeout: Optional[int] = None,
+            **kwargs: Any,
     ) -> "requests.Response":
         """
         Perform a (http) requests.get to the current host.
@@ -856,15 +873,15 @@ class BaseChecker(metaclass=_CheckerMeta):
         )
 
     def http(
-        self,
-        method: str,
-        route: str = "/",
-        params: Any = None,
-        port: Optional[int] = None,
-        scheme: str = "http",
-        raise_http_errors: bool = False,
-        timeout: Optional[int] = None,
-        **kwargs: Any,
+            self,
+            method: str,
+            route: str = "/",
+            params: Any = None,
+            port: Optional[int] = None,
+            scheme: str = "http",
+            raise_http_errors: bool = False,
+            timeout: Optional[int] = None,
+            **kwargs: Any,
     ) -> "requests.Response":
         """
         Perform an http request (requests lib) to the current host.
@@ -898,7 +915,7 @@ class BaseChecker(metaclass=_CheckerMeta):
 
 
 def run(
-    checker_cls: Type[BaseChecker], args: Optional[Sequence[str]] = None,
+        checker_cls: Type[BaseChecker], args: Optional[Sequence[str]] = None,
 ) -> Optional[CheckerResult]:
     """
     Run a checker, either from cmdline or as uwsgi script.
