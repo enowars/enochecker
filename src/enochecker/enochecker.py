@@ -777,7 +777,7 @@ class BaseChecker(metaclass=_CheckerMeta):
                 host, port, timeout=timeout, logger=self.logger, timeout_fun=timeout_fun
             )
             return sock
-        except Exception as ex:
+        except socket.error as ex:
             self.debug(f"Connection to {host}:{port} failed, retrying... {ex}")
 
         # Not putting this in the exception block - else the stack trace gets looong.
