@@ -5,9 +5,9 @@ import tempfile
 import time
 from logging import DEBUG
 
+import enochecker
 import pytest
 
-import enochecker
 from enochecker import (
     CHECKER_METHODS,
     BaseChecker,
