@@ -63,7 +63,7 @@ class CheckerExampleImpl(BaseChecker):
         json_logging=True,
         round_id=1,
         flag="ENOFLAG",
-        timeout=30,
+        timeout=30000,
         **kwargs,
     ):
         """
