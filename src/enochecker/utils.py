@@ -314,9 +314,9 @@ class SimpleSocket(telnetlib.Telnet):
         self,
         host: Optional[str] = None,
         port: int = 0,
-        timeout: int = socket._GLOBAL_DEFAULT_TIMEOUT,  # type: ignore
+        timeout: float = socket._GLOBAL_DEFAULT_TIMEOUT,  # type: ignore
         logger: Optional[logging.Logger] = None,
-        timeout_fun: Optional[Callable[[], int]] = None,
+        timeout_fun: Optional[Callable[[], float]] = None,
     ) -> None:
         """
         Initialize a new SimpleSocket Object.
@@ -333,10 +333,10 @@ class SimpleSocket(telnetlib.Telnet):
             self.logger = logger
         else:
             self.logger = utilslogger
-        self.timeout_fun: Optional[Callable[[], int]] = timeout_fun
+        self.timeout_fun: Optional[Callable[[], float]] = timeout_fun
 
     @property
-    def current_default_timeout(self) -> int:
+    def current_default_timeout(self) -> float:
         """
         Get the timeout default that should currently be used.
 
@@ -351,7 +351,7 @@ class SimpleSocket(telnetlib.Telnet):
         self,
         expected: Union[str, bytes],
         read_until: Union[str, bytes] = b"\n",
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
     ) -> bytes:
         """
         Read to newline (or read_until string) and assert the presence of a string in the response.
@@ -370,7 +370,7 @@ class SimpleSocket(telnetlib.Telnet):
     def expect(
         self,
         regexes: Sequence[Union[Pattern[bytes], bytes, str]],
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
     ) -> Tuple[int, Optional[Match[bytes]], bytes]:
         """
         Read until one from a list of a regular expressions matches.
@@ -395,7 +395,7 @@ class SimpleSocket(telnetlib.Telnet):
         return super().expect(list=regexes_, timeout=timeout)
 
     def read_until(
-        self, match: Union[bytes, str], timeout: Optional[int] = None
+        self, match: Union[bytes, str], timeout: Optional[float] = None
     ) -> bytes:
         """
         Read until the expected string has been seen, or a timeout is hit (default is default socket timeout).
