@@ -38,7 +38,10 @@ class CheckerResult:
         public_message isn't used anywhere yet"""
 
         if isinstance(e, EnoException):
-            message = str(e)
+            if e.message:
+                message = e.message
+            else:
+                message = str(e)
             return CheckerResult(result=e.result, message=message)
 
         else:
@@ -77,6 +80,8 @@ class EnoException(Exception, ABC):
                 DeprecationWarning,
             )
             self.message = scoreboard_message
+        else:
+            self.message = None
         self.internal_message = internal_message
 
 
