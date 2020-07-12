@@ -33,9 +33,7 @@ class CheckerResult:
         self.message = message
 
     @staticmethod
-    def from_exception(
-        e: Exception
-    ) -> "CheckerResult":
+    def from_exception(e: Exception) -> "CheckerResult":
         """ Converts a given Exception to an extended CheckerResult including Message
         public_message isn't used anywhere yet"""
 
@@ -73,9 +71,10 @@ class EnoException(Exception, ABC):
         super().__init__(*args, **kwargs)
         if scoreboard_message:
             import warnings
+
             warnings.warn(
                 "scoreboard_message is deprecated. Use the normal message.",
-                DeprecationWarning
+                DeprecationWarning,
             )
             self.message = scoreboard_message
         self.internal_message = internal_message
