@@ -772,10 +772,9 @@ class BaseChecker(metaclass=_CheckerMeta):
             "Opening socket to {}:{} (timeout {} secs).".format(host, port, timeout)
         )
         try:
-            sock = SimpleSocket(
+            return SimpleSocket(
                 host, port, timeout=timeout, logger=self.logger, timeout_fun=timeout_fun
             )
-            return sock
         except socket.error as ex:
             self.debug(f"Connection to {host}:{port} failed, retrying... {ex}")
 
