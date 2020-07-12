@@ -492,7 +492,11 @@ class BaseChecker(metaclass=_CheckerMeta):
                 exc_info=eno,
             )
 
-            if self.flag and self.flag in str(eno) or self.flag in eno.message:
+            if (
+                self.flag
+                and self.flag in str(eno)
+                or (eno.message and self.flag in eno.message)
+            ):
                 self.error(f"EnoMessage contained flag! (Exception was {eno}")
                 eno.message = "Something went wrong"
             if eno.internal_message:
