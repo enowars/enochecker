@@ -1,4 +1,3 @@
-import pytest
 from enochecker import BrokenServiceException
 from enochecker.utils import (
     assert_equals,
@@ -11,6 +10,8 @@ from enochecker.utils import (
     sha256ify,
     snake_caseify,
 )
+
+import pytest
 
 
 def test_assert_in():

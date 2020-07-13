@@ -15,7 +15,6 @@ from .utils import (  # the util stuff
     ensure_bytes,
     ensure_unicode,
     ensure_valid_filename,
-    readline_expect,
     serve_once,
     sha256ify,
     snake_caseify,

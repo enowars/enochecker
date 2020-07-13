@@ -6,7 +6,6 @@ import time
 from logging import DEBUG
 
 import enochecker
-import pytest
 from enochecker import (
     CHECKER_METHODS,
     BaseChecker,
@@ -23,6 +22,8 @@ from enochecker import (
     serve_once,
     snake_caseify,
 )
+
+import pytest
 
 STORAGE_DIR: str = "/tmp/enochecker_test"
 
