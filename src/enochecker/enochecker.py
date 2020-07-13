@@ -30,7 +30,7 @@ from flask import Flask
 from .checkerservice import CHECKER_METHODS, init_service
 from .logging import ELKFormatter
 from .nosqldict import NoSqlDict
-from .results import CheckerResult, EnoException, Result
+from .results import CheckerResult, EnoException, OfflineException, Result
 from .storeddict import DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING, StoredDict
 from .useragents import random_useragent
 from .utils import SimpleSocket, snake_caseify
@@ -739,6 +739,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         host: Optional[str] = None,
         port: Optional[int] = None,
         timeout: Optional[int] = None,
+        retries: int = 3,
     ) -> SimpleSocket:
         """
         Open a socket/telnet connection to the remote host.
@@ -750,22 +751,51 @@ class BaseChecker(metaclass=_CheckerMeta):
         :param timeout: timeout on connection (defaults to self.timeout)
         :return: A connected Telnet instance
         """
+
         if timeout:
-            timeout_fun: Callable[[], int] = lambda: cast(int, timeout)
+
+            def timeout_fun() -> int:
+                return cast(int, timeout)
+
         else:
-            timeout = self.time_remaining // 2
-            timeout_fun = lambda: self.time_remaining // 2
+
+            def timeout_fun() -> int:
+                return self.time_remaining // 2
 
         if port is None:
             port = self.port
         if host is None:
             host = self.address
-        self.debug(
-            "Opening socket to {}:{} (timeout {} secs).".format(host, port, timeout)
-        )
-        return SimpleSocket(
-            host, port, timeout=timeout, logger=self.logger, timeout_fun=timeout_fun
-        )
+
+        if retries < 0:
+            raise ValueError("Number of retries must be greater than zero.")
+
+        for i in range(0, retries + 1):  # + 1 for the initial try
+            try:
+
+                timeout = timeout_fun()
+                self.debug(
+                    "Opening socket to {}:{} (timeout {} secs).".format(
+                        host, port, timeout
+                    )
+                )
+                return SimpleSocket(
+                    host,
+                    port,
+                    timeout=timeout,
+                    logger=self.logger,
+                    timeout_fun=timeout_fun,
+                )
+
+            except Exception as e:
+                self.warning(
+                    f"Failed to establish connection to {host}:{port}, Try #{i+1} of {retries+1} ",
+                    exc_info=e,
+                )
+                continue
+
+        self.error(f"Failed to establish connection to {host}:{port}")
+        raise OfflineException("Failed establishing connection to service.")
 
     @property
     def http_useragent(self) -> str:
