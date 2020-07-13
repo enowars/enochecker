@@ -1269,7 +1269,7 @@ is closed and no cooked data is available.</p>
 
 <dl class="py method">
 <dt id="enochecker.utils.SimpleSocket.readline_expect">
-<code class="sig-name descname">readline_expect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">expected</span></em>, <em class="sig-param"><span class="n">read_until</span><span class="o">=</span><span class="default_value">b'\\n'</span></em>, <em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.SimpleSocket.readline_expect" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">readline_expect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">expected</span></em>, <em class="sig-param"><span class="n">read_until</span><span class="o">=</span><span class="default_value">b'\\n'</span></em>, <em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">exception_message</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.SimpleSocket.readline_expect" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read to newline (or read_until string) and assert the presence of a string in the response.</p>
 <p>Will raise an exception if failed.</p>
 <dl class="field-list simple">
@@ -1435,29 +1435,6 @@ May raise socket.error if the connection is closed.</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>all illegal chars stripped or base64ified if it gets too small</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="enochecker.utils.readline_expect">
-<code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">readline_expect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">telnet</span></em>, <em class="sig-param"><span class="n">expected</span></em>, <em class="sig-param"><span class="n">read_until</span><span class="o">=</span><span class="default_value">b'\\n'</span></em>, <em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">30</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.readline_expect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read to newline (or read_until string) and assert the presence of a string in the response.</p>
-<p>Will raise an exception if failed.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>telnet</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Telnet</span></code>, <a class="reference internal" href="#enochecker.utils.SimpleSocket" title="enochecker.utils.SimpleSocket"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimpleSocket</span></code></a>]) – Connected telnet instance (the result of self.telnet(..))</p></li>
-<li><p><strong>expected</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]) – the expected String to search for in the response</p></li>
-<li><p><strong>read_until</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]) – Which char to read until.</p></li>
-<li><p><strong>timeout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – a timeout</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the bytes read</p>
 </dd>
 </dl>
 </dd></dl>
