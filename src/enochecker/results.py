@@ -29,6 +29,10 @@ class Result(IntEnum):
 
 class CheckerResult:
     def __init__(self, result: Result, message: Optional[str] = None) -> None:
+
+        if message == "":
+            message = None
+
         self.result = result
         self.message = message
 
