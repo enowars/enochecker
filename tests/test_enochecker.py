@@ -18,7 +18,6 @@ from enochecker import (
     ensure_bytes,
     ensure_unicode,
     parse_args,
-    readline_expect,
     run,
     serve_once,
     snake_caseify,
@@ -248,7 +247,7 @@ def test_checker_connections():
     checker = CheckerExampleImpl(CHECKER_METHODS[0])
     t = checker.connect()
     t.write(b"GET / HTTP/1.0\r\n\r\n")
-    assert readline_expect(t, "HTTP")
+    assert t.readline_expect("HTTP")
     t.close()
 
 
