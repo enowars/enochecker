@@ -278,7 +278,7 @@ class BaseChecker(metaclass=_CheckerMeta):
                 DeprecationWarning,
             )
             team_name = team_name or team
-        self.team: Optional[str] = team
+        self.team: Optional[str] = team_name
         self.team_id: int = team_id or -1  # TODO: make required
         if round:
             warnings.warn(
@@ -400,9 +400,7 @@ class BaseChecker(metaclass=_CheckerMeta):
 
     # ---- Basic checker functionality ---- #
 
-    def _run_method(
-        self, method: Optional[Union[str, Callable]] = None
-    ) -> Optional[Result]:
+    def _run_method(self, method: Optional[str] = None) -> Optional[Result]:
         """
         Execute a checker method, pass all exceptions along to the calling function.
 
@@ -410,11 +408,6 @@ class BaseChecker(metaclass=_CheckerMeta):
                         using this optional param.
         :return: the Result code as int, as per the Result enum
         """
-        if callable(method):
-            return method()
-
-        if method is None:
-            method = self.method
         if method not in CHECKER_METHODS:
             raise ValueError(
                 "Method {} not supported! Supported: {}".format(method, CHECKER_METHODS)
@@ -438,7 +431,7 @@ class BaseChecker(metaclass=_CheckerMeta):
 
         return getattr(self, snake_caseify(method))()
 
-    def run(self, method: Optional[Union[str, Callable]] = None) -> CheckerResult:
+    def run(self, method: Optional[str] = None) -> CheckerResult:
         """
         Execute the checker and catch errors along the way.
 
@@ -446,6 +439,9 @@ class BaseChecker(metaclass=_CheckerMeta):
                         using this optional param.
         :return: A CheckerResult as a representation of the CheckerResult response as definded in the Spec.
         """
+        if method is None:
+            method = self.method
+
         try:
             ret = self._run_method(method)
             if ret is not None:
