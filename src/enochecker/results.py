@@ -2,7 +2,7 @@
 
 from abc import ABC
 from enum import IntEnum
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 from flask import Response, jsonify
 
