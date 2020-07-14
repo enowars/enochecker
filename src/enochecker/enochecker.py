@@ -30,7 +30,7 @@ from flask import Flask
 from .checkerservice import CHECKER_METHODS, init_service
 from .logging import ELKFormatter
 from .nosqldict import NoSqlDict
-from .results import EnoException, Result
+from .results import CheckerResult, EnoException, OfflineException, Result
 from .storeddict import DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING, StoredDict
 from .useragents import random_useragent
 from .utils import SimpleSocket, snake_caseify
@@ -291,7 +291,8 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.flag_round: Optional[int] = flag_round
         self.round_length: int = round_length
         self.flag: Optional[str] = flag
-        self.timeout: Optional[int] = timeout
+        if timeout:
+            self.timeout: Optional[int] = timeout // 1000
 
         self.flag_idx: Optional[int] = flag_idx
 
@@ -437,13 +438,13 @@ class BaseChecker(metaclass=_CheckerMeta):
 
         return getattr(self, snake_caseify(method))()
 
-    def run(self, method: Optional[Union[str, Callable]] = None) -> Result:
+    def run(self, method: Optional[Union[str, Callable]] = None) -> CheckerResult:
         """
         Execute the checker and catch errors along the way.
 
         :param method: When calling run, you may call a different method than the one passed on Checker creation
                         using this optional param.
-        :return: the Result code as int, as per the Result enum.
+        :return: A CheckerResult as a representation of the CheckerResult response as definded in the Spec.
         """
         try:
             ret = self._run_method(method)
@@ -452,7 +453,7 @@ class BaseChecker(metaclass=_CheckerMeta):
                     self.error(
                         "Illegal return value from {}: {}".format(self.method, ret)
                     )
-                    return (
+                    return CheckerResult(
                         Result.INTERNAL_ERROR
                     )  # , "Illegal return value from {}: {}".format(self.method, ret)
 
@@ -462,14 +463,15 @@ class BaseChecker(metaclass=_CheckerMeta):
                 self.team_db[
                     f"__Checker-internals-RESULT:{str(method)},{self.flag_round},{self.flag_idx}__"
                 ] = ret.name
-                return ret
+                return CheckerResult(ret)
 
             # Returned Normally
             self.info("Checker [{}] executed successfully!".format(self.method))
             self.team_db[
                 f"__Checker-internals-RESULT:{str(method)},{self.flag_round},{self.flag_idx}__"
             ] = "OK"
-            return Result.OK
+            return CheckerResult(Result.OK)
+
         except EnoException as eno:
             stacktrace = "".join(
                 traceback.format_exception(None, eno, eno.__traceback__)
@@ -480,10 +482,10 @@ class BaseChecker(metaclass=_CheckerMeta):
                 ),
                 exc_info=eno,
             )
-            return Result(eno.result)  # , eno.message
+            return CheckerResult.from_exception(eno)  # , eno.message
         except self.requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
-            return Result.MUMBLE  # , "HTTP Error" #For now
+            return CheckerResult(Result.MUMBLE, "Service returned HTTP Error",)
         except (
             self.requests.ConnectionError,  # requests
             self.requests.exceptions.ConnectTimeout,  # requests
@@ -496,13 +498,15 @@ class BaseChecker(metaclass=_CheckerMeta):
             self.info(
                 "Error in connection to service occurred: {}\n".format(ex), exc_info=ex
             )
-            return Result.OFFLINE  # , ex.message
+            return CheckerResult(
+                Result.OFFLINE, message="Error in connection to service occured"
+            )  # , ex.message
         except Exception as ex:
             stacktrace = "".join(traceback.format_exception(None, ex, ex.__traceback__))
             self.error(
                 "Unhandled checker error occurred: {}\n".format(stacktrace), exc_info=ex
             )
-            return Result.INTERNAL_ERROR  # , ex.message
+            return CheckerResult.from_exception(ex)  # , ex.message
         finally:
             for db in self._active_dbs.values():
                 # A bit of cleanup :)
@@ -726,6 +730,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         host: Optional[str] = None,
         port: Optional[int] = None,
         timeout: Optional[int] = None,
+        retries: int = 3,
     ) -> SimpleSocket:
         """
         Open a socket/telnet connection to the remote host.
@@ -737,22 +742,51 @@ class BaseChecker(metaclass=_CheckerMeta):
         :param timeout: timeout on connection (defaults to self.timeout)
         :return: A connected Telnet instance
         """
+
         if timeout:
-            timeout_fun: Callable[[], int] = lambda: cast(int, timeout)
+
+            def timeout_fun() -> int:
+                return cast(int, timeout)
+
         else:
-            timeout = self.time_remaining // 2
-            timeout_fun = lambda: self.time_remaining // 2
+
+            def timeout_fun() -> int:
+                return self.time_remaining // 2
 
         if port is None:
             port = self.port
         if host is None:
             host = self.address
-        self.debug(
-            "Opening socket to {}:{} (timeout {} secs).".format(host, port, timeout)
-        )
-        return SimpleSocket(
-            host, port, timeout=timeout, logger=self.logger, timeout_fun=timeout_fun
-        )
+
+        if retries < 0:
+            raise ValueError("Number of retries must be greater than zero.")
+
+        for i in range(0, retries + 1):  # + 1 for the initial try
+            try:
+
+                timeout = timeout_fun()
+                self.debug(
+                    "Opening socket to {}:{} (timeout {} secs).".format(
+                        host, port, timeout
+                    )
+                )
+                return SimpleSocket(
+                    host,
+                    port,
+                    timeout=timeout,
+                    logger=self.logger,
+                    timeout_fun=timeout_fun,
+                )
+
+            except Exception as e:
+                self.warning(
+                    f"Failed to establish connection to {host}:{port}, Try #{i+1} of {retries+1} ",
+                    exc_info=e,
+                )
+                continue
+
+        self.error(f"Failed to establish connection to {host}:{port}")
+        raise OfflineException("Failed establishing connection to service.")
 
     @property
     def http_useragent(self) -> str:
@@ -887,7 +921,7 @@ class BaseChecker(metaclass=_CheckerMeta):
 
 def run(
     checker_cls: Type[BaseChecker], args: Optional[Sequence[str]] = None,
-) -> Optional[Result]:
+) -> Optional[CheckerResult]:
     """
     Run a checker, either from cmdline or as uwsgi script.
 
@@ -904,5 +938,5 @@ def run(
         checker_args = vars(parsed)
         del checker_args["runmode"]  # will always be 'run' at this point
         result = checker_cls(**vars(parsed)).run()
-        print("Checker run resulted in Result.{}".format(result.name))
+        print(f"Checker run resulted in Result. {result.result.name}")
         return result
