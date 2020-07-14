@@ -30,7 +30,7 @@ from flask import Flask
 from .checkerservice import CHECKER_METHODS, init_service
 from .logging import ELKFormatter
 from .nosqldict import NoSqlDict
-from .results import CheckerResult, EnoException, Result
+from .results import CheckerResult, EnoException, Result, OfflineException
 from .storeddict import DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING, StoredDict
 from .useragents import random_useragent
 from .utils import SimpleSocket, snake_caseify
