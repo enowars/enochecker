@@ -270,7 +270,7 @@ def checker_routes(
             return jsonify(
                 {
                     "result": Result.INTERNAL_ERROR.name,
-                    "message": "Critical checker error occured",
+                    "message": "Critical checker error occurred",
                     "traceback": exception_to_string(ex),
                 }
             )

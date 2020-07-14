@@ -274,6 +274,7 @@ class StoredDict(MutableMapping):
             os.remove(self._dir_jsonname(key))
             if not locked:
                 self.release(key)
+            self.logger.debug(f"Deleted {key} from db {self.name}")
         self._to_delete = set()
 
         for key in self._dirties:
@@ -286,6 +287,7 @@ class StoredDict(MutableMapping):
             finally:
                 if not locked:
                     self.release(key)
+            self.logger.debug(f"Set {key} in db {self.name}")
         self._dirties = set()
 
     @_locked
