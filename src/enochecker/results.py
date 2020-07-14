@@ -72,7 +72,7 @@ class EnoException(Exception, ABC):
         self.internal_message: Optional[str] = internal_message
 
     def __str__(self) -> str:
-        return self.message
+        return self.message if self.message else ""
 
     def message_contains(self, flag: Optional[str]) -> bool:
         """" If the string is in the message """
