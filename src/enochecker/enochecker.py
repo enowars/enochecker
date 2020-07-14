@@ -746,6 +746,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         host: Optional[str] = None,
         port: Optional[int] = None,
         timeout: Optional[int] = None,
+        retries: int = 3,
     ) -> SimpleSocket:
         """
         Open a socket/telnet connection to the remote host.
@@ -755,6 +756,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         :param host: the host to connect to (defaults to self.address)
         :param port: the port to connect to (defaults to self.port)
         :param timeout: timeout on connection (defaults to self.timeout)
+        :param retries: the amount of times this socket connection should be retried
         :return: A connected Telnet instance
         """
 
