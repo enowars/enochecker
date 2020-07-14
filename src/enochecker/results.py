@@ -38,10 +38,7 @@ class CheckerResult:
         public_message isn't used anywhere yet"""
 
         if isinstance(e, EnoException):
-            if e.message:
-                message = e.message
-            else:
-                message = str(e)
+            message = str(e)
             return CheckerResult(result=e.result, message=message)
 
         else:
@@ -65,24 +62,21 @@ class EnoException(Exception, ABC):
     result: Result = Result.INTERNAL_ERROR
 
     def __init__(
-        self,
-        *args: Any,
-        scoreboard_message: Optional[str] = None,
-        internal_message: Optional[str] = None,
-        **kwargs: Dict[Any, Any]
+        self, message: Optional[str], internal_message: Optional[str] = None,
     ):
-        super().__init__(*args, **kwargs)
-        if scoreboard_message:
-            import warnings
+        self.message: Optional[str] = message
+        self.internal_message: Optional[str] = internal_message
 
-            warnings.warn(
-                "scoreboard_message is deprecated. Use the normal message.",
-                DeprecationWarning,
-            )
-            self.message = scoreboard_message
-        else:
-            self.message = None
-        self.internal_message = internal_message
+    def __str__(self) -> str:
+        return self.message
+
+    def message_contains(self, flag: Optional[str]) -> bool:
+        """" If the string is in the message """
+        if not self.message:
+            return False
+        if not flag:
+            return False
+        return flag in self.message
 
 
 class BrokenServiceException(EnoException):
