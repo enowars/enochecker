@@ -23,7 +23,7 @@ from typing import (
     Union,
 )
 
-from .results import BrokenServiceException, OfflineException
+from .results import BrokenServiceException
 
 if TYPE_CHECKING:  # pragma: no cover
     import requests
@@ -44,7 +44,7 @@ def assert_in(o1: Any, o2: Any, message: Optional[str] = None) -> None:
     :param message: An optional message that will be part of the error
     """
     if message is None:
-        message = "Did not receive expected response"
+        message = "Received unexpected response."
     internal_message = "{} is not in {}".format(o1, o2)
     if not o2 or o1 not in o2:
         raise BrokenServiceException(message, internal_message=internal_message)
@@ -62,7 +62,7 @@ def assert_equals(
     :param autobyteify: will call ensure_bytes on both parameters.
     """
     if message is None:
-        message = "Did not receive expected response"
+        message = "Received unexpected response."
     internal_message = "{} is not equal to {}".format(o1, o2)
     if autobyteify:
         o1 = ensure_bytes(o1)
@@ -181,42 +181,42 @@ def debase64ify(
         return base64.b64decode(s).decode("utf-8")
 
 
-def readline_expect(
-    telnet: Union[telnetlib.Telnet, "SimpleSocket"],
-    expected: Union[str, bytes],
-    read_until: Union[str, bytes] = b"\n",
-    timeout: int = 30,
-) -> bytes:
-    """
-    Read to newline (or read_until string) and assert the presence of a string in the response.
+# def readline_expect(
+#     telnet: Union[telnetlib.Telnet, "SimpleSocket"],
+#     expected: Union[str, bytes],
+#     read_until: Union[str, bytes] = b"\n",
+#     timeout: int = 30,
+# ) -> bytes:
+#     """
+#     Read to newline (or read_until string) and assert the presence of a string in the response.
 
-    Will raise an exception if failed.
+#     Will raise an exception if failed.
 
-    :param telnet: Connected telnet instance (the result of self.telnet(..))
-    :param expected: the expected String to search for in the response
-    :param read_until: Which char to read until.
-    :param timeout: a timeout
-    :return: the bytes read
-    """
-    logger = getattr(telnet, "logger", utilslogger)
+#     :param telnet: Connected telnet instance (the result of self.telnet(..))
+#     :param expected: the expected String to search for in the response
+#     :param read_until: Which char to read until.
+#     :param timeout: a timeout
+#     :return: the bytes read
+#     """
+#     logger = getattr(telnet, "logger", utilslogger)
 
-    if isinstance(expected, str):
-        expected = expected.encode("utf-8")
-    if isinstance(read_until, str):
-        read_until = read_until.encode("utf-8")
+#     if isinstance(expected, str):
+#         expected = expected.encode("utf-8")
+#     if isinstance(read_until, str):
+#         read_until = read_until.encode("utf-8")
 
-    read = telnet.read_until(read_until, timeout)
-    if read == b"":
-        err = "Expected {!r} but got nothing/timeout!".format(expected)
-        logger.error(err, stack_info=True)
-        telnet.close()
-        raise OfflineException(err)
-    if expected not in read:
-        err = "Expected {!r} but got {!r}".format(expected, read)
-        logger.error(err, stack_info=True)
-        telnet.close()
-        raise BrokenServiceException(err)
-    return read
+#     read = telnet.read_until(read_until, timeout)
+#     if read == b"":
+#         err = "Expected {!r} but got nothing/timeout!".format(expected)
+#         logger.error(err, stack_info=True)
+#         telnet.close()
+#         raise OfflineException(err)
+#     if expected not in read:
+#         err = "Expected {!r} but got {!r}".format(expected, read)
+#         logger.error(err, stack_info=True)
+#         telnet.close()
+#         raise BrokenServiceException(err)
+#     return read
 
 
 def start_daemon(target: Callable[..., Any]) -> threading.Thread:
@@ -354,6 +354,7 @@ class SimpleSocket(telnetlib.Telnet):
         expected: Union[str, bytes],
         read_until: Union[str, bytes] = b"\n",
         timeout: Optional[int] = None,
+        exception_message: Optional[str] = None,
     ) -> bytes:
         """
         Read to newline (or read_until string) and assert the presence of a string in the response.
@@ -367,7 +368,29 @@ class SimpleSocket(telnetlib.Telnet):
         """
         if timeout is None:
             timeout = self.current_default_timeout
-        return readline_expect(self, expected, read_until, timeout)
+
+        expected = ensure_bytes(expected)
+        read_until = ensure_bytes(read_until)
+
+        read = self.read_until(read_until, timeout)
+        if read == b"":
+            err = "Expected {!r} but got nothing/timeout!".format(expected)
+            self.logger.error(err, stack_info=True)
+            self.close()
+            if exception_message:
+                raise BrokenServiceException(exception_message)
+            else:
+                raise BrokenServiceException("Service returned nothing (timeout?).")
+
+        if expected not in read:
+            err = "Expected {!r} but got {!r}".format(expected, read)
+            self.logger.error(err, stack_info=True)
+            self.close()
+            if exception_message:
+                raise BrokenServiceException(exception_message)
+            else:
+                raise BrokenServiceException("Service returned unexpected response.")
+        return read
 
     def expect(
         self,

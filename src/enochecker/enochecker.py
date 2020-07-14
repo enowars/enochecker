@@ -30,7 +30,7 @@ from flask import Flask
 from .checkerservice import CHECKER_METHODS, init_service
 from .logging import ELKFormatter
 from .nosqldict import NoSqlDict
-from .results import CheckerResult, EnoException, Result, OfflineException
+from .results import CheckerResult, EnoException, Result
 from .storeddict import DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING, StoredDict
 from .useragents import random_useragent
 from .utils import SimpleSocket, snake_caseify
@@ -291,7 +291,8 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.flag_round: Optional[int] = flag_round
         self.round_length: int = round_length
         self.flag: Optional[str] = flag
-        self.timeout: Optional[int] = timeout
+        if timeout:
+            self.timeout: Optional[int] = timeout // 1000
 
         self.flag_idx: Optional[int] = flag_idx
 
@@ -514,7 +515,7 @@ class BaseChecker(metaclass=_CheckerMeta):
                 "Error in connection to service occurred: {}\n".format(ex), exc_info=ex
             )
             return CheckerResult(
-                Result.OFFLINE, message="Error in connection to service occurred"
+                Result.OFFLINE, message="Error in connection to service occured"
             )  # , ex.message
         except Exception as ex:
             stacktrace = "".join(traceback.format_exception(None, ex, ex.__traceback__))
@@ -745,7 +746,6 @@ class BaseChecker(metaclass=_CheckerMeta):
         host: Optional[str] = None,
         port: Optional[int] = None,
         timeout: Optional[int] = None,
-        retries: Optional[int] = 1,
     ) -> SimpleSocket:
         """
         Open a socket/telnet connection to the remote host.
@@ -755,39 +755,53 @@ class BaseChecker(metaclass=_CheckerMeta):
         :param host: the host to connect to (defaults to self.address)
         :param port: the port to connect to (defaults to self.port)
         :param timeout: timeout on connection (defaults to self.timeout)
-        :param retries: how often establishing the connection should be retries
         :return: A connected Telnet instance
         """
+
         if timeout:
-            timeout_fun: Callable[[], int] = lambda: cast(int, timeout)
+
+            def timeout_fun() -> int:
+                return cast(int, timeout)
+
         else:
-            timeout = self.time_remaining // 2
 
-            # PEP8 wants this to be a function, not a lambda...
-            def timeout_fun():
+            def timeout_fun() -> int:
                 return self.time_remaining // 2
-
-        if retries < 1:
-            self.info(f"Max connection retries for {host}:{port} reached, giving up.")
-            raise OfflineException(f"Connection to service failed.")
 
         if port is None:
             port = self.port
         if host is None:
             host = self.address
-        self.debug(
-            "Opening socket to {}:{} (timeout {} secs).".format(host, port, timeout)
-        )
-        try:
-            sock = SimpleSocket(
-                host, port, timeout=timeout, logger=self.logger, timeout_fun=timeout_fun
-            )
-            return sock
-        except Exception as ex:
-            self.debug(f"Connection to {host}:{port} failed, retrying... {ex}")
 
-        # Not putting this in the exception block - else the stack trace gets looong.
-        return self.connect(host, port, timeout, retries - 1)
+        if retries < 0:
+            raise ValueError("Number of retries must be greater than zero.")
+
+        for i in range(0, retries + 1):  # + 1 for the initial try
+            try:
+
+                timeout = timeout_fun()
+                self.debug(
+                    "Opening socket to {}:{} (timeout {} secs).".format(
+                        host, port, timeout
+                    )
+                )
+                return SimpleSocket(
+                    host,
+                    port,
+                    timeout=timeout,
+                    logger=self.logger,
+                    timeout_fun=timeout_fun,
+                )
+
+            except Exception as e:
+                self.warning(
+                    f"Failed to establish connection to {host}:{port}, Try #{i+1} of {retries+1} ",
+                    exc_info=e,
+                )
+                continue
+
+        self.error(f"Failed to establish connection to {host}:{port}")
+        raise OfflineException("Failed establishing connection to service.")
 
     @property
     def http_useragent(self) -> str:
