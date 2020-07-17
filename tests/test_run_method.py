@@ -229,10 +229,12 @@ def test_run_invalid_method(checker_cls):
     assert res.result == Result.INTERNAL_ERROR
 
 
-@pytest.mark.parametrize("method", CHECKER_METHODS)
-def test_requests_httperror(method, checker_cls):
+@pytest.mark.parametrize(
+    "method, exc", product(CHECKER_METHODS, [requests.HTTPError, EOFError])
+)
+def test_requests_mumble(method, exc, checker_cls):
     def meth(self):
-        raise requests.HTTPError()
+        raise exc()
 
     def ok(self):
         return Result.OK
