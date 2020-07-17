@@ -489,6 +489,11 @@ class BaseChecker(metaclass=_CheckerMeta):
         except self.requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
             return CheckerResult(Result.MUMBLE, "Service returned HTTP Error",)
+        except EOFError as ex:
+            self.info("Service returned EOF error [{}].".format(ex), exc_info=ex)
+            return CheckerResult(
+                Result.MUMBLE, "Service returned EOF while reading response."
+            )
         except (
             self.requests.ConnectionError,  # requests
             self.requests.exceptions.ConnectTimeout,  # requests
