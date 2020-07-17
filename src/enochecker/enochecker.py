@@ -479,7 +479,7 @@ class BaseChecker(metaclass=_CheckerMeta):
                 exc_info=eno,
             )
             return CheckerResult.from_exception(eno)  # , eno.message
-        except self.requests.HTTPError as ex:
+        except (self.requests.HTTPError, EOFError) as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
             return CheckerResult(Result.MUMBLE, "Service returned HTTP Error",)
         except (
