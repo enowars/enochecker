@@ -101,7 +101,10 @@ def test_run_return_status(method, result, checker_cls):
 
     setattr(checker_cls, method, meth)
     c = checker_cls(method)
-    res = c.run()
+    with pytest.warns(
+        None
+    ):  # ignore warnings caused by the deprecation of returning Results
+        res = c.run()
     assert isinstance(res, CheckerResult)
     assert res.result == result
 
@@ -293,3 +296,59 @@ def test_offline_exceptions(method, exc, checker_cls):
     assert isinstance(res, CheckerResult)
     assert res.result == Result.OFFLINE
     assert res.message
+
+
+@pytest.mark.parametrize(
+    "method", CHECKER_METHODS,
+)
+def test_no_warn_deprecated_return_ok(method, checker_cls):
+    def meth(self):
+        return Result.OK
+
+    def ok(self):
+        return Result.OK
+
+    if method == "getflag":
+        setattr(checker_cls, "putflag", ok)
+        c = checker_cls("putflag")
+        c.run()
+    elif method == "getnoise":
+        setattr(checker_cls, "putnoise", ok)
+        c = checker_cls("putnoise")
+        c.run()
+
+    setattr(checker_cls, method, meth)
+    c = checker_cls(method)
+    with pytest.warns(None) as record:
+        res = c.run()
+    assert isinstance(res, CheckerResult)
+    assert res.result == Result.OK
+    assert len(record) == 0
+
+
+@pytest.mark.parametrize(
+    "method, ret",
+    product(CHECKER_METHODS, [Result.MUMBLE, Result.OFFLINE, Result.INTERNAL_ERROR]),
+)
+def test_warn_deprecated_return_value(method, ret, checker_cls):
+    def meth(self):
+        return ret
+
+    def ok(self):
+        return Result.OK
+
+    if method == "getflag":
+        setattr(checker_cls, "putflag", ok)
+        c = checker_cls("putflag")
+        c.run()
+    elif method == "getnoise":
+        setattr(checker_cls, "putnoise", ok)
+        c = checker_cls("putnoise")
+        c.run()
+
+    setattr(checker_cls, method, meth)
+    c = checker_cls(method)
+    with pytest.deprecated_call():
+        res = c.run()
+    assert isinstance(res, CheckerResult)
+    assert res.result == ret
