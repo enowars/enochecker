@@ -395,9 +395,6 @@ class BaseChecker(metaclass=_CheckerMeta):
             1,
         )
 
-    # def __format_internal_db_entry(name):
-    #     return f"__Checker-Internals:{name}__"
-
     # ---- Basic checker functionality ---- #
 
     def _run_method(self, method: Optional[str] = None) -> Optional[Result]:
@@ -412,22 +409,6 @@ class BaseChecker(metaclass=_CheckerMeta):
             raise ValueError(
                 "Method {} not supported! Supported: {}".format(method, CHECKER_METHODS)
             )
-
-        # handle the cases where the original putflag/putnoise wasn't successful
-        if method == "getflag":
-            key = f"__Checker-internals-RESULT:putflag,{self.flag_round},{self.flag_idx}__"
-            if key not in self.team_db or self.team_db[key] != "OK":
-                self.info(
-                    f"original putflag did not return successfully -- ignoring getflag for flag_round:{self.flag_round}, index: {self.flag_idx}"
-                )
-                return None
-        elif method == "getnoise":
-            key = f"__Checker-internals-RESULT:putnoise,{self.flag_round},{self.flag_idx}__"
-            if key not in self.team_db or self.team_db[key] != "OK":
-                self.info(
-                    f"original putnoise did not return successfully -- ignoring getnoise for flag_round:{self.flag_round}, index: {self.flag_idx}"
-                )
-                return None
 
         return getattr(self, snake_caseify(method))()
 
@@ -460,16 +441,10 @@ class BaseChecker(metaclass=_CheckerMeta):
                 # Better wrap this, in case somebody returns raw ints (?)
                 ret = Result(ret)
                 self.info("Checker [{}] resulted in {}".format(self.method, ret.name))
-                self.team_db[
-                    f"__Checker-internals-RESULT:{str(method)},{self.flag_round},{self.flag_idx}__"
-                ] = ret.name
                 return CheckerResult(ret)
 
             # Returned Normally
             self.info("Checker [{}] executed successfully!".format(self.method))
-            self.team_db[
-                f"__Checker-internals-RESULT:{str(method)},{self.flag_round},{self.flag_idx}__"
-            ] = "OK"
             return CheckerResult(Result.OK)
 
         except EnoException as eno:

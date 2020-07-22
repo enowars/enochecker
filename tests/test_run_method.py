@@ -87,18 +87,6 @@ def test_run_return_status(method, result, checker_cls):
     def meth(self):
         return result
 
-    def ok(self):
-        return
-
-    if method == "getflag":
-        setattr(checker_cls, "putflag", ok)
-        c = checker_cls("putflag")
-        c.run()
-    elif method == "getnoise":
-        setattr(checker_cls, "putnoise", ok)
-        c = checker_cls("putnoise")
-        c.run()
-
     setattr(checker_cls, method, meth)
     c = checker_cls(method)
     with pytest.deprecated_call():
@@ -107,34 +95,10 @@ def test_run_return_status(method, result, checker_cls):
     assert res.result == result
 
 
-@pytest.mark.parametrize("method", ["getflag", "getnoise"])
-def test_run_get_original_run_failed(method, checker_cls):
-    def meth(self):
-        assert False  # this function should never be called
-
-    setattr(checker_cls, method, meth)
-    c = checker_cls(method)
-    res = c.run()
-    assert isinstance(res, CheckerResult)
-    assert res.result == Result.OK
-
-
 @pytest.mark.parametrize("method", CHECKER_METHODS)
 def test_raise_broken_service_exception(method, checker_cls):
     def meth(self):
         raise BrokenServiceException("msg123")
-
-    def ok(self):
-        return
-
-    if method == "getflag":
-        setattr(checker_cls, "putflag", ok)
-        c = checker_cls("putflag")
-        c.run()
-    elif method == "getnoise":
-        setattr(checker_cls, "putnoise", ok)
-        c = checker_cls("putnoise")
-        c.run()
 
     setattr(checker_cls, method, meth)
     c = checker_cls(method)
@@ -149,18 +113,6 @@ def test_raise_offline_exception(method, checker_cls):
     def meth(self):
         raise OfflineException("msg123")
 
-    def ok(self):
-        return
-
-    if method == "getflag":
-        setattr(checker_cls, "putflag", ok)
-        c = checker_cls("putflag")
-        c.run()
-    elif method == "getnoise":
-        setattr(checker_cls, "putnoise", ok)
-        c = checker_cls("putnoise")
-        c.run()
-
     setattr(checker_cls, method, meth)
     c = checker_cls(method)
     res = c.run()
@@ -173,18 +125,6 @@ def test_raise_offline_exception(method, checker_cls):
 def test_raise_unhandled_exception(method, checker_cls):
     def meth(self):
         raise Exception("msg123")
-
-    def ok(self):
-        return
-
-    if method == "getflag":
-        setattr(checker_cls, "putflag", ok)
-        c = checker_cls("putflag")
-        c.run()
-    elif method == "getnoise":
-        setattr(checker_cls, "putnoise", ok)
-        c = checker_cls("putnoise")
-        c.run()
 
     setattr(checker_cls, method, meth)
     c = checker_cls(method)
@@ -200,18 +140,6 @@ def test_raise_unhandled_exception(method, checker_cls):
 def test_invalid_return(method, checker_cls):
     def meth(self):
         return "lolthisisinvalid"
-
-    def ok(self):
-        return
-
-    if method == "getflag":
-        setattr(checker_cls, "putflag", ok)
-        c = checker_cls("putflag")
-        c.run()
-    elif method == "getnoise":
-        setattr(checker_cls, "putnoise", ok)
-        c = checker_cls("putnoise")
-        c.run()
 
     setattr(checker_cls, method, meth)
     c = checker_cls(method)
@@ -237,18 +165,6 @@ def test_run_invalid_method(checker_cls):
 def test_requests_mumble(method, exc, checker_cls):
     def meth(self):
         raise exc()
-
-    def ok(self):
-        return
-
-    if method == "getflag":
-        setattr(checker_cls, "putflag", ok)
-        c = checker_cls("putflag")
-        c.run()
-    elif method == "getnoise":
-        setattr(checker_cls, "putnoise", ok)
-        c = checker_cls("putnoise")
-        c.run()
 
     setattr(checker_cls, method, meth)
     c = checker_cls(method)
@@ -276,18 +192,6 @@ def test_requests_mumble(method, exc, checker_cls):
 def test_offline_exceptions(method, exc, checker_cls):
     def meth(self):
         raise exc()
-
-    def ok(self):
-        return
-
-    if method == "getflag":
-        setattr(checker_cls, "putflag", ok)
-        c = checker_cls("putflag")
-        c.run()
-    elif method == "getnoise":
-        setattr(checker_cls, "putnoise", ok)
-        c = checker_cls("putnoise")
-        c.run()
 
     setattr(checker_cls, method, meth)
     c = checker_cls(method)
