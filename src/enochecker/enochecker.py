@@ -427,7 +427,7 @@ class BaseChecker(metaclass=_CheckerMeta):
             ret = self._run_method(method)
             if ret is not None:
                 warnings.warn(
-                    "Returning a non-ok status code is not recommended and will be removed in the future. Raise an Exception with additional text instead.",
+                    "Returning a result is not recommended and will be removed in the future. Raise EnoExceptions with additional text instead.",
                     DeprecationWarning,
                 )
                 if not Result.is_valid(ret):
