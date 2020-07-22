@@ -304,13 +304,10 @@ def checker_routes(
             return info_dict  # type: ignore # (mypy would infer Dict[str, object] instead)
 
         except Exception:
-            logger.error("SERVICE INFO NOT SPECIFIED!!!11ELF!")
             logger.error(
-                "add service_name, flag_count, havoc_count and noise_count as \
-static fields to your CHECKER\n"
-            )
-            logger.error(
-                """
+                """Service info not specified!
+add service_name, flag_count, havoc_count and noise_count as static fields to your CHECKER
+
 Example:
 class ExampleChecker(BaseChecker):
     flag_count  = 1
