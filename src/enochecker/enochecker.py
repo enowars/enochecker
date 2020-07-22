@@ -287,7 +287,6 @@ class BaseChecker(metaclass=_CheckerMeta):
             )
             round_id = round_id or round
         self.round: Optional[int] = round_id
-        self.current_round: Optional[int] = round_id
         self.flag_round: Optional[int] = flag_round
         self.round_length: int = round_length
         self.flag: Optional[str] = flag
@@ -358,6 +357,18 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.warning: Callable[..., None] = self.logger.warning
         self.error: Callable[..., None] = self.logger.error
         self.critical: Callable[..., None] = self.logger.critical
+
+    @property
+    def current_round(self) -> Optional[int]:
+        """
+        Deprecated! Only for backwards compatibility! Use self.round instead.
+
+        :return: current round
+        """
+        warnings.warn(
+            "current_round is deprecated, use round instead", DeprecationWarning
+        )
+        return self.round
 
     @property
     def noise(self) -> Optional[str]:
