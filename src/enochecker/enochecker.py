@@ -426,6 +426,10 @@ class BaseChecker(metaclass=_CheckerMeta):
         try:
             ret = self._run_method(method)
             if ret is not None:
+                warnings.warn(
+                    "Returning a result is not recommended and will be removed in the future. Raise EnoExceptions with additional text instead.",
+                    DeprecationWarning,
+                )
                 if not Result.is_valid(ret):
                     self.error(
                         "Illegal return value from {}: {}".format(self.method, ret)
@@ -436,11 +440,6 @@ class BaseChecker(metaclass=_CheckerMeta):
 
                 # Better wrap this, in case somebody returns raw ints (?)
                 ret = Result(ret)
-                if ret != Result.OK:
-                    warnings.warn(
-                        "Returning a non-ok status code is not recommended and will be removed in the future. Raise an Exception with additional text instead.",
-                        DeprecationWarning,
-                    )
                 self.info("Checker [{}] resulted in {}".format(self.method, ret.name))
                 return CheckerResult(ret)
 
@@ -494,7 +493,7 @@ class BaseChecker(metaclass=_CheckerMeta):
                 db.persist()
 
     @abstractmethod
-    def putflag(self) -> Optional[Result]:
+    def putflag(self) -> None:
         """
         Store a flag in the service.
 
@@ -503,14 +502,11 @@ class BaseChecker(metaclass=_CheckerMeta):
         On error, raise an Eno Exception.
 
         :raises: EnoException on error
-        :return: this function can return a result if it wants
-                if nothing is returned, the service status is considered okay.
-                the preferred way to report errors in the service is by raising an appropriate enoexception
         """
         pass
 
     @abstractmethod
-    def getflag(self) -> Optional[Result]:
+    def getflag(self) -> None:
         """
         Retrieve a flag from the service.
 
@@ -518,14 +514,11 @@ class BaseChecker(metaclass=_CheckerMeta):
         On error, raise an EnoException.
 
         :raises: EnoException on error
-        :return: this function can return a result if it wants
-                if nothing is returned, the service status is considered okay.
-                the preferred way to report errors in the service is by raising an appropriate enoexception
         """
         pass
 
     @abstractmethod
-    def putnoise(self) -> Optional[Result]:
+    def putnoise(self) -> None:
         """
         Store noise in the service.
 
@@ -535,14 +528,11 @@ class BaseChecker(metaclass=_CheckerMeta):
         On error, raise an EnoException.
 
         :raises: EnoException on error
-        :return: this function can return a result if it wants
-                if nothing is returned, the service status is considered okay.
-                the preferred way to report errors in the service is by raising an appropriate enoexception
         """
         pass
 
     @abstractmethod
-    def getnoise(self) -> Optional[Result]:
+    def getnoise(self) -> None:
         """
         Retrieve noise in the service.
 
@@ -552,37 +542,28 @@ class BaseChecker(metaclass=_CheckerMeta):
         On error, raise an EnoException.
 
         :raises: EnoException on error
-        :return: this function can return a result if it wants
-                if nothing is returned, the service status is considered okay.
-                the preferred way to report errors in the service is by raising an appropriate enoexception
         """
         pass
 
     @abstractmethod
-    def havoc(self) -> Optional[Result]:
+    def havoc(self) -> None:
         """
         Unleash havoc on the app -> Do whatever you must to prove the service still works. Or not.
 
         On error, raise an EnoException.
 
         :raises: EnoException on Error
-        :return: This function can return a result if it wants
-                If nothing is returned, the service status is considered okay.
-                The preferred way to report Errors in the service is by raising an appropriate EnoException
         """
         pass
 
     @abstractmethod
-    def exploit(self) -> Optional[Result]:
+    def exploit(self) -> None:
         """
         Use this method strictly for testing purposes.
 
         Will hopefully not be called during the actual CTF.
 
         :raises: EnoException on Error
-        :return: This function can return a result if it wants
-                If nothing is returned, the service status is considered okay.
-                The preferred way to report Errors in the service is by raising an appropriate EnoException
         """
         pass
 
