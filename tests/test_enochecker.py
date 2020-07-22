@@ -267,6 +267,13 @@ def test_checker():
 
     assert CheckerExampleImpl(method="havoc").run().result == Result.OFFLINE
 
+    c = CheckerExampleImpl(method="putflag", round_id=1337)
+    with pytest.deprecated_call():
+        assert c.current_round == 1337
+    c.round = 15
+    with pytest.deprecated_call():
+        assert c.current_round == c.round
+
 
 @temp_storage_dir
 def test_useragents():
