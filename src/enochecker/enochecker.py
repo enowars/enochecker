@@ -455,6 +455,11 @@ class BaseChecker(metaclass=_CheckerMeta):
 
                 # Better wrap this, in case somebody returns raw ints (?)
                 ret = Result(ret)
+                if ret != Result.OK:
+                    warnings.warn(
+                        "Returning a non-ok status code is not recommended and will be removed in the future. Raise an Exception with additional text instead.",
+                        DeprecationWarning,
+                    )
                 self.info("Checker [{}] resulted in {}".format(self.method, ret.name))
                 self.team_db[
                     f"__Checker-internals-RESULT:{str(method)},{self.flag_round},{self.flag_idx}__"
