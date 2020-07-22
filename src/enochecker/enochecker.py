@@ -365,7 +365,9 @@ class BaseChecker(metaclass=_CheckerMeta):
 
         :return: current round
         """
-        warnings.warn("current_round is deprecated, use round instead", DeprecationWarning)
+        warnings.warn(
+            "current_round is deprecated, use round instead", DeprecationWarning
+        )
         return self.round
 
     @property
