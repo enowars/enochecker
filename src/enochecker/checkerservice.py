@@ -186,7 +186,9 @@ def assert_types(
 
             val = json[entry.key]
             if val is None and isinstance(entry, Optional):
-                print("Inserted default")
+                logger.debug(
+                    f"Inserted default value {entry.default} for key {entry.key}"
+                )
                 val = entry.default
 
             if entry.key == "method" and val == "havok":
@@ -220,7 +222,7 @@ def checker_routes(
 
         :return: HTML page with info about this service
         """
-        logging.info("Request on /")
+        logger.info("Request on /")
 
         return Response(
             "<h1>Welcome to {} :)</h1>"
@@ -260,7 +262,6 @@ def checker_routes(
             return res.jsonify()
 
         except Exception as ex:
-            print(ex)
             logger.error(
                 "Returning Internal Error {}.\nTraceback:\n{}".format(
                     ex, exception_to_string(ex)
@@ -303,12 +304,12 @@ def checker_routes(
             return info_dict  # type: ignore # (mypy would infer Dict[str, object] instead)
 
         except Exception:
-            print("SERVICE INFO NOT SPECIFIED!!!11ELF!")
-            print(
+            logger.error("SERVICE INFO NOT SPECIFIED!!!11ELF!")
+            logger.error(
                 "add service_name, flag_count, havoc_count and noise_count as \
 static fields to your CHECKER\n"
             )
-            print(
+            logger.error(
                 """
 Example:
 class ExampleChecker(BaseChecker):
@@ -346,6 +347,6 @@ def init_service(checker: Type["BaseChecker"]) -> Flask:
     app.route("/", methods=["POST"])(checker_route)
     app.route("/service", methods=["GET"])(get_service_info)
 
-    print(service_info())
+    logger.info(service_info())
 
     return app  # Start service using service.run(host="0.0.0.0")
