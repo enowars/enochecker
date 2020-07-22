@@ -143,7 +143,7 @@ def test_invalid_return(method, checker_cls):
 
     setattr(checker_cls, method, meth)
     c = checker_cls(method)
-    with pytest.warns(DeprecationWarning):
+    with pytest.deprecated_call():
         res = c.run()
     assert isinstance(res, CheckerResult)
     assert res.result == Result.INTERNAL_ERROR
