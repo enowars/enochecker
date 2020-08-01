@@ -9,7 +9,7 @@ diff:
 	python3 -m black --diff src/ tests/ example/
 
 format:
-	python3 -m isort -rc src/ tests/ example/
+	python3 -m isort src/ tests/ example/
 	python3 -m black src/ tests/ example/
 
 test:
