@@ -287,7 +287,6 @@ class BaseChecker(metaclass=_CheckerMeta):
             )
             round_id = round_id or round
         self.round: Optional[int] = round_id
-        self.current_round: Optional[int] = round_id
         self.flag_round: Optional[int] = flag_round
         self.round_length: int = round_length
         self.flag: Optional[str] = flag
@@ -360,6 +359,18 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.critical: Callable[..., None] = self.logger.critical
 
     @property
+    def current_round(self) -> Optional[int]:
+        """
+        Deprecated! Only for backwards compatibility! Use self.round instead.
+
+        :return: current round
+        """
+        warnings.warn(
+            "current_round is deprecated, use round instead", DeprecationWarning
+        )
+        return self.round
+
+    @property
     def noise(self) -> Optional[str]:
         """
         Pretty similar to a flag, just in a different mode (storeNoise vs storeFlag).
@@ -395,9 +406,6 @@ class BaseChecker(metaclass=_CheckerMeta):
             1,
         )
 
-    # def __format_internal_db_entry(name):
-    #     return f"__Checker-Internals:{name}__"
-
     # ---- Basic checker functionality ---- #
 
     def _run_method(self, method: Optional[str] = None) -> Optional[Result]:
@@ -412,22 +420,6 @@ class BaseChecker(metaclass=_CheckerMeta):
             raise ValueError(
                 "Method {} not supported! Supported: {}".format(method, CHECKER_METHODS)
             )
-
-        # handle the cases where the original putflag/putnoise wasn't successful
-        if method == "getflag":
-            key = f"__Checker-internals-RESULT:putflag,{self.flag_round},{self.flag_idx}__"
-            if key not in self.team_db or self.team_db[key] != "OK":
-                self.info(
-                    f"original putflag did not return successfully -- ignoring getflag for flag_round:{self.flag_round}, index: {self.flag_idx}"
-                )
-                return Result.OK
-        elif method == "getnoise":
-            key = f"__Checker-internals-RESULT:putnoise,{self.flag_round},{self.flag_idx}__"
-            if key not in self.team_db or self.team_db[key] != "OK":
-                self.info(
-                    f"original putnoise did not return successfully -- ignoring getnoise for flag_round:{self.flag_round}, index: {self.flag_idx}"
-                )
-                return Result.OK
 
         return getattr(self, snake_caseify(method))()
 
@@ -445,6 +437,10 @@ class BaseChecker(metaclass=_CheckerMeta):
         try:
             ret = self._run_method(method)
             if ret is not None:
+                warnings.warn(
+                    "Returning a result is not recommended and will be removed in the future. Raise EnoExceptions with additional text instead.",
+                    DeprecationWarning,
+                )
                 if not Result.is_valid(ret):
                     self.error(
                         "Illegal return value from {}: {}".format(self.method, ret)
@@ -456,16 +452,10 @@ class BaseChecker(metaclass=_CheckerMeta):
                 # Better wrap this, in case somebody returns raw ints (?)
                 ret = Result(ret)
                 self.info("Checker [{}] resulted in {}".format(self.method, ret.name))
-                self.team_db[
-                    f"__Checker-internals-RESULT:{str(method)},{self.flag_round},{self.flag_idx}__"
-                ] = ret.name
                 return CheckerResult(ret)
 
             # Returned Normally
             self.info("Checker [{}] executed successfully!".format(self.method))
-            self.team_db[
-                f"__Checker-internals-RESULT:{str(method)},{self.flag_round},{self.flag_idx}__"
-            ] = "OK"
             return CheckerResult(Result.OK)
 
         except EnoException as eno:
@@ -521,7 +511,7 @@ class BaseChecker(metaclass=_CheckerMeta):
                 db.persist()
 
     @abstractmethod
-    def putflag(self) -> Optional[Result]:
+    def putflag(self) -> None:
         """
         Store a flag in the service.
 
@@ -530,14 +520,11 @@ class BaseChecker(metaclass=_CheckerMeta):
         On error, raise an Eno Exception.
 
         :raises: EnoException on error
-        :return: this function can return a result if it wants
-                if nothing is returned, the service status is considered okay.
-                the preferred way to report errors in the service is by raising an appropriate enoexception
         """
         pass
 
     @abstractmethod
-    def getflag(self) -> Optional[Result]:
+    def getflag(self) -> None:
         """
         Retrieve a flag from the service.
 
@@ -545,14 +532,11 @@ class BaseChecker(metaclass=_CheckerMeta):
         On error, raise an EnoException.
 
         :raises: EnoException on error
-        :return: this function can return a result if it wants
-                if nothing is returned, the service status is considered okay.
-                the preferred way to report errors in the service is by raising an appropriate enoexception
         """
         pass
 
     @abstractmethod
-    def putnoise(self) -> Optional[Result]:
+    def putnoise(self) -> None:
         """
         Store noise in the service.
 
@@ -562,14 +546,11 @@ class BaseChecker(metaclass=_CheckerMeta):
         On error, raise an EnoException.
 
         :raises: EnoException on error
-        :return: this function can return a result if it wants
-                if nothing is returned, the service status is considered okay.
-                the preferred way to report errors in the service is by raising an appropriate enoexception
         """
         pass
 
     @abstractmethod
-    def getnoise(self) -> Optional[Result]:
+    def getnoise(self) -> None:
         """
         Retrieve noise in the service.
 
@@ -579,37 +560,28 @@ class BaseChecker(metaclass=_CheckerMeta):
         On error, raise an EnoException.
 
         :raises: EnoException on error
-        :return: this function can return a result if it wants
-                if nothing is returned, the service status is considered okay.
-                the preferred way to report errors in the service is by raising an appropriate enoexception
         """
         pass
 
     @abstractmethod
-    def havoc(self) -> Optional[Result]:
+    def havoc(self) -> None:
         """
         Unleash havoc on the app -> Do whatever you must to prove the service still works. Or not.
 
         On error, raise an EnoException.
 
         :raises: EnoException on Error
-        :return: This function can return a result if it wants
-                If nothing is returned, the service status is considered okay.
-                The preferred way to report Errors in the service is by raising an appropriate EnoException
         """
         pass
 
     @abstractmethod
-    def exploit(self) -> Optional[Result]:
+    def exploit(self) -> None:
         """
         Use this method strictly for testing purposes.
 
         Will hopefully not be called during the actual CTF.
 
         :raises: EnoException on Error
-        :return: This function can return a result if it wants
-                If nothing is returned, the service status is considered okay.
-                The preferred way to report Errors in the service is by raising an appropriate EnoException
         """
         pass
 
