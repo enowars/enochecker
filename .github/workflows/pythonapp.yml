@@ -1,0 +1,38 @@
+name: Python package
+
+on:
+  push:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: pytest
+      run: |
+        pip install -r dev-requirements.txt
+        make test
+    - name: lint
+      run: |
+        pip install -r dev-requirements.txt
+        make lint
+    - name: test sdist
+      run: |
+        mkdir /tmp/test_sdist
+        python setup.py sdist -d /tmp/test_sdist
+        cd /tmp/test_sdist
+        pip install enochecker-*.tar.gz
