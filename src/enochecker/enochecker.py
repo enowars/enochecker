@@ -468,7 +468,14 @@ class BaseChecker(metaclass=_CheckerMeta):
                 ),
                 exc_info=eno,
             )
-            return CheckerResult.from_exception(eno)  # , eno.message
+
+            if eno.message_contains(self.flag):
+                self.error(f"EnoMessage contained flag! (Exception was {eno}")
+                eno.message = None
+            if eno.internal_message:
+                self.info(f"Internal info for return: {eno.internal_message}")
+
+            return CheckerResult.from_exception(eno)
         except self.requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
             return CheckerResult(Result.MUMBLE, "Service returned HTTP Error",)
@@ -713,6 +720,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         :param host: the host to connect to (defaults to self.address)
         :param port: the port to connect to (defaults to self.port)
         :param timeout: timeout on connection (defaults to self.timeout)
+        :param retries: the amount of times this socket connection should be retried
         :return: A connected Telnet instance
         """
 
