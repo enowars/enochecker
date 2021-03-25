@@ -43,10 +43,11 @@ def assert_in(o1: Any, o2: Any, message: Optional[str] = None) -> None:
     :param o2: the object to look in
     :param message: An optional message that will be part of the error
     """
-    if message is None:
-        message = "Received unexpected response."
     if not o2 or o1 not in o2:
-        raise BrokenServiceException(message)
+        raise BrokenServiceException(
+            message or "Received unexpected response.",
+            internal_message=f"{o1} is not in {o2}",
+        )
 
 
 def assert_equals(
@@ -60,13 +61,14 @@ def assert_equals(
     :param message: The exception message in case of an error (optional)
     :param autobyteify: will call ensure_bytes on both parameters.
     """
-    if message is None:
-        message = "Received unexpected response."
     if autobyteify:
         o1 = ensure_bytes(o1)
         o2 = ensure_bytes(o2)
     if o1 != o2:
-        raise BrokenServiceException(message)
+        raise BrokenServiceException(
+            message or "Received unexpected response.",
+            internal_message=f"{o1} is not equal to {o2}",
+        )
 
 
 def ensure_bytes(obj: Union[bytes, str, Any]) -> bytes:

@@ -2,7 +2,7 @@
 
 from abc import ABC
 from enum import IntEnum
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 from flask import Response, jsonify
 
@@ -37,9 +37,7 @@ class CheckerResult:
         self.message = message
 
     @staticmethod
-    def from_exception(
-        e: Exception, public_message: Optional[str] = None
-    ) -> "CheckerResult":
+    def from_exception(e: Exception) -> "CheckerResult":
         """ Converts a given Exception to an extended CheckerResult including Message
         public_message isn't used anywhere yet"""
 
@@ -68,13 +66,21 @@ class EnoException(Exception, ABC):
     result: Result = Result.INTERNAL_ERROR
 
     def __init__(
-        self,
-        *args: Any,
-        scoreboard_message: Optional[str] = None,
-        **kwargs: Dict[Any, Any]
+        self, message: Optional[str], internal_message: Optional[str] = None,
     ):
-        super().__init__(*args)
-        self.message = scoreboard_message
+        self.message: Optional[str] = message
+        self.internal_message: Optional[str] = internal_message
+
+    def __str__(self) -> str:
+        return self.message if self.message else ""
+
+    def message_contains(self, flag: Optional[str]) -> bool:
+        """" If the string is in the message """
+        if not self.message:
+            return False
+        if not flag:
+            return False
+        return flag in self.message
 
 
 class BrokenServiceException(EnoException):
