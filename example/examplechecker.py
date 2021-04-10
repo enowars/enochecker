@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # from src.enochecker import *
 import json
+import random
 import secrets
+import string
 from typing import Dict
 
 from enochecker import BaseChecker, BrokenServiceException, assert_equals, run
@@ -129,7 +131,7 @@ class ExampleChecker(BaseChecker):
         :raises EnoException on error
         """
         credentials = self.generate_credentials()
-        self.team_db[self.flag] = credentials
+        self.team_db[self.unique_run_identifier] = credentials
         self.register_and_login(credentials)
 
         category = secrets.choice(
@@ -148,11 +150,11 @@ class ExampleChecker(BaseChecker):
         )
 
         # we are overwriting the credentials on purpose since we don't need them later in this case
-        self.team_db[self.noise] = category
+        noise = "".join(random.choices(string.ascii_letters, k=16))
+        self.team_db[self.unique_run_identifier] = (category, noise)
 
         res = self.http_post(
-            "/posts",
-            json={"content": self.noise, "category": category, "public": True},
+            "/posts", json={"content": noise, "category": category, "public": True},
         )
         assert_equals(res.status_code, 200)
 
@@ -165,14 +167,14 @@ class ExampleChecker(BaseChecker):
         On error, raise an EnoException.
         :raises EnoException on error
         """
-        category = self.team_db[self.noise]
+        category, noise = self.team_db[self.unique_run_identifier]
 
         res = self.http_get("/posts", json={"category": category})
         assert_equals(res.status_code, 200)
 
         try:
             for post in res.json()["posts"]:
-                if post["content"] == self.noise:
+                if post["content"] == noise:
                     return  # returning nothing/raising no exceptions means everything is ok
         except (KeyError, json.JSONDecodeError):
             raise BrokenServiceException("received invalid response on /posts")

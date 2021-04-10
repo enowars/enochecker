@@ -104,11 +104,11 @@ class CheckerExampleImpl(BaseChecker):
             raise BrokenServiceException("Flag not correct!")
 
     def putnoise(self):
-        self.team_db["noise"] = self.noise
+        self.team_db[self.unique_run_identifier] = self.flag
 
     def getnoise(self):
         try:
-            if not self.team_db["noise"] == self.noise:
+            if not self.team_db[self.unique_run_identifier] == self.flag:
                 raise BrokenServiceException("Noise not correct!")
         except KeyError:
             raise BrokenServiceException("Noise not found!")
@@ -263,7 +263,12 @@ def test_checker():
     CheckerExampleImpl(method="getflag", flag=flag).run()
 
     CheckerExampleImpl(method="putnoise", flag=noise).run()
-    assert CheckerExampleImpl().team_db["noise"] == noise
+    assert (
+        CheckerExampleImpl(method="getnoise").team_db[
+            CheckerExampleImpl(method="getnoise").unique_run_identifier
+        ]
+        == noise
+    )
     CheckerExampleImpl(method="getnoise", flag=noise).run()
 
     assert CheckerExampleImpl(method="havoc").run().result == Result.OFFLINE
