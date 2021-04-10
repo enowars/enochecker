@@ -268,7 +268,10 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.run_id: Optional[int] = run_id
         self.json_logging: bool = json_logging
 
-        self.method: Optional[str] = method
+        if method not in CHECKER_METHODS:
+            raise ValueError("Invalid checker method")
+        self.method: str = method
+
         if not address:
             raise TypeError("must specify address")
         self.address: str = address
@@ -330,6 +333,17 @@ class BaseChecker(metaclass=_CheckerMeta):
             self.method = "havoc"
             self.warning("Ignoring method 'havok', calling 'havoc' instead")
 
+        method_key = {
+            "putflag": "flag",
+            "getflag": "flag",
+            "putnoise": "noise",
+            "getnoise": "noise",
+            "havoc": "havoc",
+            "exploit": "exploit"
+        }[self.method]
+
+        self.unique_run_identifier = f"RUN_IDENTIFIER_{self.service_name}_{self.team_id}_{method_key}_{self.flag_round}_{self.flag_idx}"
+
     def _setup_logger(self) -> None:
         """
         Set up a logger usable from inside a checker using.
@@ -369,15 +383,6 @@ class BaseChecker(metaclass=_CheckerMeta):
             "current_round is deprecated, use round instead", DeprecationWarning
         )
         return self.round
-
-    @property
-    def noise(self) -> Optional[str]:
-        """
-        Pretty similar to a flag, just in a different mode (storeNoise vs storeFlag).
-
-        :return: The noise
-        """
-        return self.flag
 
     @property
     def time_running(self) -> float:
@@ -478,7 +483,10 @@ class BaseChecker(metaclass=_CheckerMeta):
             return CheckerResult.from_exception(eno)
         except self.requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
-            return CheckerResult(Result.MUMBLE, "Service returned HTTP Error",)
+            return CheckerResult(
+                Result.MUMBLE,
+                "Service returned HTTP Error",
+            )
         except EOFError as ex:
             self.info("Service returned EOF error [{}].".format(ex), exc_info=ex)
             return CheckerResult(
@@ -901,7 +909,8 @@ class BaseChecker(metaclass=_CheckerMeta):
 
 
 def run(
-    checker_cls: Type[BaseChecker], args: Optional[Sequence[str]] = None,
+    checker_cls: Type[BaseChecker],
+    args: Optional[Sequence[str]] = None,
 ) -> Optional[CheckerResult]:
     """
     Run a checker, either from cmdline or as uwsgi script.

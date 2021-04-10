@@ -5,6 +5,7 @@ from logging import DEBUG
 
 import pytest
 import requests
+
 from enochecker import (
     CHECKER_METHODS,
     BaseChecker,
@@ -25,7 +26,9 @@ def checker_cls():
         havoc_count = 1
 
         def __init__(
-            self, method=CHECKER_METHODS[0], **kwargs,
+            self,
+            method=CHECKER_METHODS[0],
+            **kwargs,
         ):
             """
             An mocked implementation of a checker for testing purposes
