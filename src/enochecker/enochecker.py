@@ -329,17 +329,13 @@ class BaseChecker(metaclass=_CheckerMeta):
             )
         )
 
-        if self.method == "havok":
-            self.method = "havoc"
-            self.warning("Ignoring method 'havok', calling 'havoc' instead")
-
         method_key = {
             "putflag": "flag",
             "getflag": "flag",
             "putnoise": "noise",
             "getnoise": "noise",
             "havoc": "havoc",
-            "exploit": "exploit"
+            "exploit": "exploit",
         }[self.method]
 
         self.unique_run_identifier = f"RUN_IDENTIFIER_{self.service_name}_{self.team_id}_{method_key}_{self.flag_round}_{self.flag_idx}"
