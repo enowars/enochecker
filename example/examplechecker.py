@@ -160,9 +160,8 @@ class ExampleChecker(BaseChecker):
 
     def getnoise(self) -> None:
         """
-        This method retrieves noise in the service.
-        The noise to be retrieved is inside self.flag
-        The difference between noise and flag is, tht noise does not have to remain secret for other teams.
+        This method retrieves noise stored in the service. 
+        The difference between noise and flag is, the noise does not have to remain secret for other teams.
         This method can be called many times per round. Check how often using flag_idx.
         On error, raise an EnoException.
         :raises EnoException on error
