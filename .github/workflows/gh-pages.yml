@@ -31,7 +31,7 @@ jobs:
           make html
 
       - name: Install SSH Client 🔑
-        uses: webfactory/ssh-agent@4fcb25e7ef89d0ad885e957928ddfe0a78aad59e
+        uses: webfactory/ssh-agent@cb8b21017acfd319f0f4eb320ae495f22c36d0a7
         with:
           ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
