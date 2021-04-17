@@ -36,7 +36,7 @@ jobs:
           ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@51f4ac3d8eee61c56287220b5413c627eea5c6f4
+        uses: JamesIves/github-pages-deploy-action@164583b9e44b4fc5910e78feb607ea7c98d3c7b9
         with:
           SSH: true
           BRANCH: gh-pages # The branch the action should deploy to.
