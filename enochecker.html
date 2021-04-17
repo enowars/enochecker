@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>enochecker package &mdash; enochecker  documentation</title>
@@ -79,7 +80,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="guide/index.html">Checker Development</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API</a><ul>
@@ -159,12 +160,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="enochecker-package">
+  <section id="enochecker-package">
 <h1>enochecker package<a class="headerlink" href="#enochecker-package" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="submodules">
+<section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="module-enochecker.checkerservice">
+</section>
+<section id="module-enochecker.checkerservice">
 <span id="enochecker-checkerservice-module"></span><h2>enochecker.checkerservice module<a class="headerlink" href="#module-enochecker.checkerservice" title="Permalink to this headline">¶</a></h2>
 <p>Flask service to run a checker as HTTP service.</p>
 <dl class="py class">
@@ -318,8 +319,8 @@ In case the spec fails, errors out with ValueError.</p>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-enochecker.enochecker">
+</section>
+<section id="module-enochecker.enochecker">
 <span id="enochecker-enochecker-module"></span><h2>enochecker.enochecker module<a class="headerlink" href="#module-enochecker.enochecker" title="Permalink to this headline">¶</a></h2>
 <p>Contains the BaseChecker to be used as base for all checkers.</p>
 <dl class="py class">
@@ -340,6 +341,7 @@ Magic.</p>
 <li><p><strong>host</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – the host to connect to (defaults to self.address)</p></li>
 <li><p><strong>port</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – the port to connect to (defaults to self.port)</p></li>
 <li><p><strong>timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – timeout on connection (defaults to self.timeout)</p></li>
+<li><p><strong>retries</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the amount of times this socket connection should be retried</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -769,8 +771,8 @@ using this optional param.</p>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-enochecker.logging">
+</section>
+<section id="module-enochecker.logging">
 <span id="enochecker-logging-module"></span><h2>enochecker.logging module<a class="headerlink" href="#module-enochecker.logging" title="Permalink to this headline">¶</a></h2>
 <p>Utilities for sending log messages to a central ELK.</p>
 <dl class="py class">
@@ -807,8 +809,8 @@ using this optional param.</p>
 :return: The formatted string</p>
 </dd></dl>
 
-</div>
-<div class="section" id="module-enochecker.nosqldict">
+</section>
+<section id="module-enochecker.nosqldict">
 <span id="enochecker-nosqldict-module"></span><h2>enochecker.nosqldict module<a class="headerlink" href="#module-enochecker.nosqldict" title="Permalink to this headline">¶</a></h2>
 <p>Backend for team_db based on MongoDB.</p>
 <dl class="py class">
@@ -876,13 +878,13 @@ In the future changes to the DB might be cached until they are explicitly persis
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-enochecker.results">
+</section>
+<section id="module-enochecker.results">
 <span id="enochecker-results-module"></span><h2>enochecker.results module<a class="headerlink" href="#module-enochecker.results" title="Permalink to this headline">¶</a></h2>
 <p>Collection of Exception classes to signal the status of the service being checked.</p>
 <dl class="py exception">
 <dt id="enochecker.results.BrokenCheckerException">
-<em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">BrokenCheckerException</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">scoreboard_message</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.BrokenCheckerException" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">BrokenCheckerException</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span></em>, <em class="sig-param"><span class="n">internal_message</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.BrokenCheckerException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#enochecker.results.EnoException" title="enochecker.results.EnoException"><code class="xref py py-class docutils literal notranslate"><span class="pre">enochecker.results.EnoException</span></code></a></p>
 <p>Shouldn’t be raised ever since we catch all abstract Errors.</p>
 <p>Used internally if something goes horribly wrong.</p>
@@ -895,7 +897,7 @@ In the future changes to the DB might be cached until they are explicitly persis
 
 <dl class="py exception">
 <dt id="enochecker.results.BrokenServiceException">
-<em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">BrokenServiceException</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">scoreboard_message</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.BrokenServiceException" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">BrokenServiceException</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span></em>, <em class="sig-param"><span class="n">internal_message</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.BrokenServiceException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#enochecker.results.EnoException" title="enochecker.results.EnoException"><code class="xref py py-class docutils literal notranslate"><span class="pre">enochecker.results.EnoException</span></code></a></p>
 <p>Indicates a broken Service.</p>
 <dl class="py attribute">
@@ -911,7 +913,7 @@ In the future changes to the DB might be cached until they are explicitly persis
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt id="enochecker.results.CheckerResult.from_exception">
-<em class="property">static </em><code class="sig-name descname">from_exception</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">e</span></em>, <em class="sig-param"><span class="n">public_message</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.CheckerResult.from_exception" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">from_exception</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">e</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.CheckerResult.from_exception" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts a given Exception to an extended CheckerResult including Message
 public_message isn’t used anywhere yet</p>
 <dl class="field-list simple">
@@ -947,9 +949,20 @@ public_message isn’t used anywhere yet</p>
 
 <dl class="py exception">
 <dt id="enochecker.results.EnoException">
-<em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">EnoException</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">scoreboard_message</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.EnoException" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">EnoException</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span></em>, <em class="sig-param"><span class="n">internal_message</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.EnoException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
 <p>Base error including the Result. Raise a subclass of me once we know what to do.</p>
+<dl class="py method">
+<dt id="enochecker.results.EnoException.message_contains">
+<code class="sig-name descname">message_contains</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">flag</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.EnoException.message_contains" title="Permalink to this definition">¶</a></dt>
+<dd><p>” If the string is in the message</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py attribute">
 <dt id="enochecker.results.EnoException.result">
 <code class="sig-name descname">result</code><em class="property">: enochecker.results.Result</em><em class="property"> = -1</em><a class="headerlink" href="#enochecker.results.EnoException.result" title="Permalink to this definition">¶</a></dt>
@@ -959,7 +972,7 @@ public_message isn’t used anywhere yet</p>
 
 <dl class="py exception">
 <dt id="enochecker.results.OfflineException">
-<em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">OfflineException</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">scoreboard_message</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.OfflineException" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">OfflineException</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span></em>, <em class="sig-param"><span class="n">internal_message</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.OfflineException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#enochecker.results.EnoException" title="enochecker.results.EnoException"><code class="xref py py-class docutils literal notranslate"><span class="pre">enochecker.results.EnoException</span></code></a></p>
 <p>Service was not reachable (at least once) during our checks.</p>
 <dl class="py attribute">
@@ -1013,8 +1026,8 @@ public_message isn’t used anywhere yet</p>
 
 </dd></dl>
 
-</div>
-<div class="section" id="module-enochecker.storeddict">
+</section>
+<section id="module-enochecker.storeddict">
 <span id="enochecker-storeddict-module"></span><h2>enochecker.storeddict module<a class="headerlink" href="#module-enochecker.storeddict" title="Permalink to this headline">¶</a></h2>
 <p>Backend for team_db based on a local filesystem directory.</p>
 <dl class="py class">
@@ -1129,8 +1142,8 @@ param exist_ok: ignore already existing path and do nothing</p>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-enochecker.useragents">
+</section>
+<section id="module-enochecker.useragents">
 <span id="enochecker-useragents-module"></span><h2>enochecker.useragents module<a class="headerlink" href="#module-enochecker.useragents" title="Permalink to this headline">¶</a></h2>
 <p>Collection of random usernames to make fingerprinting checker traffic harder.</p>
 <dl class="py function">
@@ -1147,8 +1160,8 @@ param exist_ok: ignore already existing path and do nothing</p>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-enochecker.utils">
+</section>
+<section id="module-enochecker.utils">
 <span id="enochecker-utils-module"></span><h2>enochecker.utils module<a class="headerlink" href="#module-enochecker.utils" title="Permalink to this headline">¶</a></h2>
 <p>Collection of utilities for checker development.</p>
 <dl class="py class">
@@ -1501,11 +1514,11 @@ The port will be open when this function returns. (though serving the request ma
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-enochecker">
+</section>
+<section id="module-enochecker">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-enochecker" title="Permalink to this headline">¶</a></h2>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
