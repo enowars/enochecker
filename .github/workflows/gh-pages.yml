@@ -31,12 +31,12 @@ jobs:
           make html
 
       - name: Install SSH Client 🔑
-        uses: webfactory/ssh-agent@4fcb25e7ef89d0ad885e957928ddfe0a78aad59e
+        uses: webfactory/ssh-agent@cb8b21017acfd319f0f4eb320ae495f22c36d0a7
         with:
           ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@51f4ac3d8eee61c56287220b5413c627eea5c6f4
+        uses: JamesIves/github-pages-deploy-action@164583b9e44b4fc5910e78feb607ea7c98d3c7b9
         with:
           SSH: true
           BRANCH: gh-pages # The branch the action should deploy to.
