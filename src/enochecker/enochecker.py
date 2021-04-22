@@ -25,7 +25,7 @@ from typing import (
 from urllib.parse import urlparse
 
 import jsons
-from enochecker_core import CheckerTaskMessage, CheckerTaskResult, CheckerTaskType
+from enochecker_core import CheckerMethod, CheckerTaskMessage, CheckerTaskResult
 from flask import Flask
 
 from .checkerservice import init_service
@@ -157,7 +157,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.task_id: int = task.task_id
         self.json_logging: bool = json_logging
 
-        self.method: CheckerTaskType = task.method
+        self.method: CheckerMethod = task.method
         self.address: str = task.address
         self.team_id: int = task.team_id
         self.team_name: str = task.team_name
@@ -254,7 +254,7 @@ class BaseChecker(metaclass=_CheckerMeta):
 
     # ---- Basic checker functionality ---- #
 
-    def _run_method(self, method: CheckerTaskType) -> Optional[CheckerTaskResult]:
+    def _run_method(self, method: CheckerMethod) -> Optional[CheckerTaskResult]:
         """
         Execute a checker method, pass all exceptions along to the calling function.
 
@@ -265,7 +265,7 @@ class BaseChecker(metaclass=_CheckerMeta):
 
         return getattr(self, snake_caseify(method.value))()
 
-    def run(self, method: Optional[CheckerTaskType] = None) -> CheckerResult:
+    def run(self, method: Optional[CheckerMethod] = None) -> CheckerResult:
         """
         Execute the checker and catch errors along the way.
 
@@ -344,7 +344,7 @@ class BaseChecker(metaclass=_CheckerMeta):
                 "Error in connection to service occurred: {}\n".format(ex), exc_info=ex
             )
             return CheckerResult(
-                CheckerTaskResult.CHECKER_TASK_RESULT_DOWN,
+                CheckerTaskResult.CHECKER_TASK_RESULT_OFFLINE,
                 message="Error in connection to service occured",
             )  # , ex.message
         except Exception as ex:

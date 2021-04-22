@@ -75,7 +75,7 @@ class BrokenServiceException(EnoException):
 class OfflineException(EnoException):
     """Service was not reachable (at least once) during our checks."""
 
-    result: CheckerTaskResult = CheckerTaskResult.CHECKER_TASK_RESULT_DOWN
+    result: CheckerTaskResult = CheckerTaskResult.CHECKER_TASK_RESULT_OFFLINE
 
 
 class BrokenCheckerException(EnoException):

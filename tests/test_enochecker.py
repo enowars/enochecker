@@ -18,7 +18,7 @@ from enochecker import (
     serve_once,
     snake_caseify,
 )
-from enochecker_core import CheckerTaskMessage, CheckerTaskResult, CheckerTaskType
+from enochecker_core import CheckerMethod, CheckerTaskMessage, CheckerTaskResult
 
 STORAGE_DIR: str = "/tmp/enochecker_test"
 
@@ -44,10 +44,7 @@ class CheckerExampleImpl(BaseChecker):
     havoc_variants = 1
 
     def __init__(
-        self,
-        method=CheckerTaskType.CHECKER_TASK_TYPE_PUTFLAG,
-        flag="ENOFLAG",
-        **kwargs,
+        self, method=CheckerMethod.CHECKER_METHOD_PUTFLAG, flag="ENOFLAG", **kwargs,
     ):
         """
         An mocked implementation of a checker for testing purposes
@@ -57,7 +54,7 @@ class CheckerExampleImpl(BaseChecker):
         super(CheckerExampleImpl, self).__init__(
             CheckerTaskMessage(
                 task_id=1,
-                method=CheckerTaskType(method),
+                method=CheckerMethod(method),
                 address="localhost",
                 team_id=1,
                 team_name="team1",
@@ -171,7 +168,7 @@ def test_checker_connections():
     text = "ECHO :)"
     _ = serve_once(text, 9999)
     checker = CheckerExampleImpl(
-        CheckerTaskType.CHECKER_TASK_TYPE_PUTFLAG,
+        CheckerMethod.CHECKER_METHOD_PUTFLAG,
     )  # Conflict between logging and enochecker.logging because of wildcart import
     assert (
         checker.http_get("/").text == text
@@ -181,7 +178,7 @@ def test_checker_connections():
     time.sleep(0.2)
 
     _ = serve_once(text, 9999)
-    checker = CheckerExampleImpl(CheckerTaskType.CHECKER_TASK_TYPE_PUTFLAG)
+    checker = CheckerExampleImpl(CheckerMethod.CHECKER_METHOD_PUTFLAG)
     t = checker.connect()
     t.write(b"GET / HTTP/1.0\r\n\r\n")
     assert t.readline_expect("HTTP")
@@ -204,7 +201,7 @@ def test_checker():
 
     assert (
         CheckerExampleImpl(method="havoc").run().result
-        == CheckerTaskResult.CHECKER_TASK_RESULT_DOWN
+        == CheckerTaskResult.CHECKER_TASK_RESULT_OFFLINE
     )
 
 
