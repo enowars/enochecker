@@ -35,4 +35,5 @@ setuptools.setup(
         "Programming Language :: Python :: 3.7",
     ],
     zip_safe=False,  # This might be needed for requirements.txt
+    python_requires=">=3.7",
 )
