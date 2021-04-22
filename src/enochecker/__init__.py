@@ -1,10 +1,8 @@
-from .checkerservice import CHECKER_METHODS
 from .enochecker import BaseChecker, parse_args, run  # the BaseChecker
 from .results import (  # Possible results
     BrokenServiceException,
     EnoException,
     OfflineException,
-    Result,
 )
 from .utils import (  # the util stuff
     SimpleSocket,

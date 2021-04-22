@@ -1,15 +1,18 @@
 """Flask service to run a checker as HTTP service."""
 
-import collections
-import json
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Type, Union
+from typing import TYPE_CHECKING, Callable, Tuple, Type
 
-from flask import Flask, Response, jsonify, request
+import jsons
+from enochecker_core import (
+    CheckerInfoMessage,
+    CheckerResultMessage,
+    CheckerTaskMessage,
+    CheckerTaskResult,
+)
+from flask import Flask, Response, request
 
 from .logging import exception_to_string
-from .results import Result
-from .utils import snake_caseify
 
 if TYPE_CHECKING:  # pragma: no cover
     from .enochecker import BaseChecker
@@ -17,33 +20,6 @@ if TYPE_CHECKING:  # pragma: no cover
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.Logger(__name__)
 logger.setLevel(logging.DEBUG)
-
-Optional = collections.namedtuple("Optional", "key type default")
-Required = collections.namedtuple("Required", "key type")
-
-CHECKER_METHODS: List[str] = [
-    "putflag",
-    "getflag",
-    "putnoise",
-    "getnoise",
-    "havoc",
-    "exploit",
-]
-
-# The json spec a checker request follows.
-spec: List[Union[Required, Optional]] = [
-    Required("method", CHECKER_METHODS),  # method to execute
-    Required("address", str),  # address to check
-    Optional("runId", int, 0),  # internal ID of this run inside our db
-    Optional("teamName", str, "FakeTeam"),  # the team name
-    Optional("teamId", int, 1),  # team ID
-    Optional("roundId", int, 0),  # which tick we are in
-    Optional("relatedRoundId", int, 0),  # Flag-Related
-    Optional("roundLength", int, 300),  # the default tick time
-    Optional("flag", str, "ENOTESTFLAG"),  # the flag or noise to drop or get
-    Optional("flagIndex", int, 0),
-    Optional("timeout", int, 30),  # timeout we have for this run
-]
 
 UI_TEMPLATE = """
 
@@ -92,111 +68,14 @@ function update_pending(){
 """
 
 
-def check_type(name: str, val: str, expected_type: Any) -> None:
+def serialize_spec() -> str:
     """
-    Return and convert the value if necessary.
+    Return a checker json spec
 
-    :param name: the name of the value
-    :param val: the value to check
-    :param expected_type: the expected type
-    """
-    if isinstance(expected_type, list):
-        if val not in expected_type:
-            # The given type is not in the list of allowed members.
-            raise ValueError(
-                "{} is not a member of expected list {}, got {}".format(
-                    name, expected_type, val
-                )
-            )
-    elif not isinstance(val, expected_type):
-        raise ValueError(
-            "{} should be a '{}' but is of type '{}'.".format(
-                name, expected_type.__name__, type(val).__name__
-            )
-        )
-
-
-def stringify_spec_entry(entry: Union[Optional, Required]) -> str:
-    """
-    Make a nice string out of a spec entry.
-
-    :param entry: the spec entry
-    :returns: string representation of the entry
-    """
-    entrytype = entry.type
-    if isinstance(entrytype, type):
-        entrytype = entrytype.__name__
-    # ugly hack: We don't want a list to be ['like', 'this'] but ["with", "json", "quotes"]...
-    entrytype = "{}".format(entrytype).replace("'", '"')
-    if isinstance(entry, Required):
-        return '"{}": {}'.format(entry.key, entrytype)
-    if isinstance(entry, Optional):
-        return '"{}": ({} ?? {})'.format(entry.key, entrytype, entry.default)
-    raise ValueError(
-        "Could not stringify unknown entry type {}: {}".format(type(entry), entry)
-    )
-
-
-def serialize_spec(spec: List[Union[Optional, Required]]) -> str:
-    """
-    Return a checker json spec in a readable multiline format.
-
-    :param spec: a spec
     :return: formatted string
     """
-    ret = "{\n"
-    for entry in spec:
-        if ret != "{\n":
-            ret += ",\n"
-        ret += "  " + stringify_spec_entry(entry)
-    return ret + "\n}"
-
-
-def assert_types(
-    json: Dict[str, Any], spec: List[Union[Optional, Required]]
-) -> Dict[str, Any]:
-    """
-    Generate a kwargs dict from a json.
-
-    Will copy all elements from json to the dict, rename all keys to snake_case and Index to idx.
-    In case the spec fails, errors out with ValueError.
-
-    :param json: the json object
-    :param spec: the specification
-    :return: kwargs dict.
-    """
-    ret = {}
-
-    def key_to_name(key: str) -> str:
-        key = key.replace("Index", "Idx")  # -> flagIndex -> flag_idx
-        key = key.replace("relatedRoundId", "flagRound")
-        return snake_caseify(key)
-
-    for entry in spec:
-        if entry.key not in json:
-            if isinstance(entry, Optional):
-                ret[key_to_name(entry.key)] = entry.default
-            else:
-                raise ValueError(
-                    "Required parameter {} is missing.".format(
-                        stringify_spec_entry(entry)
-                    )
-                )
-        else:
-
-            val = json[entry.key]
-            if val is None and isinstance(entry, Optional):
-                logger.debug(
-                    f"Inserted default value {entry.default} for key {entry.key}"
-                )
-                val = entry.default
-
-            if entry.key == "method" and val == "havok":
-                logger.warning("Ignoring Havok -- calling Havoc instead")
-                val = "havoc"
-            check_type(entry.key, val, entry.type)
-            ret[key_to_name(entry.key)] = val
-    return ret
+    # TODO: update
+    return ""
 
 
 def checker_routes(
@@ -204,8 +83,8 @@ def checker_routes(
 ) -> Tuple[
     Callable[[], Response],
     Callable[[], Response],
-    Callable[[], Dict[str, Union[str, int]]],
-    Callable[[], str],
+    Callable[[], CheckerInfoMessage],
+    Callable[[], Response],
 ]:
     """
     Create a flask app for the given checker class.
@@ -224,11 +103,16 @@ def checker_routes(
         """
         logger.info("Request on /")
 
+        serialized_spec = serialize_spec()
+
         return Response(
             "<h1>Welcome to {} :)</h1>"
             '<p>Expecting POST with a JSON:</p><div><textarea id="jsonTextbox" rows={} cols="80">{}</textarea>{}</div>'
             '<a href="https://www.youtube.com/watch?v=SBClImpnfAg"><br>check it out now</a><div id="out">'.format(
-                checker_cls.__name__, len(spec) + 3, serialize_spec(spec), tiny_poster
+                checker_cls.__name__,
+                len(serialized_spec.split("\n")) + 3,
+                serialized_spec,
+                tiny_poster,
             )
         )
 
@@ -243,23 +127,35 @@ def checker_routes(
         """
         try:
             logger.info(request.json)
-            req_json = request.get_json(force=True)
+            try:
+                task_msg = jsons.loads(
+                    request.get_data(),
+                    CheckerTaskMessage,
+                    strict=True,
+                    key_transformer=jsons.KEY_TRANSFORMER_SNAKECASE,
+                )
+            except jsons.exceptions.UnfulfilledArgumentError as e:
+                return Response(e._msg, status=400)
 
-            kwargs = assert_types(req_json, spec)
+            checker = checker_cls(task_msg)
 
-            checker = checker_cls(request_dict=kwargs, **kwargs)
-
-            checker.logger.info(request.json)
+            checker.logger.info(task_msg)
             res = checker.run()
 
-            req_json["result"] = res.result.name
-            req_json["message"] = res.message
-            req_json = json.dumps(req_json)
+            result_message = CheckerResultMessage(
+                result=res.result, message=res.message
+            )
 
-            # checker.logger.info("Run resulted in {}: {}".format(res, request.json))
-            checker.logger.info("{}".format(req_json))
+            res_json = jsons.dumps(
+                result_message,
+                use_enum_name=False,
+                key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE,
+                strict=True,
+            )
 
-            return res.jsonify()
+            checker.logger.info("{}".format(res_json))
+
+            return Response(res_json, mimetype="application/json")
 
         except Exception as ex:
             logger.error(
@@ -268,15 +164,19 @@ def checker_routes(
                 ),
                 exc_info=ex,
             )
-            return jsonify(
-                {
-                    "result": Result.INTERNAL_ERROR.name,
-                    "message": "Critical checker error occurred",
-                    "traceback": exception_to_string(ex),
-                }
+            result_message = CheckerResultMessage(
+                result=CheckerTaskResult.CHECKER_TASK_RESULT_INTERNAL_ERROR,
+                message=f"Critical checker error occured\n{exception_to_string(ex)}",
             )
+            res_json = jsons.dumps(
+                result_message,
+                use_enum_name=False,
+                key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE,
+                strict=True,
+            )
+            return Response(res_json, mimetype="application/json")
 
-    def service_info() -> Dict[str, Union[str, int]]:
+    def service_info() -> CheckerInfoMessage:
         """
         Return technical information about this service.
 
@@ -289,41 +189,41 @@ def checker_routes(
                 checker_cls, "service_name", checker_cls.__name__.split("Checker")[0]
             )
 
-            info_dict = {
-                "serviceName": service_name,
-                "flagCount": checker_cls.flag_count,
-                "havocCount": checker_cls.havoc_count,
-                "noiseCount": checker_cls.noise_count,
-            }
-
-            assert isinstance(info_dict["serviceName"], str)
-            assert isinstance(info_dict["flagCount"], int)
-            assert isinstance(info_dict["havocCount"], int)
-            assert isinstance(info_dict["noiseCount"], int)
-
-            return info_dict  # type: ignore # (mypy would infer Dict[str, object] instead)
+            return CheckerInfoMessage(
+                service_name=service_name,
+                flag_variants=checker_cls.flag_variants,
+                noise_variants=checker_cls.noise_variants,
+                havoc_variants=checker_cls.havoc_variants,
+            )
 
         except Exception:
             logger.error(
                 """Service info not specified!
-add service_name, flag_count, havoc_count and noise_count as static fields to your CHECKER
+add service_name, flag_variants, havoc_variants and noise_variants as static fields to your CHECKER
 
 Example:
 class ExampleChecker(BaseChecker):
-    flag_count  = 1
-    noise_count = 1
-    havoc_count = 1
+    flag_variants  = 1
+    noise_variants = 1
+    havoc_variants = 1
 """
             )
             raise AttributeError("REQUIRED SERVICE INFO FIELDS NOT SPECIFIED!")
 
-    def get_service_info() -> str:
+    def get_service_info() -> Response:
         """
         Return JSON representation of the information from :func:`service_info`.
 
         :return: JSON representation of the service info
         """
-        return jsonify(service_info())
+        res_json = jsons.dumps(
+            service_info(),
+            use_enum_name=False,
+            key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE,
+            strict=True,
+        )
+
+        return Response(res_json, mimetype="application/json")
 
     return index, serve_checker, service_info, get_service_info
 

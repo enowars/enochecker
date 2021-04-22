@@ -5,27 +5,21 @@ from logging import DEBUG
 
 import pytest
 import requests
-from enochecker import (
-    CHECKER_METHODS,
-    BaseChecker,
-    BrokenServiceException,
-    OfflineException,
-)
-from enochecker.results import CheckerResult, Result
-
-RESULTS = [Result.OK, Result.MUMBLE, Result.OFFLINE, Result.INTERNAL_ERROR]
+from enochecker import BaseChecker, BrokenServiceException, OfflineException
+from enochecker.results import CheckerResult
+from enochecker_core import CheckerTaskMessage, CheckerTaskResult, CheckerTaskType
 
 
 @pytest.fixture()
 def checker_cls():
     class CheckerExampleImpl(BaseChecker):
         port = 9999
-        flag_count = 1
-        noise_count = 1
-        havoc_count = 1
+        flag_variants = 1
+        noise_variants = 1
+        havoc_variants = 1
 
         def __init__(
-            self, method=CHECKER_METHODS[0], **kwargs,
+            self, method=CheckerTaskType.CHECKER_TASK_TYPE_PUTFLAG, **kwargs,
         ):
             """
             An mocked implementation of a checker for testing purposes
@@ -33,21 +27,20 @@ def checker_cls():
             :param fail: If and how
             """
             super(CheckerExampleImpl, self).__init__(
-                method=method,
-                run_id=0,
-                address="localhost",
-                team_name="Testteam",
-                team_id=1,
-                flag_round=1,
-                round_length=300,
-                flag_idx=0,
-                storage_dir=CheckerExampleImpl._storage_dir,  # type: ignore
-                use_db_cache=False,
-                json_logging=True,
-                round_id=1,
-                flag="ENOFLAG",
-                timeout=30000,
-                **kwargs,
+                CheckerTaskMessage(
+                    task_id=1,
+                    method=CheckerTaskType(method),
+                    address="localhost",
+                    team_id=1,
+                    team_name="team1",
+                    current_round_id=1,
+                    related_round_id=1,
+                    flag="testflag",
+                    variant_id=0,
+                    timeout=30000,
+                    round_length=60000,
+                    task_chain_id="test",
+                )
             )
             self.logger.setLevel(DEBUG)
 
@@ -74,79 +67,81 @@ def checker_cls():
         yield CheckerExampleImpl
 
 
-@pytest.mark.parametrize("method", CHECKER_METHODS)
+@pytest.mark.parametrize("method", list(CheckerTaskType))
 def test_run_return_nothing(method, checker_cls):
     c = checker_cls(method)
     res = c.run()
     assert isinstance(res, CheckerResult)
-    assert res.result == Result.OK
+    assert res.result == CheckerTaskResult.CHECKER_TASK_RESULT_OK
 
 
-@pytest.mark.parametrize("method, result", product(CHECKER_METHODS, RESULTS))
+@pytest.mark.parametrize(
+    "method, result", product(list(CheckerTaskType), list(CheckerTaskResult))
+)
 def test_run_return_status(method, result, checker_cls):
     def meth(self):
         return result
 
-    setattr(checker_cls, method, meth)
+    setattr(checker_cls, str(method), meth)
     c = checker_cls(method)
     with pytest.deprecated_call():
         res = c.run()
     assert isinstance(res, CheckerResult)
-    assert res.result == result
+    assert res.result == CheckerTaskResult(result)
 
 
-@pytest.mark.parametrize("method", CHECKER_METHODS)
+@pytest.mark.parametrize("method", list(CheckerTaskType))
 def test_raise_broken_service_exception(method, checker_cls):
     def meth(self):
         raise BrokenServiceException("msg123")
 
-    setattr(checker_cls, method, meth)
+    setattr(checker_cls, str(method), meth)
     c = checker_cls(method)
     res = c.run()
     assert isinstance(res, CheckerResult)
-    assert res.result == Result.MUMBLE
+    assert res.result == CheckerTaskResult.CHECKER_TASK_RESULT_MUMBLE
     assert res.message == "msg123"
 
 
-@pytest.mark.parametrize("method", CHECKER_METHODS)
+@pytest.mark.parametrize("method", list(CheckerTaskType))
 def test_raise_offline_exception(method, checker_cls):
     def meth(self):
         raise OfflineException("msg123")
 
-    setattr(checker_cls, method, meth)
+    setattr(checker_cls, str(method), meth)
     c = checker_cls(method)
     res = c.run()
     assert isinstance(res, CheckerResult)
-    assert res.result == Result.OFFLINE
+    assert res.result == CheckerTaskResult.CHECKER_TASK_RESULT_DOWN
     assert res.message == "msg123"
 
 
-@pytest.mark.parametrize("method", CHECKER_METHODS)
+@pytest.mark.parametrize("method", list(CheckerTaskType))
 def test_raise_unhandled_exception(method, checker_cls):
     def meth(self):
         raise Exception("msg123")
 
-    setattr(checker_cls, method, meth)
+    setattr(checker_cls, str(method), meth)
     c = checker_cls(method)
     res = c.run()
     assert isinstance(res, CheckerResult)
-    assert res.result == Result.INTERNAL_ERROR
+    assert res.result == CheckerTaskResult.CHECKER_TASK_RESULT_INTERNAL_ERROR
     assert (
         not res.message
     )  # make sure no checker internals are leaked to the scoreboard
 
 
-@pytest.mark.parametrize("method", CHECKER_METHODS)
+@pytest.mark.parametrize("method", list(CheckerTaskType))
 def test_invalid_return(method, checker_cls):
     def meth(self):
         return "lolthisisinvalid"
 
-    setattr(checker_cls, method, meth)
+    setattr(checker_cls, str(method), meth)
     c = checker_cls(method)
     with pytest.deprecated_call():
         res = c.run()
     assert isinstance(res, CheckerResult)
-    assert res.result == Result.INTERNAL_ERROR
+    assert res.result == CheckerTaskResult.CHECKER_TASK_RESULT_INTERNAL_ERROR
     assert (
         not res.message
     )  # make sure no checker internals are leaked to the scoreboard
@@ -156,28 +151,28 @@ def test_run_invalid_method(checker_cls):
     c = checker_cls()
     res = c.run("lolthisisinvalid")
     assert isinstance(res, CheckerResult)
-    assert res.result == Result.INTERNAL_ERROR
+    assert res.result == CheckerTaskResult.CHECKER_TASK_RESULT_INTERNAL_ERROR
 
 
 @pytest.mark.parametrize(
-    "method, exc", product(CHECKER_METHODS, [requests.HTTPError, EOFError])
+    "method, exc", product(list(CheckerTaskType), [requests.HTTPError, EOFError])
 )
 def test_requests_mumble(method, exc, checker_cls):
     def meth(self):
         raise exc()
 
-    setattr(checker_cls, method, meth)
+    setattr(checker_cls, str(method), meth)
     c = checker_cls(method)
     res = c.run()
     assert isinstance(res, CheckerResult)
-    assert res.result == Result.MUMBLE
+    assert res.result == CheckerTaskResult.CHECKER_TASK_RESULT_MUMBLE
     assert res.message
 
 
 @pytest.mark.parametrize(
     "method, exc",
     product(
-        CHECKER_METHODS,
+        list(CheckerTaskType),
         [
             requests.ConnectionError,
             requests.exceptions.ConnectTimeout,
@@ -193,9 +188,9 @@ def test_offline_exceptions(method, exc, checker_cls):
     def meth(self):
         raise exc()
 
-    setattr(checker_cls, method, meth)
+    setattr(checker_cls, str(method), meth)
     c = checker_cls(method)
     res = c.run()
     assert isinstance(res, CheckerResult)
-    assert res.result == Result.OFFLINE
+    assert res.result == CheckerTaskResult.CHECKER_TASK_RESULT_DOWN
     assert res.message

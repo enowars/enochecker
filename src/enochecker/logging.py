@@ -67,6 +67,9 @@ class ELKFormatter(logging.Formatter):
             stack = self.formatStack(record.stack_info)
             message += f" trace: {stack}"
 
+        # TODO: fix
+        return ""
+
         log_output = {
             "tool": type(self.checker).__name__,
             "type": "infrastructure",
