@@ -371,8 +371,8 @@
         .then(service_json => {
           service_info = service_json
           var header = document.getElementById("checker-header")
-          document.title = service_info["service_name"] + "-Checker"
-          header.textContent = service_info["service_name"] + "-Checker"
+          document.title = service_info["serviceName"] + "-Checker"
+          header.textContent = service_info["serviceName"] + "-Checker"
         })
 
       var method_selector = document.getElementById("method")
