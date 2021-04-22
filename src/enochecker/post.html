@@ -2,7 +2,7 @@
 <html lang='en'>
   <head>
     <meta charset='UTF-8'/>
-    <title>{{SERVICENAME}}-Checker</title>
+    <title>$SERVICE-Checker</title>
     <!-- <link rel='stylesheet' href='styles.css'/> -->
     <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0' />
 
@@ -42,7 +42,7 @@
     }
     
     .responses-container,
-    .request_col {
+    .request-col {
       width: 80%;
     }
 
@@ -242,7 +242,7 @@
         width: 600px;
       }
 
-      .request_col {
+      .request-col {
         width: 600px;
       }
     } 
@@ -258,7 +258,7 @@
         width: 40%;
       }
 
-      .request_col {
+      .request-col {
         width: 600px;
       }
     } 
@@ -269,9 +269,9 @@
 
   </head>
   <body>
-    <div class='request_col'>
+    <div class='request-col'>
       <header action="/" method="post" class='checker-form-header'>
-        <h1>{{SERVICENAME}}-Checker</h1>
+        <h1 id="checker-header">$SERVICE-Checker</h1>
         <p><em>Try out your checker here!</em></p>
       </header>
       <div class="checker-form">
@@ -363,50 +363,62 @@
       var checker_pending_requests = 0
       var checker_results = []
 
-      var method_selector = document.getElementById("method");
+      var service_info;
+
+      //const service_info = await (await fetch("/service")).json()
+      var service_fut = fetch("/service")
+        .then(service_req => service_req.json())
+        .then(service_json => {
+          service_info = service_json
+          var header = document.getElementById("checker-header")
+          document.title = service_info["service_name"] + "-Checker"
+          header.textContent = service_info["service_name"] + "-Checker"
+        })
+
+      var method_selector = document.getElementById("method")
 
       method_selector.onchange = function () {
         if ( method_selector.selectedOptions[0].value === "putflag" 
             || method_selector.selectedOptions[0].value === "getflag" ) {
           
-          document.getElementById("flag").disabled = false;
-          var flag_row = document.getElementById("flag").parentNode;
-          flag_row.classList.remove("disabled");
+          document.getElementById("flag").disabled = false
+          var flag_row = document.getElementById("flag").parentNode
+          flag_row.classList.remove("disabled")
 
         } else {
 
-          document.getElementById("flag").disabled = true;
-          var flag_row = document.getElementById("flag").parentNode;
-          flag_row.classList.add("disabled");
+          document.getElementById("flag").disabled = true
+          var flag_row = document.getElementById("flag").parentNode
+          flag_row.classList.add("disabled")
         }
       }
 
       function update_pending() {
         for (var pending_container of document.getElementsByClassName('pending-requests')) {
           if (checker_pending_requests == 0) {
-            pending_container.innerText = "No request pending";
+            pending_container.innerText = "No request pending"
           } else {
-            pending_container.innerText = checker_pending_requests.toString() + " request(s) pending";
+            pending_container.innerText = checker_pending_requests.toString() + " request(s) pending"
           }
         }
       }
 
       function checkertask_submit(e) {
-        var started = Date.now();
-        e.preventDefault();
-        let formElement = document.querySelector("form");
-        let data = new FormData(formElement);
+        var started = Date.now()
+        e.preventDefault()
+        let formElement = document.querySelector("form")
+        let data = new FormData(formElement)
 
         var object = {};
         data.forEach(function(value, key){
-            object[key] = value;
+            object[key] = value
             let formfield = document.getElementById(key);
             if (formfield instanceof HTMLInputElement) {
               if (formfield.type == 'number') {
                 object[key] = parseInt(value)
               }
             }
-        });
+        })
 
         let method_ident = {
           "putflag": "flag",
@@ -415,41 +427,41 @@
           "getnoise": "noise",
           "havoc": "havoc",
           "exploit": "exploit",
-        }[object["method"]];
+        }[object["method"]]
 
         // We assume that we're the service with Id
-        object["taskChainId"] = `${method_ident}_s0_r${object["relatedRoundId"]}_t${object["teamId"]}_i${object["uniqueVariantId"]}`;
+        object["taskChainId"] = `${method_ident}_s0_r${object["relatedRoundId"]}_t${object["teamId"]}_i${object["uniqueVariantId"]}`
         delete object["uniqueVariantId"]
         
-        var request_json = JSON.stringify(object);
+        var request_json = JSON.stringify(object)
 
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "/");
-        xhr.setRequestHeader("Content-Type", "application/json");
+        var xhr = new XMLHttpRequest()
+        xhr.open("POST", "/")
+        xhr.setRequestHeader("Content-Type", "application/json")
         xhr.onload = xhr.onerror = function () {
-          console.log(xhr.responseText);
+          console.log(xhr.responseText)
           try {
             obj = JSON.parse(xhr.responseText)
-            json_indented = JSON.stringify(obj, undefined, 4);
+            json_indented = JSON.stringify(obj, undefined, 4)
           } catch (e) {
             // Print raw response is JSON-parsing failed
-            json_indented = xhr.responseText;
+            json_indented = xhr.responseText
           }
-          var response_history = document.getElementById('responses');
-          var out_element = document.createElement('div');
-          out_element.classList.add('response-container');
+          var response_history = document.getElementById('responses')
+          var out_element = document.createElement('div')
+          out_element.classList.add('response-container')
 
-          var status_text = document.createElement('p');
+          var status_text = document.createElement('p')
           status_text.append(
             document.createTextNode(
               "Request " + checker_request_count.toString() + " resulted after " + ((Date.now() - started)/1000) + " s in:"
             )
-          );
+          )
           
-          var response = document.createElement('pre');
+          var response = document.createElement('pre')
           response.append(
             document.createTextNode(json_indented)
-          );
+          )
           
           out_element.append(status_text)
           out_element.append(response)
@@ -458,11 +470,11 @@
 
           checker_request_count++
           checker_pending_requests--
-          update_pending();
+          update_pending()
         }
 
-        xhr.send(request_json);
-        checker_pending_requests++;
+        xhr.send(request_json)
+        checker_pending_requests++
         update_pending();
         return false;
       }
