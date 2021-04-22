@@ -18,7 +18,8 @@ setuptools.setup(
     url="https://github.com/ENOWARS/enochecker",
     packages=setuptools.find_packages("src"),
     package_dir={"": "src"},
-    package_data={"enochecker": ["py.typed"]},
+    include_package_data=True,
+    package_data={"enochecker": ["py.typed", "src/enochecker/post.html"]},
     install_requires=requirements,
     classifiers=[
         # How mature is this project? Common values are
