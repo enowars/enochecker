@@ -1,9 +1,9 @@
 from .enochecker import BaseChecker, parse_args, run  # the BaseChecker
 from .results import (  # Possible results
+    BrokenCheckerException,
     BrokenServiceException,
     EnoException,
     OfflineException,
-    BrokenCheckerException,
 )
 from .utils import (  # the util stuff
     SimpleSocket,
