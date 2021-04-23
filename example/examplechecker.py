@@ -53,7 +53,7 @@ class ExampleChecker(BaseChecker):
     def putflag(self) -> None:
         """
         This method stores a flag in the service.
-        In case multiple flags are provided, self.flag_idx gives the appropriate index.
+        In case multiple flags are provided, self.variant_id gives the appropriate index.
         The flag itself can be retrieved from self.flag.
         On error, raise an Eno Exception.
         :raises EnoException on error
@@ -75,7 +75,7 @@ class ExampleChecker(BaseChecker):
         else:
             raise ValueError(
                 "Call_Idx {} exceeds the amount of flags. Not supported.".format(
-                    self.flag_idx
+                    self.variant_id
                 )
             )
 
@@ -117,14 +117,14 @@ class ExampleChecker(BaseChecker):
                 )
         else:
             raise ValueError(
-                "Call_idx {} not supported!".format(self.flag_idx)
+                "Call_idx {} not supported!".format(self.variant_id)
             )  # Internal error.
 
     def putnoise(self) -> None:
         """
         This method stores noise in the service. The noise should later be recoverable.
         The difference between noise and flag is, tht noise does not have to remain secret for other teams.
-        This method can be called many times per round. Check how often using self.flag_idx.
+        This method can be called many times per round. Check how often using self.variant_id.
         On error, raise an EnoException.
         :raises EnoException on error
         """
@@ -152,7 +152,7 @@ class ExampleChecker(BaseChecker):
 
         res = self.http_post(
             "/posts",
-            json={"content": category, "category": category, "public": True},
+            json={"content": self.noise, "category": category, "public": True},
         )
         assert_equals(res.status_code, 200)
 
@@ -160,8 +160,9 @@ class ExampleChecker(BaseChecker):
         """
         This method retrieves noise in the service.
         The noise to be retrieved is inside self.flag
-        The difference between noise and flag is, tht noise does not have to remain secret for other teams.
-        This method can be called many times per round. Check how often using flag_idx.
+        The difference between noise and flag is, that noise does not have to remain secret for other teams.
+        This method can be called many times per round.
+        The engine will also trigger different variants, indicated by variant_id.
         On error, raise an EnoException.
         :raises EnoException on error
         """
@@ -172,7 +173,7 @@ class ExampleChecker(BaseChecker):
 
         try:
             for post in res.json()["posts"]:
-                if post["content"] == category:
+                if post["content"] == self.noise:
                     return  # returning nothing/raising no exceptions means everything is ok
         except (KeyError, json.JSONDecodeError):
             raise BrokenServiceException("received invalid response on /posts")

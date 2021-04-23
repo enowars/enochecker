@@ -36,17 +36,17 @@ def checker_cls():
             """
             super(CheckerExampleImpl, self).__init__(
                 method=method,
-                run_id=0,
+                task_id=0,
                 address="localhost",
                 team_name="Testteam",
                 team_id=1,
-                flag_round=1,
+                round_id=1,
+                related_round_id=1,
                 round_length=300,
-                flag_idx=0,
+                variant_id=0,
                 storage_dir=CheckerExampleImpl._storage_dir,  # type: ignore
                 use_db_cache=False,
                 json_logging=True,
-                round_id=1,
                 flag="ENOFLAG",
                 timeout=30000,
                 **kwargs,

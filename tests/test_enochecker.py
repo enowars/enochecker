@@ -49,20 +49,21 @@ class CheckerExampleImpl(BaseChecker):
     def __init__(
         self,
         method=CHECKER_METHODS[0],
-        run_id=0,
+        task_id=0,
         address="localhost",
         team_name="Testteam",
         team_id=1,
-        flag_round=None,
-        round_length=300,
-        flag_idx=None,
+        related_round_id=1,
+        round_length=30000,
+        variant_id=0,
         storage_dir=None,
         log_endpoint=None,
         use_db_cache=True,
         json_logging=True,
-        round_id=1,
+        current_round_id=1,
+        task_chain_id="task_chain_id_0",
         flag="ENOFLAG",
-        timeout=30000,
+        timeout=300000,
         **kwargs,
     ):
         """
@@ -72,17 +73,18 @@ class CheckerExampleImpl(BaseChecker):
         """
         super(CheckerExampleImpl, self).__init__(
             method=method,
-            run_id=run_id,
+            task_id=task_id,
             address=address,
             team_name=team_name,
             team_id=team_id,
-            flag_round=flag_round,
+            related_round_id=related_round_id,
             round_length=round_length,
-            flag_idx=flag_idx,
+            variant_id=variant_id,
             storage_dir=storage_dir or STORAGE_DIR,
             use_db_cache=use_db_cache,
             json_logging=json_logging,
-            round_id=round_id,
+            current_round_id=current_round_id,
+            task_chain_id=task_chain_id,
             flag=flag,
             timeout=timeout,
             **kwargs,
@@ -91,7 +93,7 @@ class CheckerExampleImpl(BaseChecker):
 
     def putflag(self):
         self.team_db["flag"] = self.flag
-        if self.flag_idx == 2:
+        if self.variant_id == 2:
             self.info("RAN IDX 2")
             raise Exception()
 
@@ -191,38 +193,32 @@ def test_args():
     argv = [
         "run",
         CHECKER_METHODS[0],
+        "-i",
+        "0",
         "-a",
         "localhost",
         "-t",
         "TestTeam",
-        "-I",
+        "-r",
         "1",
         "-f",
         "ENOTESTFLAG",
         "-x",
-        "30",
-        "-i",
-        "0",
+        "30000",
         "-R",
         "500",
-        "-F",
-        "299",
-        "-T",
-        "19"
         # "-p", "1337"
     ]
     args = parse_args(argv)
 
     assert args.method == argv[1]
-    assert args.address == argv[3]
-    assert args.team_name == argv[5]
-    assert args.round_id == int(argv[7])
-    assert args.flag == argv[9]
-    assert args.timeout == int(argv[11])
-    assert args.flag_idx == int(argv[13])
-    assert args.round_length == int(argv[15])
-    assert args.flag_round == int(argv[17])
-    assert args.team_id == int(argv[19])
+    assert args.address == argv[5]
+    assert args.team_name == argv[7]
+    assert args.current_round_id == int(argv[9])
+    assert args.flag == argv[11]
+    assert args.timeout == int(argv[13])
+
+    # TODO: test more parameters
 
     # assert args.port == int(argv[15])
     # port should be specified in the basechecker as a constant, so this test isn't neccesary
@@ -254,20 +250,20 @@ def test_checker_connections():
 @temp_storage_dir
 def test_checker():
     flag = "ENOFLAG"
-    noise = "buzzzz! :)"
+    task_chain_id = "test_id"
 
     CheckerExampleImpl(method="putflag").run()
 
     assert CheckerExampleImpl().team_db["flag"] == flag
     CheckerExampleImpl(method="getflag", flag=flag).run()
 
-    CheckerExampleImpl(method="putnoise", flag=noise).run()
-    assert CheckerExampleImpl().team_db["noise"] == noise
-    CheckerExampleImpl(method="getnoise", flag=noise).run()
+    CheckerExampleImpl(method="putnoise", variant_id="test_id").run()
+    assert CheckerExampleImpl().team_db["noise"] is not None
+    CheckerExampleImpl(method="getnoise", variant_id="test_id").run()
 
     assert CheckerExampleImpl(method="havoc").run().result == Result.OFFLINE
 
-    c = CheckerExampleImpl(method="putflag", round_id=1337)
+    c = CheckerExampleImpl(method="putflag", current_round_id=1337)
     with pytest.deprecated_call():
         assert c.current_round == 1337
     c.round = 15

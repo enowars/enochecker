@@ -2,6 +2,7 @@
 
 import argparse
 import datetime
+import hashlib
 import json
 import logging
 import os
@@ -341,6 +342,10 @@ class BaseChecker(metaclass=_CheckerMeta):
             self.method = "havoc"
             self.warning("Ignoring method 'havok', calling 'havoc' instead")
 
+        self._noise_cache: Optional[
+            str
+        ] = None  # cache, in case noise is being used by the current run
+
     def _setup_logger(self) -> None:
         """
         Set up a logger usable from inside a checker using.
@@ -411,14 +416,22 @@ class BaseChecker(metaclass=_CheckerMeta):
         return self.round
 
     @property
-    def noise(self) -> Optional[str]:
+    def noise(self) -> str:
         """
-        Deprecated! Only for backwards compatibility! Use self.ctx instead.
+        Creates a stable noise value for the current context.
+        Do not use for indexing (use self.ctx instead).
 
-        :return: The context of this run
+        :return: A noise string, unique for each ctx.
         """
-        warn_deprecated("noise", "ctx")
-        return self.ctx
+        if self._noise_cache is None:
+            if not self.ctx:
+                self.warning("No valid ctx when calling noise!")
+                return "<none>"
+            # We cache the hex in case it's called often.
+            m = hashlib.sha256()
+            m.update(self.ctx.encode())
+            self._noise_cache = m.hexdigest()
+        return self._noise_cache
 
     @property
     def time_running(self) -> float:

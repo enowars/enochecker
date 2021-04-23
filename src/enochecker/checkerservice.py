@@ -169,7 +169,10 @@ def assert_types(
     ret = {}
 
     def key_to_name(key: str) -> str:
-        key = key.replace("Index", "Idx")  # -> flagIndex -> flag_idx
+        """
+        Translates the keys to pythonic names
+        Mostly snake_cases them, historically did some remapping.
+        """
         return snake_caseify(key)
 
     for entry in spec:

@@ -76,8 +76,8 @@ class ELKFormatter(logging.Formatter):
             "module": record.module,
             "function": record.funcName,
             "flag": self.checker.flag,
-            "flagIndex": self.checker.flag_idx,
-            "runId": self.checker.run_id,
+            "flagIndex": self.checker.variant_id,
+            "task_id": self.checker.task_id,
             "roundId": self.checker.round,
             "relatedRoundId": self.checker.related_round_id,
             "message": message,
@@ -85,6 +85,7 @@ class ELKFormatter(logging.Formatter):
             "teamId": self.checker.team_id,
             "serviceName": self.checker.service_name,
             "method": self.checker.method,
+            "task_chain_id": self.ctx,
         }
 
         return LOGGING_PREFIX + json.dumps(log_output)
