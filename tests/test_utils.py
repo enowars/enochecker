@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+import sys
 import pytest
 from enochecker import BrokenServiceException
 from enochecker.utils import (
@@ -131,3 +133,11 @@ def test_debase64ify():
     assert debase64ify("MdW_", "-_") == b"\x31\xd5\xbf".decode()
     assert debase64ify("8J_dgQ==", "_-") == b"\xf0\x9f\x9d\x81".decode()
     assert debase64ify("MdW-", "_-") == b"\x31\xd5\xbf".decode()
+
+
+def main():
+    pytest.main(sys.argv)
+
+
+if __name__ == "__main__":
+    main()

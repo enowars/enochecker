@@ -1,4 +1,6 @@
+#!/usr/bin/env python3
 import socket
+import sys
 import tempfile
 from itertools import product
 from logging import DEBUG
@@ -40,7 +42,7 @@ def checker_cls():
                 address="localhost",
                 team_name="Testteam",
                 team_id=1,
-                round_id=1,
+                current_round_id=1,
                 related_round_id=1,
                 round_length=300,
                 variant_id=0,
@@ -201,3 +203,11 @@ def test_offline_exceptions(method, exc, checker_cls):
     assert isinstance(res, CheckerResult)
     assert res.result == Result.OFFLINE
     assert res.message
+
+
+def main():
+    pytest.main(sys.argv)
+
+
+if __name__ == "__main__":
+    main()
