@@ -181,44 +181,6 @@ def debase64ify(
         return base64.b64decode(s).decode("utf-8")
 
 
-# def readline_expect(
-#     telnet: Union[telnetlib.Telnet, "SimpleSocket"],
-#     expected: Union[str, bytes],
-#     read_until: Union[str, bytes] = b"\n",
-#     timeout: int = 30,
-# ) -> bytes:
-#     """
-#     Read to newline (or read_until string) and assert the presence of a string in the response.
-
-#     Will raise an exception if failed.
-
-#     :param telnet: Connected telnet instance (the result of self.telnet(..))
-#     :param expected: the expected String to search for in the response
-#     :param read_until: Which char to read until.
-#     :param timeout: a timeout
-#     :return: the bytes read
-#     """
-#     logger = getattr(telnet, "logger", utilslogger)
-
-#     if isinstance(expected, str):
-#         expected = expected.encode("utf-8")
-#     if isinstance(read_until, str):
-#         read_until = read_until.encode("utf-8")
-
-#     read = telnet.read_until(read_until, timeout)
-#     if read == b"":
-#         err = "Expected {!r} but got nothing/timeout!".format(expected)
-#         logger.error(err, stack_info=True)
-#         telnet.close()
-#         raise OfflineException(err)
-#     if expected not in read:
-#         err = "Expected {!r} but got {!r}".format(expected, read)
-#         logger.error(err, stack_info=True)
-#         telnet.close()
-#         raise BrokenServiceException(err)
-#     return read
-
-
 def start_daemon(target: Callable[..., Any]) -> threading.Thread:
     """
     Start a thread as daemon.
@@ -316,9 +278,9 @@ class SimpleSocket(telnetlib.Telnet):
         self,
         host: Optional[str] = None,
         port: int = 0,
-        timeout: int = socket._GLOBAL_DEFAULT_TIMEOUT,  # type: ignore
+        timeout: float = socket._GLOBAL_DEFAULT_TIMEOUT,  # type: ignore
         logger: Optional[logging.Logger] = None,
-        timeout_fun: Optional[Callable[[], int]] = None,
+        timeout_fun: Optional[Callable[[], float]] = None,
     ) -> None:
         """
         Initialize a new SimpleSocket Object.
@@ -329,16 +291,16 @@ class SimpleSocket(telnetlib.Telnet):
         :param logger: The optional logger to use
         :param timeout_fun: function that will output the current timeout on each call.
         """
-        super().__init__(host, port, timeout)
+        super().__init__(host, port, timeout)  # type: ignore
         self.socket: socket.socket = super().get_socket()
         if logger:
             self.logger = logger
         else:
             self.logger = utilslogger
-        self.timeout_fun: Optional[Callable[[], int]] = timeout_fun
+        self.timeout_fun: Optional[Callable[[], float]] = timeout_fun
 
     @property
-    def current_default_timeout(self) -> int:
+    def current_default_timeout(self) -> float:
         """
         Get the timeout default that should currently be used.
 
@@ -353,7 +315,7 @@ class SimpleSocket(telnetlib.Telnet):
         self,
         expected: Union[str, bytes],
         read_until: Union[str, bytes] = b"\n",
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         exception_message: Optional[str] = None,
     ) -> bytes:
         """
@@ -395,7 +357,7 @@ class SimpleSocket(telnetlib.Telnet):
     def expect(
         self,
         regexes: Sequence[Union[Pattern[bytes], bytes, str]],
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
     ) -> Tuple[int, Optional[Match[bytes]], bytes]:
         """
         Read until one from a list of a regular expressions matches.
@@ -417,10 +379,10 @@ class SimpleSocket(telnetlib.Telnet):
             ensure_bytes(x) if isinstance(x, str) else x for x in regexes
         ]
 
-        return super().expect(list=regexes_, timeout=timeout)
+        return super().expect(list=regexes_, timeout=timeout)  # type: ignore
 
     def read_until(
-        self, match: Union[bytes, str], timeout: Optional[int] = None
+        self, match: Union[bytes, str], timeout: Optional[float] = None
     ) -> bytes:
         """
         Read until the expected string has been seen, or a timeout is hit (default is default socket timeout).
@@ -433,7 +395,7 @@ class SimpleSocket(telnetlib.Telnet):
         """
         if timeout is None:
             timeout = self.current_default_timeout
-        return super().read_until(ensure_bytes(match), timeout)
+        return super().read_until(ensure_bytes(match), timeout)  # type: ignore
 
     def read_n_lines(
         self, line_count: int, delimiter: Union[str, bytes] = b"\n"

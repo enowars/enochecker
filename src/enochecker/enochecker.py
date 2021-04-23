@@ -42,8 +42,8 @@ if TYPE_CHECKING:  # pragma: no cover
     # The import might fail in UWSGI, see the comments below.
     import requests
 
-DEFAULT_TIMEOUT: int = 30000
-TIME_BUFFER: int = 5000  # time in milliseconds we try to finish earlier
+DEFAULT_TIMEOUT: float = 30
+TIME_BUFFER: float = 5  # time in seconds we try to finish earlier
 
 # Global cache for all stored dicts.  TODO: Prune this at some point?
 global_db_cache: Dict[str, Union[StoredDict, NoSqlDict]] = {}
@@ -155,8 +155,8 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.related_round_id: int = task.related_round_id
         self.flag: Optional[str] = task.flag
         self.variant_id: int = task.variant_id
-        self.timeout: int = task.timeout
-        self.round_length: int = task.round_length
+        self.timeout: float = task.timeout / 1000
+        self.round_length: float = task.round_length / 1000
         self.task_chain_id: str = task.task_chain_id
 
         self._noise_cache: Optional[str] = None
@@ -245,28 +245,26 @@ class BaseChecker(metaclass=_CheckerMeta):
         return self._noise_cache
 
     @property
-    def time_running(self) -> int:
+    def time_running(self) -> float:
         """
         How long this checker has been running for.
 
-        :return: time this checker has been running for in milliseconds
+        :return: time this checker has been running for in seconds
         """
-        return int(
-            (datetime.datetime.now() - self.time_started_at).total_seconds() * 1000
-        )
+        return (datetime.datetime.now() - self.time_started_at).total_seconds()
 
     @property
-    def time_remaining(self) -> int:
+    def time_remaining(self) -> float:
         """
         Return a remaining time that is safe to be used as timeout.
 
         Includes a buffer of TIME_BUFFER seconds.
 
-        :return: A safe number of milliseconds that may still be used
+        :return: A safe number of seconds that may still be used
         """
         return max(
             getattr(self, "timeout", DEFAULT_TIMEOUT) - self.time_running - TIME_BUFFER,
-            1000,
+            1,
         )
 
     # ---- Basic checker functionality ---- #
@@ -574,7 +572,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         self,
         host: Optional[str] = None,
         port: Optional[int] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         retries: int = 3,
     ) -> SimpleSocket:
         """
@@ -589,15 +587,15 @@ class BaseChecker(metaclass=_CheckerMeta):
         :return: A connected Telnet instance
         """
 
-        if timeout:
+        if timeout is not None:
 
-            def timeout_fun() -> int:
-                return cast(int, timeout)
+            def timeout_fun() -> float:
+                return cast(float, timeout)
 
         else:
 
-            def timeout_fun() -> int:
-                return self.time_remaining // 2
+            def timeout_fun() -> float:
+                return self.time_remaining / 2
 
         if port is None:
             port = self.port
@@ -674,7 +672,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         port: Optional[int] = None,
         scheme: str = "http",
         raise_http_errors: bool = False,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         **kwargs: Any,
     ) -> "requests.Response":
         """
@@ -702,7 +700,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         port: Optional[int] = None,
         scheme: str = "http",
         raise_http_errors: bool = False,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         **kwargs: Any,
     ) -> "requests.Response":
         """
@@ -731,7 +729,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         port: Optional[int] = None,
         scheme: str = "http",
         raise_http_errors: bool = False,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         **kwargs: Any,
     ) -> "requests.Response":
         """
@@ -751,7 +749,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         kwargs.setdefault("allow_redirects", False)
         url = self._sanitize_url(route, port, scheme)
         if timeout is None:
-            timeout = self.time_remaining // 2
+            timeout = self.time_remaining / 2
         self.debug(
             "Request: {} {} with params: {} and {} secs timeout.".format(
                 method, url, params, timeout
