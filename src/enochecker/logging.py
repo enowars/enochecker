@@ -1,11 +1,13 @@
 """Utilities for sending log messages to a central ELK."""
 
 import datetime
-import json
 import logging
 import traceback
 from logging import LogRecord
 from typing import TYPE_CHECKING
+
+import jsons
+from enochecker_core import EnoLogMessage
 
 LOGGING_PREFIX = "##ENOLOGMESSAGE "
 
@@ -67,24 +69,30 @@ class ELKFormatter(logging.Formatter):
             stack = self.formatStack(record.stack_info)
             message += f" trace: {stack}"
 
-        log_output = {
-            "tool": type(self.checker).__name__,
-            "type": "infrastructure",
-            "severity": record.levelname,
-            "severityLevel": max(0, record.levelno // 10 - 1),
-            "timestamp": record.asctime,
-            "module": record.module,
-            "function": record.funcName,
-            "flag": self.checker.flag,
-            "flagIndex": self.checker.flag_idx,
-            "runId": self.checker.run_id,
-            "roundId": self.checker.round,
-            "relatedRoundId": self.checker.flag_round,
-            "message": message,
-            "teamName": self.checker.team,
-            "teamId": self.checker.team_id,
-            "serviceName": self.checker.service_name,
-            "method": self.checker.method,
-        }
+        log_message = EnoLogMessage(
+            tool=type(self.checker).__name__,
+            type="infrastructure",
+            severity=record.levelname,
+            severity_level=max(0, record.levelno // 10 - 1),
+            timestamp=record.asctime,
+            message=message,
+            module=record.module,
+            function=record.funcName,
+            service_name=self.checker.service_name,
+            method=self.checker.method.value if self.checker.method else None,
+            task_id=self.checker.task_id,
+            team_id=self.checker.team_id,
+            team_name=self.checker.team_name,
+            current_round_id=self.checker.current_round_id,
+            related_round_id=self.checker.related_round_id,
+            flag=self.checker.flag,
+            variant_id=self.checker.variant_id,
+            task_chain_id=self.checker.task_chain_id,
+        )
 
-        return LOGGING_PREFIX + json.dumps(log_output)
+        return LOGGING_PREFIX + jsons.dumps(
+            log_message,
+            use_enum_name=False,
+            key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE,
+            strict=True,
+        )
