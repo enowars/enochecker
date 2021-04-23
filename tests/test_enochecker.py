@@ -250,16 +250,16 @@ def test_checker_connections():
 @temp_storage_dir
 def test_checker():
     flag = "ENOFLAG"
-    task_chain_id = "test_id"
+    task_chain_id = "test_task_chain_id"
 
     CheckerExampleImpl(method="putflag").run()
 
     assert CheckerExampleImpl().team_db["flag"] == flag
     CheckerExampleImpl(method="getflag", flag=flag).run()
 
-    CheckerExampleImpl(method="putnoise", variant_id="test_id").run()
+    CheckerExampleImpl(method="putnoise", task_chain_id=task_chain_id).run()
     assert CheckerExampleImpl().team_db["noise"] is not None
-    CheckerExampleImpl(method="getnoise", variant_id="test_id").run()
+    CheckerExampleImpl(method="getnoise", task_chain_id=task_chain_id).run()
 
     assert CheckerExampleImpl(method="havoc").run().result == Result.OFFLINE
 
