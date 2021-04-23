@@ -3,6 +3,7 @@ from .results import (  # Possible results
     BrokenServiceException,
     EnoException,
     OfflineException,
+    BrokenCheckerException,
 )
 from .utils import (  # the util stuff
     SimpleSocket,
