@@ -1,4 +1,6 @@
+#!/usr/bin/env python3
 import socket
+import sys
 import tempfile
 from itertools import product
 from logging import DEBUG
@@ -194,3 +196,11 @@ def test_offline_exceptions(method, exc, checker_cls):
     assert isinstance(res, CheckerResult)
     assert res.result == CheckerTaskResult.CHECKER_TASK_RESULT_OFFLINE
     assert res.message
+
+
+def main():
+    pytest.main(sys.argv)
+
+
+if __name__ == "__main__":
+    main()

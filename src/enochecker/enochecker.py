@@ -2,6 +2,7 @@
 
 import argparse
 import datetime
+import hashlib
 import logging
 import os
 import socket
@@ -46,6 +47,17 @@ TIME_BUFFER: int = 5000  # time in milliseconds we try to finish earlier
 
 # Global cache for all stored dicts.  TODO: Prune this at some point?
 global_db_cache: Dict[str, Union[StoredDict, NoSqlDict]] = {}
+
+
+def warn_deprecated(old_name: str, new_name: str) -> None:
+    """
+    Print a warning for the deprecated feature, include the new name in the log
+    This needs python development mode or deprecation warnings enabled!
+    """
+    warnings.warn(
+        f"Checker uses deprecated {old_name}; use {new_name} instead.",
+        DeprecationWarning,
+    )
 
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -120,10 +132,10 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         Init the Checker, fill the params.
 
-        TODO: update docs
-
         :param task: The CheckerTaskMessage to be executed
         :param storage_dir: The directory to store persistent data in (used by StoredDict)
+        :param variant_id: The variant of this run
+        :param task_chain_id: The context of this run
         """
         # We import requests after startup global imports may deadlock, see
         # https://github.com/psf/requests/issues/2925
@@ -146,6 +158,8 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.timeout: int = task.timeout
         self.round_length: int = task.round_length
         self.task_chain_id: str = task.task_chain_id
+
+        self._noise_cache: Optional[str] = None
 
         self.storage_dir = storage_dir
 
@@ -202,6 +216,33 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.warning: Callable[..., None] = self.logger.warning
         self.error: Callable[..., None] = self.logger.error
         self.critical: Callable[..., None] = self.logger.critical
+
+    @property
+    def ctx(self) -> str:
+        """
+        short hand version for self.task_chain_id
+
+        :return: self.task_chain_id
+        """
+        return self.task_chain_id
+
+    @property
+    def noise(self) -> str:
+        """
+        Creates a stable noise value for the current context.
+        Do not use for indexing (use self.ctx instead).
+
+        :return: A noise string, unique for each ctx.
+        """
+        if self._noise_cache is None:
+            if not self.ctx:
+                self.warning("No valid ctx when calling noise!")
+                return "<none>"
+            # We cache the hex in case it's called often.
+            m = hashlib.sha256()
+            m.update(self.ctx.encode())
+            self._noise_cache = m.hexdigest()
+        return self._noise_cache
 
     @property
     def time_running(self) -> int:

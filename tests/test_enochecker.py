@@ -44,7 +44,11 @@ class CheckerExampleImpl(BaseChecker):
     havoc_variants = 1
 
     def __init__(
-        self, method=CheckerMethod.CHECKER_METHOD_PUTFLAG, flag="ENOFLAG", **kwargs,
+        self,
+        method=CheckerMethod.CHECKER_METHOD_PUTFLAG,
+        flag="ENOFLAG",
+        task_chain_id="test",
+        **kwargs,
     ):
         """
         An mocked implementation of a checker for testing purposes
@@ -64,7 +68,7 @@ class CheckerExampleImpl(BaseChecker):
                 variant_id=0,
                 timeout=30000,
                 round_length=60000,
-                task_chain_id="test",
+                task_chain_id=task_chain_id,
             ),
             **kwargs,
         )
@@ -188,16 +192,16 @@ def test_checker_connections():
 @temp_storage_dir
 def test_checker():
     flag = "ENOFLAG"
-    noise = "buzzzz! :)"
+    task_chain_id = "test_task_chain_id"
 
     CheckerExampleImpl(method="putflag").run()
 
     assert CheckerExampleImpl().team_db["flag"] == flag
     CheckerExampleImpl(method="getflag", flag=flag).run()
 
-    CheckerExampleImpl(method="putnoise", flag=noise).run()
-    assert CheckerExampleImpl().team_db["noise"] == noise
-    CheckerExampleImpl(method="getnoise", flag=noise).run()
+    CheckerExampleImpl(method="putnoise", task_chain_id=task_chain_id).run()
+    assert CheckerExampleImpl().team_db["noise"] is not None
+    CheckerExampleImpl(method="getnoise", task_chain_id=task_chain_id).run()
 
     assert (
         CheckerExampleImpl(method="havoc").run().result

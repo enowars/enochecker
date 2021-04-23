@@ -60,14 +60,14 @@ class ExampleChecker(BaseChecker):
         """
         if self.variant_id == 0:
             credentials = self.generate_credentials()
-            self.team_db[self.task_chain_id] = credentials
+            self.team_db[self.ctx] = credentials
             self.register_and_login(credentials)
 
             res = self.http_post("/notes", json={"note": self.flag})
             assert_equals(res.status_code, 200)
         elif self.variant_id == 1:
             credentials = self.generate_credentials()
-            self.team_db[self.task_chain_id] = credentials
+            self.team_db[self.ctx] = credentials
             self.register_and_login(credentials)
 
             res = self.http_post("/profile/status", json={"status": self.flag})
@@ -87,7 +87,7 @@ class ExampleChecker(BaseChecker):
         :raises EnoException on error
         """
         if self.variant_id == 0:
-            credentials = self.team_db[self.task_chain_id]
+            credentials = self.team_db[self.ctx]
             self.login(credentials)
 
             res = self.http_get("/notes")
@@ -102,7 +102,7 @@ class ExampleChecker(BaseChecker):
                 )
 
         elif self.variant_id == 1:
-            credentials = self.team_db[self.task_chain_id]
+            credentials = self.team_db[self.ctx]
             self.login(credentials)
 
             res = self.http_get("/profile")
@@ -124,12 +124,11 @@ class ExampleChecker(BaseChecker):
         """
         This method stores noise in the service. The noise should later be recoverable.
         The difference between noise and flag is, tht noise does not have to remain secret for other teams.
-        This method can be called many times per round. Check how often using self.flag_idx.
+        This method can be called many times per round. Check how often using self.variant_id.
         On error, raise an EnoException.
         :raises EnoException on error
         """
         credentials = self.generate_credentials()
-        self.team_db[self.task_chain_id] = credentials
         self.register_and_login(credentials)
 
         category = secrets.choice(
@@ -147,16 +146,12 @@ class ExampleChecker(BaseChecker):
             ]
         )
 
-        noise = f"{category} is cool"
-
         # we are overwriting the credentials on purpose since we don't need them later in this case
-        self.team_db[self.task_chain_id] = {
-            "noise": noise,
-            "category": category,
-        }
+        self.team_db[self.ctx] = category
 
         res = self.http_post(
-            "/posts", json={"content": noise, "category": category, "public": True},
+            "/posts",
+            json={"content": self.noise, "category": category, "public": True},
         )
         assert_equals(res.status_code, 200)
 
@@ -164,20 +159,20 @@ class ExampleChecker(BaseChecker):
         """
         This method retrieves noise in the service.
         The noise to be retrieved is inside self.flag
-        The difference between noise and flag is, tht noise does not have to remain secret for other teams.
-        This method can be called many times per round. Check how often using flag_idx.
+        The difference between noise and flag is, that noise does not have to remain secret for other teams.
+        This method can be called many times per round.
+        The engine will also trigger different variants, indicated by variant_id.
         On error, raise an EnoException.
         :raises EnoException on error
         """
-        noise = self.team_db[self.task_chain_id]["noise"]
-        category = self.team_db[self.task_chain_id]["category"]
+        category = self.team_db[self.ctx]
 
         res = self.http_get("/posts", json={"category": category})
         assert_equals(res.status_code, 200)
 
         try:
             for post in res.json()["posts"]:
-                if post["content"] == noise:
+                if post["content"] == self.noise:
                     return  # returning nothing/raising no exceptions means everything is ok
         except (KeyError, json.JSONDecodeError):
             raise BrokenServiceException("received invalid response on /posts")
