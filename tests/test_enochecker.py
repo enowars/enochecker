@@ -5,8 +5,10 @@ import tempfile
 import time
 from logging import DEBUG
 
-import enochecker
 import pytest
+from enochecker_core import CheckerMethod, CheckerTaskMessage, CheckerTaskResult
+
+import enochecker
 from enochecker import (
     BaseChecker,
     BrokenServiceException,
@@ -18,7 +20,6 @@ from enochecker import (
     serve_once,
     snake_caseify,
 )
-from enochecker_core import CheckerMethod, CheckerTaskMessage, CheckerTaskResult
 
 STORAGE_DIR: str = "/tmp/enochecker_test"
 
@@ -70,6 +71,7 @@ class CheckerExampleImpl(BaseChecker):
                 round_length=60000,
                 task_chain_id=task_chain_id,
             ),
+            use_db_cache=False,
             **kwargs,
         )
         self.logger.setLevel(DEBUG)

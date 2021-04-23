@@ -185,7 +185,8 @@ class BaseChecker(metaclass=_CheckerMeta):
 
         self.debug(
             "Initialized checker for task {} in {} seconds".format(
-                jsons.dumps(task), datetime.datetime.now() - self.time_started_at,
+                jsons.dumps(task),
+                datetime.datetime.now() - self.time_started_at,
             )
         )
 
@@ -773,7 +774,8 @@ class BaseChecker(metaclass=_CheckerMeta):
 
 
 def run(
-    checker_cls: Type[BaseChecker], args: Optional[Sequence[str]] = None,
+    checker_cls: Type[BaseChecker],
+    args: Optional[Sequence[str]] = None,
 ) -> Optional[CheckerResult]:
     """
     Run a checker, either from cmdline or as uwsgi script.
