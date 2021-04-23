@@ -218,13 +218,22 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.critical: Callable[..., None] = self.logger.critical
 
     @property
-    def ctx(self) -> str:
+    def chain_db(self) -> Any:
         """
-        short hand version for self.task_chain_id
+        get the team_db entry for the current chain. Short hand version for self.team_db[self.task_chain_id]
 
-        :return: self.task_chain_id
+        :return: the team_db entry
         """
-        return self.task_chain_id
+        return self.team_db[self.task_chain_id]
+
+    @chain_db.setter
+    def chain_db(self, value: Any) -> None:
+        """
+        set the team_db entry for the current task chain. Short hand version for self.team_db[self.task_chain_id] = value
+
+        :param value: the value to set in the team_db
+        """
+        self.team_db[self.task_chain_id] = value
 
     @property
     def noise(self) -> str:
@@ -235,12 +244,12 @@ class BaseChecker(metaclass=_CheckerMeta):
         :return: A noise string, unique for each ctx.
         """
         if self._noise_cache is None:
-            if not self.ctx:
+            if not self.task_chain_id:
                 self.warning("No valid ctx when calling noise!")
                 return "<none>"
             # We cache the hex in case it's called often.
             m = hashlib.sha256()
-            m.update(self.ctx.encode())
+            m.update(self.task_chain_id.encode())
             self._noise_cache = m.hexdigest()
         return self._noise_cache
 

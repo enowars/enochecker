@@ -75,21 +75,21 @@ class CheckerExampleImpl(BaseChecker):
         self.logger.setLevel(DEBUG)
 
     def putflag(self):
-        self.team_db["flag"] = self.flag
+        self.chain_db = self.flag
 
     def getflag(self):
         try:
-            if not self.team_db["flag"] == self.flag:
+            if not self.chain_db == self.flag:
                 raise BrokenServiceException("Flag not found!")
         except KeyError:
             raise BrokenServiceException("Flag not correct!")
 
     def putnoise(self):
-        self.team_db["noise"] = self.flag
+        self.chain_db = self.flag
 
     def getnoise(self):
         try:
-            if not self.team_db["noise"] == self.flag:
+            if not self.chain_db == self.flag:
                 raise BrokenServiceException("Noise not correct!")
         except KeyError:
             raise BrokenServiceException("Noise not found!")
@@ -196,11 +196,11 @@ def test_checker():
 
     CheckerExampleImpl(method="putflag").run()
 
-    assert CheckerExampleImpl().team_db["flag"] == flag
+    assert CheckerExampleImpl().chain_db == flag
     CheckerExampleImpl(method="getflag", flag=flag).run()
 
     CheckerExampleImpl(method="putnoise", task_chain_id=task_chain_id).run()
-    assert CheckerExampleImpl().team_db["noise"] is not None
+    assert CheckerExampleImpl(task_chain_id=task_chain_id).chain_db is not None
     CheckerExampleImpl(method="getnoise", task_chain_id=task_chain_id).run()
 
     assert (

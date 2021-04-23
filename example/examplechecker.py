@@ -60,14 +60,14 @@ class ExampleChecker(BaseChecker):
         """
         if self.variant_id == 0:
             credentials = self.generate_credentials()
-            self.team_db[self.ctx] = credentials
+            self.chain_db = credentials
             self.register_and_login(credentials)
 
             res = self.http_post("/notes", json={"note": self.flag})
             assert_equals(res.status_code, 200)
         elif self.variant_id == 1:
             credentials = self.generate_credentials()
-            self.team_db[self.ctx] = credentials
+            self.chain_db = credentials
             self.register_and_login(credentials)
 
             res = self.http_post("/profile/status", json={"status": self.flag})
@@ -87,7 +87,7 @@ class ExampleChecker(BaseChecker):
         :raises EnoException on error
         """
         if self.variant_id == 0:
-            credentials = self.team_db[self.ctx]
+            credentials = self.chain_db
             self.login(credentials)
 
             res = self.http_get("/notes")
@@ -102,7 +102,7 @@ class ExampleChecker(BaseChecker):
                 )
 
         elif self.variant_id == 1:
-            credentials = self.team_db[self.ctx]
+            credentials = self.chain_db
             self.login(credentials)
 
             res = self.http_get("/profile")
@@ -147,7 +147,7 @@ class ExampleChecker(BaseChecker):
         )
 
         # we are overwriting the credentials on purpose since we don't need them later in this case
-        self.team_db[self.ctx] = category
+        self.chain_db = category
 
         res = self.http_post(
             "/posts",
@@ -165,7 +165,7 @@ class ExampleChecker(BaseChecker):
         On error, raise an EnoException.
         :raises EnoException on error
         """
-        category = self.team_db[self.ctx]
+        category = self.chain_db
 
         res = self.http_get("/posts", json={"category": category})
         assert_equals(res.status_code, 200)
