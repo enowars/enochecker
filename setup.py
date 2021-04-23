@@ -9,7 +9,7 @@ with open("requirements.txt", "r") as f:
 
 setuptools.setup(
     name="enochecker",
-    version="0.3.1",
+    version="0.3.2",
     author="domenukk",
     author_email="dmaier@sect.tu-berlin.de",
     description="Library to build checker scripts for EnoEngine A/D CTF Framework in Python",

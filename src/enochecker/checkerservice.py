@@ -49,9 +49,9 @@ def checker_routes(
 
         :return: Flask resposne containing the HTML page with info about this service
         """
-        logger.info("Request on /", mimetype="text/html")
+        logger.info("Request on /")
 
-        return Response(INDEX_PAGE)
+        return Response(INDEX_PAGE, mimetype="text/html")
 
     def serve_checker() -> Response:
         """
