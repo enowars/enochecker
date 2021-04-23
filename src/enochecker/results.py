@@ -19,7 +19,7 @@ class CheckerResult:
 
     @staticmethod
     def from_exception(e: Exception) -> "CheckerResult":
-        """ Converts a given Exception to an extended CheckerResult including Message
+        """Converts a given Exception to an extended CheckerResult including Message
         public_message isn't used anywhere yet"""
 
         if isinstance(e, EnoException):

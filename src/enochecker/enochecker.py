@@ -25,6 +25,7 @@ from typing import (
 from urllib.parse import urlparse
 
 import jsons
+from enochecker_cli import add_arguments, task_message_from_namespace
 from enochecker_core import CheckerMethod, CheckerTaskMessage, CheckerTaskResult
 from flask import Flask
 
@@ -51,24 +52,13 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     """
     Return the parsed argparser args.
 
-    Args look like this:
-    [
-        "StoreFlag|RetrieveFlag|StoreNoise|RetrieveNoise|Havoc", [Task type]
-        "$Address", [Address, either IP or domain]
-        "$TeamName",
-        "$Round",
-        "$Flag|$Noise",
-        "$MaxRunningTime",
-        "$CallIdx" [index of this task (for each type) in the current round]
-    ]
-
     :param argv: argv. Custom argvs. Will default to sys.argv if not provided.
     :return: args object
     """
     if argv is None:
         return parse_args(sys.argv[1:])
     parser = argparse.ArgumentParser(description="Your friendly checker script")
-    # noinspection SpellCheckingInspection
+
     subparsers = parser.add_subparsers(
         help="The checker runmode (run/listen)", dest="runmode"
     )
@@ -80,10 +70,9 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     )
 
     runparser = subparsers.add_parser("run", help="Run checker on cmdline")
-    print(runparser)
-    # TODO: include parser from enochecker_cli
+    add_arguments(runparser)
 
-    return parser.parse_args(args=argv)  # (return is of type argparse.Namespace)
+    return parser.parse_args(args=argv)
 
 
 class _CheckerMeta(ABCMeta):
@@ -764,8 +753,7 @@ def run(
         checker_cls.service.run(host="::", debug=True, port=parsed.listen_port)
         return None
     else:
-        checker_args = vars(parsed)
-        del checker_args["runmode"]  # will always be 'run' at this point
-        result = checker_cls(**vars(parsed)).run()
-        print(f"Checker run resulted in Result. {result.result.name}")
+        task_message = task_message_from_namespace(parsed)
+        result = checker_cls(task_message).run()
+        print(f"Checker run resulted in Result: {result.result.name}")
         return result
