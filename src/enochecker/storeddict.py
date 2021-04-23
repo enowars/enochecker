@@ -1,6 +1,5 @@
 """Backend for team_db based on a local filesystem directory."""
 
-import atexit
 import json
 import logging
 import os
@@ -11,11 +10,9 @@ from functools import wraps
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterator, Optional, Set
 
-from .utils import base64ify, debase64ify, ensure_valid_filename, start_daemon
+from .utils import base64ify, debase64ify, ensure_valid_filename
 
 logging.basicConfig(level=logging.DEBUG)
-dictlogger = logging.Logger(__name__)
-dictlogger.setLevel(logging.DEBUG)
 
 DB_DEFAULT_DIR = os.path.join(
     os.getcwd(), ".data"
@@ -86,7 +83,6 @@ class StoredDict(MutableMapping):
         self,
         name: str = "default",
         base_path: str = DB_DEFAULT_DIR,
-        persist_secs: int = 3,
         ignore_locks: bool = False,
         logger: Optional[logging.Logger] = None,
         *args: Any,
@@ -99,60 +95,30 @@ class StoredDict(MutableMapping):
 
         :param name: name of this store
         :param base_path: the base path
-        :param persist_secs: how often to persist dirty elements (0 means: never autostore. Call persist manually)
         :param ignore_locks: We usually write and read lock files before accessing the data.
                 This flag seaves them out.
         :param logger: The logger instance to log events to
         """
-        self._cache: Dict[str, Any] = {}
-        self._dirties: Set[str] = set()
+        self._cache: Dict[str, Any] = dict()
         self._locks: Set[str] = set()
         self._to_delete: Set[str] = set()
-        self._persist_thread: Optional[threading.Thread] = None
         self.name = name
         self.path: str = os.path.join(base_path, ensure_valid_filename(name))
-        self.persist_secs: int = persist_secs
         self.ignore_locks: bool = ignore_locks
 
         if logger:
             self.logger = logger
         else:
-            self.logger = dictlogger
+            self.logger = logging.Logger(__name__)
+            self.logger.setLevel(logging.DEBUG)
 
         self._local_lock = threading.RLock()
 
         makedirs(self.path, exist_ok=True)
-        atexit.register(self._cleanup)
-        self._stopping = False
 
         self.update(
             dict(*args, **kwargs)
         )  # In case we got initialized using a dict, make sure it's in sync.
-
-    @_locked
-    def _spawn_persist_thread(self) -> None:
-        """Spawn a thread persisting all changes, if necessary."""
-        if self.persist_secs > 0 and not self._persist_thread:
-
-            def persist_async() -> None:
-                time.sleep(self.persist_secs)
-                self.logger.debug("Persisting db {} from background.".format(self.name))
-                self.persist()
-
-            self._persist_thread = start_daemon(persist_async)
-
-    @_locked
-    def _cleanup(self) -> None:
-        """Clean up the db: persists and releases all locks currently held."""
-        self.logger.debug("StoredDict cleanup task running.")
-        self._stopping = True
-        self.persist()
-        for lock in self._locks:
-            self.release(lock)
-
-    def __del__(self) -> None:
-        """Delete a key."""
-        self._cleanup()
 
     def _dir(self, key: str) -> str:
         """
@@ -256,8 +222,7 @@ class StoredDict(MutableMapping):
         Non persisted changes might be lost.
         Only reason would be if another process fiddles with our data concurrently.
         """
-        self._cache = {}
-        self._dirties = set()
+        self._cache = dict()
         self._to_delete = set()
 
     @_locked
@@ -277,7 +242,7 @@ class StoredDict(MutableMapping):
             self.logger.debug(f"Deleted {key} from db {self.name}")
         self._to_delete = set()
 
-        for key in self._dirties:
+        for key in self._cache.keys():
             locked = self.is_locked(key)
             if not locked:
                 self.lock(key)
@@ -288,7 +253,7 @@ class StoredDict(MutableMapping):
                 if not locked:
                     self.release(key)
             self.logger.debug(f"Set {key} in db {self.name}")
-        self._dirties = set()
+        self._cache = dict()
 
     @_locked
     def __getitem__(self, key: str) -> Any:
@@ -298,13 +263,6 @@ class StoredDict(MutableMapping):
         :param key: the key to look up
         :return: the value
         """
-        if key in self._to_delete:
-            raise KeyError("Key was marked for deletion: {}".format(key))
-        try:
-            return self._cache[key]
-        except KeyError:
-            self.logger.debug("Hitting disk for {}".format(key))
-
         locked = self.is_locked(key) or self.ignore_locks
         if not locked:
             self.lock(key)
@@ -317,40 +275,35 @@ class StoredDict(MutableMapping):
             if not locked:
                 self.release(key)
 
-        self._cache[key] = val
         return val
 
     @_locked
     def __setitem__(self, key: str, value: Any) -> None:
         """
-        Set an item. It'll be stored to disk on the next persist.
+        Set an item.
 
         :param key: Key to store
         :param value: Value to store
         """
-        if key in self._to_delete:
-            self._to_delete.remove(key)
         self._cache[key] = value
-        self._dirties.add(key)
+        self.persist()
 
     @_locked
     def __delitem__(self, key: str) -> None:
         """
-        Delete an item. It will be deleted from disk on the next .persist().
+        Delete an item.
 
         :param key: the key to delete
         """
         self._to_delete.add(key)
+        self.persist()
 
     def __iter__(self) -> Iterator[str]:
         """
         Return an iterator over the dict.
 
-        Implicitly persisting the data before reading.
-
         :return: An iterator containing all keys to a dict.
         """
-        self.persist()
         keys = [
             debase64ify(x[len(DB_PREFIX) : -len(DB_EXTENSION)], b"+-")
             for x in os.listdir(self.path)
@@ -362,11 +315,8 @@ class StoredDict(MutableMapping):
         """
         Calculate the length of the dict.
 
-        Implicitly calls persist.
-
         :return: the the number of elements
         """
-        self.persist()
         keys = [
             x[len(DB_PREFIX) : -len(DB_EXTENSION)]
             for x in os.listdir(self.path)

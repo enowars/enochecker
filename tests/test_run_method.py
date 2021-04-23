@@ -7,9 +7,10 @@ from logging import DEBUG
 
 import pytest
 import requests
+from enochecker_core import CheckerMethod, CheckerTaskMessage, CheckerTaskResult
+
 from enochecker import BaseChecker, BrokenServiceException, OfflineException
 from enochecker.results import CheckerResult
-from enochecker_core import CheckerMethod, CheckerTaskMessage, CheckerTaskResult
 
 
 @pytest.fixture()
@@ -21,7 +22,9 @@ def checker_cls():
         havoc_variants = 1
 
         def __init__(
-            self, method=CheckerMethod.CHECKER_METHOD_PUTFLAG, **kwargs,
+            self,
+            method=CheckerMethod.CHECKER_METHOD_PUTFLAG,
+            **kwargs,
         ):
             """
             An mocked implementation of a checker for testing purposes
@@ -42,7 +45,8 @@ def checker_cls():
                     timeout=30000,
                     round_length=60000,
                     task_chain_id="test",
-                )
+                ),
+                use_db_cache=False,
             )
             self.logger.setLevel(DEBUG)
 
