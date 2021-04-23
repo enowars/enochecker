@@ -168,88 +168,6 @@
 <section id="module-enochecker.checkerservice">
 <span id="enochecker-checkerservice-module"></span><h2>enochecker.checkerservice module<a class="headerlink" href="#module-enochecker.checkerservice" title="Permalink to this headline">¶</a></h2>
 <p>Flask service to run a checker as HTTP service.</p>
-<dl class="py class">
-<dt id="enochecker.checkerservice.Optional">
-<em class="property">class </em><code class="sig-prename descclassname">enochecker.checkerservice.</code><code class="sig-name descname">Optional</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em>, <em class="sig-param"><span class="n">type</span></em>, <em class="sig-param"><span class="n">default</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.checkerservice.Optional" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
-<dl class="py attribute">
-<dt id="enochecker.checkerservice.Optional.default">
-<code class="sig-name descname">default</code><a class="headerlink" href="#enochecker.checkerservice.Optional.default" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 2</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="enochecker.checkerservice.Optional.key">
-<code class="sig-name descname">key</code><a class="headerlink" href="#enochecker.checkerservice.Optional.key" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 0</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="enochecker.checkerservice.Optional.type">
-<code class="sig-name descname">type</code><a class="headerlink" href="#enochecker.checkerservice.Optional.type" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 1</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt id="enochecker.checkerservice.Required">
-<em class="property">class </em><code class="sig-prename descclassname">enochecker.checkerservice.</code><code class="sig-name descname">Required</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em>, <em class="sig-param"><span class="n">type</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.checkerservice.Required" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
-<dl class="py attribute">
-<dt id="enochecker.checkerservice.Required.key">
-<code class="sig-name descname">key</code><a class="headerlink" href="#enochecker.checkerservice.Required.key" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 0</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="enochecker.checkerservice.Required.type">
-<code class="sig-name descname">type</code><a class="headerlink" href="#enochecker.checkerservice.Required.type" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 1</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt id="enochecker.checkerservice.assert_types">
-<code class="sig-prename descclassname">enochecker.checkerservice.</code><code class="sig-name descname">assert_types</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">json</span></em>, <em class="sig-param"><span class="n">spec</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.checkerservice.assert_types" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate a kwargs dict from a json.</p>
-<p>Will copy all elements from json to the dict, rename all keys to snake_case and Index to idx.
-In case the spec fails, errors out with ValueError.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>json</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]) – the json object</p></li>
-<li><p><strong>spec</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="#enochecker.checkerservice.Required" title="enochecker.checkerservice.Required"><code class="xref py py-class docutils literal notranslate"><span class="pre">Required</span></code></a>, <a class="reference internal" href="#enochecker.checkerservice.Optional" title="enochecker.checkerservice.Optional"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>]]) – the specification</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>kwargs dict.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="enochecker.checkerservice.check_type">
-<code class="sig-prename descclassname">enochecker.checkerservice.</code><code class="sig-name descname">check_type</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">val</span></em>, <em class="sig-param"><span class="n">expected_type</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.checkerservice.check_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return and convert the value if necessary.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – the name of the value</p></li>
-<li><p><strong>val</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – the value to check</p></li>
-<li><p><strong>expected_type</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>) – the expected type</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py function">
 <dt id="enochecker.checkerservice.checker_routes">
 <code class="sig-prename descclassname">enochecker.checkerservice.</code><code class="sig-name descname">checker_routes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">checker_cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.checkerservice.checker_routes" title="Permalink to this definition">¶</a></dt>
@@ -259,7 +177,7 @@ In case the spec fails, errors out with ValueError.</p>
 <dd class="field-odd"><p><strong>checker_cls</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code>]) – The checker class to use</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]], <code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</p>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">CheckerInfoMessage</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code>]]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>A flask app that can be passed to a uWSGI server or run using .run().</p>
@@ -285,51 +203,31 @@ In case the spec fails, errors out with ValueError.</p>
 </dl>
 </dd></dl>
 
-<dl class="py function">
-<dt id="enochecker.checkerservice.serialize_spec">
-<code class="sig-prename descclassname">enochecker.checkerservice.</code><code class="sig-name descname">serialize_spec</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">spec</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.checkerservice.serialize_spec" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a checker json spec in a readable multiline format.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>spec</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="#enochecker.checkerservice.Required" title="enochecker.checkerservice.Required"><code class="xref py py-class docutils literal notranslate"><span class="pre">Required</span></code></a>, <a class="reference internal" href="#enochecker.checkerservice.Optional" title="enochecker.checkerservice.Optional"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>]]) – a spec</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>formatted string</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="enochecker.checkerservice.stringify_spec_entry">
-<code class="sig-prename descclassname">enochecker.checkerservice.</code><code class="sig-name descname">stringify_spec_entry</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">entry</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.checkerservice.stringify_spec_entry" title="Permalink to this definition">¶</a></dt>
-<dd><p>Make a nice string out of a spec entry.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>entry</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="#enochecker.checkerservice.Optional" title="enochecker.checkerservice.Optional"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>, <a class="reference internal" href="#enochecker.checkerservice.Required" title="enochecker.checkerservice.Required"><code class="xref py py-class docutils literal notranslate"><span class="pre">Required</span></code></a>]) – the spec entry</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>string representation of the entry</p>
-</dd>
-</dl>
-</dd></dl>
-
 </section>
 <section id="module-enochecker.enochecker">
 <span id="enochecker-enochecker-module"></span><h2>enochecker.enochecker module<a class="headerlink" href="#module-enochecker.enochecker" title="Permalink to this headline">¶</a></h2>
 <p>Contains the BaseChecker to be used as base for all checkers.</p>
 <dl class="py class">
 <dt id="enochecker.enochecker.BaseChecker">
-<em class="property">class </em><code class="sig-prename descclassname">enochecker.enochecker.</code><code class="sig-name descname">BaseChecker</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">run_id</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">address</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">team</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">team_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">team_id</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">round</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">round_id</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">flag_round</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">round_length</span><span class="o">=</span><span class="default_value">300</span></em>, <em class="sig-param"><span class="n">flag</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">flag_idx</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">storage_dir</span><span class="o">=</span><span class="default_value">'/home/runner/work/enochecker/enochecker/docs/.data'</span></em>, <em class="sig-param"><span class="n">use_db_cache</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">json_logging</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.enochecker.BaseChecker" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">enochecker.enochecker.</code><code class="sig-name descname">BaseChecker</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">task</span></em>, <em class="sig-param"><span class="n">storage_dir</span><span class="o">=</span><span class="default_value">'/home/runner/work/enochecker/enochecker/docs/.data'</span></em>, <em class="sig-param"><span class="n">use_db_cache</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">json_logging</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.enochecker.BaseChecker" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>All you base are belong to us. Also all your flags. And checker scripts.</p>
 <p>Override the methods given here, then simply init and .run().
 Magic.</p>
+<dl class="py method">
+<dt id="enochecker.enochecker.BaseChecker.chain_db">
+<em class="property">property </em><code class="sig-name descname">chain_db</code><a class="headerlink" href="#enochecker.enochecker.BaseChecker.chain_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the team_db entry for the current chain. Short hand version for self.team_db[self.task_chain_id]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the team_db entry</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt id="enochecker.enochecker.BaseChecker.connect">
 <code class="sig-name descname">connect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">host</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">port</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">retries</span><span class="o">=</span><span class="default_value">3</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.enochecker.BaseChecker.connect" title="Permalink to this definition">¶</a></dt>
@@ -340,7 +238,7 @@ Magic.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>host</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – the host to connect to (defaults to self.address)</p></li>
 <li><p><strong>port</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – the port to connect to (defaults to self.port)</p></li>
-<li><p><strong>timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – timeout on connection (defaults to self.timeout)</p></li>
+<li><p><strong>timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]) – timeout on connection (defaults to self.timeout)</p></li>
 <li><p><strong>retries</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the amount of times this socket connection should be retried</p></li>
 </ul>
 </dd>
@@ -349,20 +247,6 @@ Magic.</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>A connected Telnet instance</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="enochecker.enochecker.BaseChecker.current_round">
-<em class="property">property </em><code class="sig-name descname">current_round</code><a class="headerlink" href="#enochecker.enochecker.BaseChecker.current_round" title="Permalink to this definition">¶</a></dt>
-<dd><p>Deprecated! Only for backwards compatibility! Use self.round instead.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>current round</p>
 </dd>
 </dl>
 </dd></dl>
@@ -406,18 +290,18 @@ Manual locking ist still possible.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="enochecker.enochecker.BaseChecker.flag_count">
-<code class="sig-name descname">flag_count</code><em class="property">: int</em><em class="property"> = None</em><a class="headerlink" href="#enochecker.enochecker.BaseChecker.flag_count" title="Permalink to this definition">¶</a></dt>
+<dt id="enochecker.enochecker.BaseChecker.flag_variants">
+<code class="sig-name descname">flag_variants</code><em class="property">: int</em><em class="property"> = None</em><a class="headerlink" href="#enochecker.enochecker.BaseChecker.flag_variants" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="enochecker.enochecker.BaseChecker.get_team_db">
-<code class="sig-name descname">get_team_db</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">team</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.enochecker.BaseChecker.get_team_db" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_team_db</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">team_id</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.enochecker.BaseChecker.get_team_db" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the database for a specific team.</p>
 <p>Subsequent calls will return the same db.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>team</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – Return a db for an other team. If none, the db for the local team will be returned.</p>
+<dd class="field-odd"><p><strong>team</strong> – Return a db for an other team. If none, the db for the local team will be returned.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="#enochecker.nosqldict.NoSqlDict" title="enochecker.nosqldict.NoSqlDict"><code class="xref py py-class docutils literal notranslate"><span class="pre">NoSqlDict</span></code></a>, <a class="reference internal" href="#enochecker.storeddict.StoredDict" title="enochecker.storeddict.StoredDict"><code class="xref py py-class docutils literal notranslate"><span class="pre">StoredDict</span></code></a>]</p>
@@ -432,7 +316,7 @@ Manual locking ist still possible.</p></li>
 <dt id="enochecker.enochecker.BaseChecker.getflag">
 <em class="property">abstract </em><code class="sig-name descname">getflag</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.enochecker.BaseChecker.getflag" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve a flag from the service.</p>
-<p>Use self.flag to get the flag that needs to be recovered and self.roudn to get the round the flag was placed in.
+<p>Use self.flag to get the flag that needs to be recovered and self.task_chain_id as a key to retrieve data from the database stored during putflag
 On error, raise an EnoException.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises</dt>
@@ -448,9 +332,9 @@ On error, raise an EnoException.</p>
 <dt id="enochecker.enochecker.BaseChecker.getnoise">
 <em class="property">abstract </em><code class="sig-name descname">getnoise</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.enochecker.BaseChecker.getnoise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve noise in the service.</p>
-<p>The noise to be retrieved is inside self.flag
+<p>The noise to be retrieved, can be restored from the database by using the self.task_chain_id used to store it during putflag.
 The difference between noise and flag is, tht noise does not have to remain secret for other teams.
-This method can be called many times per round. Check how often using flag_idx.
+This method can be called many times per round. Check which variant is called using self.variant_id.
 On error, raise an EnoException.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises</dt>
@@ -494,8 +378,8 @@ Prefer db_team_local or db_round_local</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="enochecker.enochecker.BaseChecker.havoc_count">
-<code class="sig-name descname">havoc_count</code><em class="property">: int</em><em class="property"> = None</em><a class="headerlink" href="#enochecker.enochecker.BaseChecker.havoc_count" title="Permalink to this definition">¶</a></dt>
+<dt id="enochecker.enochecker.BaseChecker.havoc_variants">
+<code class="sig-name descname">havoc_variants</code><em class="property">: int</em><em class="property"> = None</em><a class="headerlink" href="#enochecker.enochecker.BaseChecker.havoc_variants" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -512,7 +396,7 @@ Prefer db_team_local or db_round_local</p>
 <li><p><strong>port</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – The remote port in case it has not been specified at creation</p></li>
 <li><p><strong>scheme</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The scheme (defaults to http)</p></li>
 <li><p><strong>raise_http_errors</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If True, will raise exception on http error codes (4xx, 5xx)</p></li>
-<li><p><strong>timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – How long we’ll try to connect (default: self.timeout)</p></li>
+<li><p><strong>timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]) – How long we’ll try to connect (default: self.timeout)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -537,7 +421,7 @@ Prefer db_team_local or db_round_local</p>
 <li><p><strong>port</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – The remote port in case it has not been specified at creation</p></li>
 <li><p><strong>scheme</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The scheme (defaults to http)</p></li>
 <li><p><strong>raise_http_errors</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If True, will raise exception on http error codes (4xx, 5xx)</p></li>
-<li><p><strong>timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – How long we’ll try to connect</p></li>
+<li><p><strong>timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]) – How long we’ll try to connect</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -562,7 +446,7 @@ Prefer db_team_local or db_round_local</p>
 <li><p><strong>port</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – The remote port in case it has not been specified at creation</p></li>
 <li><p><strong>scheme</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The scheme (defaults to http)</p></li>
 <li><p><strong>raise_http_errors</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If True, will raise exception on http error codes (4xx, 5xx)</p></li>
-<li><p><strong>timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – How long we’ll try to connect</p></li>
+<li><p><strong>timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]) – How long we’ll try to connect</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -607,27 +491,28 @@ To retrieve a random useragent without setting it, use random instead.</p>
 <dl class="py method">
 <dt id="enochecker.enochecker.BaseChecker.noise">
 <em class="property">property </em><code class="sig-name descname">noise</code><a class="headerlink" href="#enochecker.enochecker.BaseChecker.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p>Pretty similar to a flag, just in a different mode (storeNoise vs storeFlag).</p>
+<dd><p>Creates a stable noise value for the current task chain.
+Do not use for indexing (use self.task_chain_id instead).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The noise</p>
+<dd class="field-even"><p>A noise string, unique for each task_chain_id.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="enochecker.enochecker.BaseChecker.noise_count">
-<code class="sig-name descname">noise_count</code><em class="property">: int</em><em class="property"> = None</em><a class="headerlink" href="#enochecker.enochecker.BaseChecker.noise_count" title="Permalink to this definition">¶</a></dt>
+<dt id="enochecker.enochecker.BaseChecker.noise_variants">
+<code class="sig-name descname">noise_variants</code><em class="property">: int</em><em class="property"> = None</em><a class="headerlink" href="#enochecker.enochecker.BaseChecker.noise_variants" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="enochecker.enochecker.BaseChecker.putflag">
 <em class="property">abstract </em><code class="sig-name descname">putflag</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.enochecker.BaseChecker.putflag" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store a flag in the service.</p>
-<p>In case multiple flags are provided, self.flag_idx gives the appropriate index.
+<p>In case multiple flags are provided, self.variant_id gives the appropriate flag store to target.
 The flag itself can be retrieved from self.flag.
 On error, raise an Eno Exception.</p>
 <dl class="field-list simple">
@@ -646,7 +531,7 @@ On error, raise an Eno Exception.</p>
 <dd><p>Store noise in the service.</p>
 <p>The noise should later be recoverable.
 The difference between noise and flag is that noise does not have to remain secret for other teams.
-This method can be called many times per round. Check how often using self.flag_idx.
+This method can be called multiple times per round. Check which variant is called using self.variant_id.
 On error, raise an EnoException.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises</dt>
@@ -664,7 +549,7 @@ On error, raise an EnoException.</p>
 <dd><p>Execute the checker and catch errors along the way.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>method</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – When calling run, you may call a different method than the one passed on Checker creation
+<dd class="field-odd"><p><strong>method</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">CheckerMethod</span></code>]) – When calling run, you may call a different method than the one passed on Checker creation
 using this optional param.</p>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -697,7 +582,7 @@ using this optional param.</p>
 <p>Includes a buffer of TIME_BUFFER seconds.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A safe number of seconds that may still be used</p>
@@ -714,7 +599,7 @@ using this optional param.</p>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>time this checker has been running for</p>
+<dd class="field-even"><p>time this checker has been running for in seconds</p>
 </dd>
 </dl>
 </dd></dl>
@@ -725,18 +610,6 @@ using this optional param.</p>
 <dt id="enochecker.enochecker.parse_args">
 <code class="sig-prename descclassname">enochecker.enochecker.</code><code class="sig-name descname">parse_args</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">argv</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.enochecker.parse_args" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the parsed argparser args.</p>
-<p>Args look like this:
-[</p>
-<blockquote>
-<div><p>“StoreFlag|RetrieveFlag|StoreNoise|RetrieveNoise|Havoc”, [Task type]
-“$Address”, [Address, either IP or domain]
-“$TeamName”,
-“$Round”,
-“$Flag|$Noise”,
-“$MaxRunningTime”,
-“$CallIdx” [index of this task (for each type) in the current round]</p>
-</div></blockquote>
-<p>]</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>argv</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]) – argv. Custom argvs. Will default to sys.argv if not provided.</p>
@@ -767,6 +640,18 @@ using this optional param.</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Never returns.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="enochecker.enochecker.warn_deprecated">
+<code class="sig-prename descclassname">enochecker.enochecker.</code><code class="sig-name descname">warn_deprecated</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">old_name</span></em>, <em class="sig-param"><span class="n">new_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.enochecker.warn_deprecated" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print a warning for the deprecated feature, include the new name in the log
+This needs python development mode or deprecation warnings enabled!</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -890,7 +775,7 @@ In the future changes to the DB might be cached until they are explicitly persis
 <p>Used internally if something goes horribly wrong.</p>
 <dl class="py attribute">
 <dt id="enochecker.results.BrokenCheckerException.result">
-<code class="sig-name descname">result</code><em class="property">: enochecker.results.Result</em><em class="property"> = -1</em><a class="headerlink" href="#enochecker.results.BrokenCheckerException.result" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">result</code><em class="property">: enochecker_core.CheckerTaskResult</em><em class="property"> = 'INTERNAL_ERROR'</em><a class="headerlink" href="#enochecker.results.BrokenCheckerException.result" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -902,7 +787,7 @@ In the future changes to the DB might be cached until they are explicitly persis
 <p>Indicates a broken Service.</p>
 <dl class="py attribute">
 <dt id="enochecker.results.BrokenServiceException.result">
-<code class="sig-name descname">result</code><em class="property">: enochecker.results.Result</em><em class="property"> = 1</em><a class="headerlink" href="#enochecker.results.BrokenServiceException.result" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">result</code><em class="property">: enochecker_core.CheckerTaskResult</em><em class="property"> = 'MUMBLE'</em><a class="headerlink" href="#enochecker.results.BrokenServiceException.result" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -919,28 +804,6 @@ public_message isn’t used anywhere yet</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference internal" href="#enochecker.results.CheckerResult" title="enochecker.results.CheckerResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">CheckerResult</span></code></a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="enochecker.results.CheckerResult.jsonify">
-<code class="sig-name descname">jsonify</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.CheckerResult.jsonify" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts a Checkerresult to a valid json response (hopefully) according to spec</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="enochecker.results.CheckerResult.to_dict">
-<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.CheckerResult.to_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a dictionary representation of a given CheckerResult</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -965,7 +828,7 @@ public_message isn’t used anywhere yet</p>
 
 <dl class="py attribute">
 <dt id="enochecker.results.EnoException.result">
-<code class="sig-name descname">result</code><em class="property">: enochecker.results.Result</em><em class="property"> = -1</em><a class="headerlink" href="#enochecker.results.EnoException.result" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">result</code><em class="property">: enochecker_core.CheckerTaskResult</em><em class="property"> = 'INTERNAL_ERROR'</em><a class="headerlink" href="#enochecker.results.EnoException.result" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -977,52 +840,8 @@ public_message isn’t used anywhere yet</p>
 <p>Service was not reachable (at least once) during our checks.</p>
 <dl class="py attribute">
 <dt id="enochecker.results.OfflineException.result">
-<code class="sig-name descname">result</code><em class="property">: enochecker.results.Result</em><em class="property"> = 2</em><a class="headerlink" href="#enochecker.results.OfflineException.result" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">result</code><em class="property">: enochecker_core.CheckerTaskResult</em><em class="property"> = 'OFFLINE'</em><a class="headerlink" href="#enochecker.results.OfflineException.result" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt id="enochecker.results.Result">
-<em class="property">class </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">Result</code><a class="headerlink" href="#enochecker.results.Result" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.IntEnum</span></code></p>
-<p>Result Values to be returned from a Checker.</p>
-<dl class="py attribute">
-<dt id="enochecker.results.Result.INTERNAL_ERROR">
-<code class="sig-name descname">INTERNAL_ERROR</code><em class="property">: int</em><em class="property"> = -1</em><a class="headerlink" href="#enochecker.results.Result.INTERNAL_ERROR" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="enochecker.results.Result.MUMBLE">
-<code class="sig-name descname">MUMBLE</code><em class="property">: int</em><em class="property"> = 1</em><a class="headerlink" href="#enochecker.results.Result.MUMBLE" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="enochecker.results.Result.OFFLINE">
-<code class="sig-name descname">OFFLINE</code><em class="property">: int</em><em class="property"> = 2</em><a class="headerlink" href="#enochecker.results.Result.OFFLINE" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="enochecker.results.Result.OK">
-<code class="sig-name descname">OK</code><em class="property">: int</em><em class="property"> = 0</em><a class="headerlink" href="#enochecker.results.Result.OK" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="enochecker.results.Result.is_valid">
-<em class="property">classmethod </em><code class="sig-name descname">is_valid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.Result.is_valid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return if the value is part of this Enum.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>value</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the value</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>True, if value is part of this Enum</p>
-</dd>
-</dl>
-</dd></dl>
 
 </dd></dl>
 
@@ -1176,7 +995,7 @@ param exist_ok: ignore already existing path and do nothing</p>
 <dd><p>Get the timeout default that should currently be used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>current timeout default, either from self.timeout_fun or from timeout.</p>
@@ -1194,7 +1013,7 @@ param exist_ok: ignore already existing path and do nothing</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>regexes</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Pattern</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]) – The first argument is a list of regular expressions, either
 compiled (re.Pattern instances) or uncompiled (strings).</p></li>
-<li><p><strong>timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – Timeout in seconds. If none, default will be taken.</p></li>
+<li><p><strong>timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]) – Timeout in seconds. If none, default will be taken.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -1250,7 +1069,7 @@ returned; and the text read up till and including the match.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>match</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – what to look for.</p></li>
-<li><p><strong>timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – default socket timeout override</p></li>
+<li><p><strong>timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]) – default socket timeout override</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -1274,7 +1093,7 @@ is closed and no cooked data is available.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>read_until</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]) – Which parameter to read until</p></li>
 <li><p><strong>expected</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]) – the expected String to search for in the response</p></li>
-<li><p><strong>timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – The timeout (uses Telnet default if not passed in)</p></li>
+<li><p><strong>timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]) – The timeout (uses Telnet default if not passed in)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return read</dt>
