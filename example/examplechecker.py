@@ -24,11 +24,11 @@ class ExampleChecker(BaseChecker):
     """
 
     # how many flags does this service deploy per round? each flag should be stored at a different location in the service
-    flag_count = 2
+    flag_variants = 2
     # how many noises does this service deploy per round?
-    noise_count = 1
+    noise_variants = 1
     # how many different havoc methods does this service use per round?
-    havoc_count = 1
+    havoc_variants = 1
 
     # The port will automatically be picked up as default by self.connect and self.http methods.
     port = 80
@@ -53,29 +53,29 @@ class ExampleChecker(BaseChecker):
     def putflag(self) -> None:
         """
         This method stores a flag in the service.
-        In case multiple flags are provided, self.flag_idx gives the appropriate index.
+        In case the service has multiple flag stores, self.variant_id gives the appropriate index.
         The flag itself can be retrieved from self.flag.
         On error, raise an Eno Exception.
         :raises EnoException on error
         """
-        if self.flag_idx == 0:
+        if self.variant_id == 0:
             credentials = self.generate_credentials()
-            self.team_db[self.flag] = credentials
+            self.chain_db = credentials
             self.register_and_login(credentials)
 
             res = self.http_post("/notes", json={"note": self.flag})
             assert_equals(res.status_code, 200)
-        elif self.flag_idx == 1:
+        elif self.variant_id == 1:
             credentials = self.generate_credentials()
-            self.team_db[self.flag] = credentials
+            self.chain_db = credentials
             self.register_and_login(credentials)
 
             res = self.http_post("/profile/status", json={"status": self.flag})
             assert_equals(res.status_code, 200)
         else:
             raise ValueError(
-                "Call_Idx {} exceeds the amount of flags. Not supported.".format(
-                    self.flag_idx
+                "variant_id {} exceeds the amount of flag variants. Not supported.".format(
+                    self.variant_id
                 )
             )
 
@@ -86,8 +86,8 @@ class ExampleChecker(BaseChecker):
         On error, raise an EnoException.
         :raises EnoException on error
         """
-        if self.flag_idx == 0:
-            credentials = self.team_db[self.flag]
+        if self.variant_id == 0:
+            credentials = self.chain_db
             self.login(credentials)
 
             res = self.http_get("/notes")
@@ -101,8 +101,8 @@ class ExampleChecker(BaseChecker):
                     "received invalid response on /notes endpoint"
                 )
 
-        elif self.flag_idx == 1:
-            credentials = self.team_db[self.flag]
+        elif self.variant_id == 1:
+            credentials = self.chain_db
             self.login(credentials)
 
             res = self.http_get("/profile")
@@ -117,19 +117,18 @@ class ExampleChecker(BaseChecker):
                 )
         else:
             raise ValueError(
-                "Call_idx {} not supported!".format(self.flag_idx)
+                "variant_id {} not supported!".format(self.variant_id)
             )  # Internal error.
 
     def putnoise(self) -> None:
         """
         This method stores noise in the service. The noise should later be recoverable.
         The difference between noise and flag is, tht noise does not have to remain secret for other teams.
-        This method can be called many times per round. Check how often using self.flag_idx.
+        This method can be called many times per round. Check how often using self.variant_id.
         On error, raise an EnoException.
         :raises EnoException on error
         """
         credentials = self.generate_credentials()
-        self.team_db[self.flag] = credentials
         self.register_and_login(credentials)
 
         category = secrets.choice(
@@ -148,7 +147,7 @@ class ExampleChecker(BaseChecker):
         )
 
         # we are overwriting the credentials on purpose since we don't need them later in this case
-        self.team_db[self.noise] = category
+        self.chain_db = category
 
         res = self.http_post(
             "/posts",
@@ -159,13 +158,14 @@ class ExampleChecker(BaseChecker):
     def getnoise(self) -> None:
         """
         This method retrieves noise in the service.
-        The noise to be retrieved is inside self.flag
-        The difference between noise and flag is, tht noise does not have to remain secret for other teams.
-        This method can be called many times per round. Check how often using flag_idx.
+        The noise to be retrieved is inside self.noise
+        The difference between noise and flag is, that noise does not have to remain secret for other teams.
+        This method can be called many times per round.
+        The engine will also trigger different variants, indicated by variant_id.
         On error, raise an EnoException.
         :raises EnoException on error
         """
-        category = self.team_db[self.noise]
+        category = self.chain_db
 
         res = self.http_get("/posts", json={"category": category})
         assert_equals(res.status_code, 200)

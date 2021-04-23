@@ -2,7 +2,7 @@
 
 import argparse
 import datetime
-import json
+import hashlib
 import logging
 import os
 import socket
@@ -25,12 +25,15 @@ from typing import (
 )
 from urllib.parse import urlparse
 
+import jsons
+from enochecker_cli import add_arguments, task_message_from_namespace
+from enochecker_core import CheckerMethod, CheckerTaskMessage, CheckerTaskResult
 from flask import Flask
 
-from .checkerservice import CHECKER_METHODS, init_service
+from .checkerservice import init_service
 from .logging import ELKFormatter
 from .nosqldict import NoSqlDict
-from .results import CheckerResult, EnoException, OfflineException, Result
+from .results import CheckerResult, EnoException, OfflineException
 from .storeddict import DB_DEFAULT_DIR, DB_GLOBAL_CACHE_SETTING, StoredDict
 from .useragents import random_useragent
 from .utils import SimpleSocket, snake_caseify
@@ -39,50 +42,35 @@ if TYPE_CHECKING:  # pragma: no cover
     # The import might fail in UWSGI, see the comments below.
     import requests
 
-DEFAULT_TIMEOUT: int = 30
-TIME_BUFFER: int = 5  # time in seconds we try to finish earlier
-
-VALID_ARGS = [
-    "method",
-    "address",
-    "team",
-    "team_id",
-    "round",
-    "flag_round",
-    "flag",
-    "timeout",
-    "flag_idx",
-    "json_logging",
-    "round_length",
-]
+DEFAULT_TIMEOUT: float = 30
+TIME_BUFFER: float = 5  # time in seconds we try to finish earlier
 
 # Global cache for all stored dicts.  TODO: Prune this at some point?
 global_db_cache: Dict[str, Union[StoredDict, NoSqlDict]] = {}
+
+
+def warn_deprecated(old_name: str, new_name: str) -> None:
+    """
+    Print a warning for the deprecated feature, include the new name in the log
+    This needs python development mode or deprecation warnings enabled!
+    """
+    warnings.warn(
+        f"Checker uses deprecated {old_name}; use {new_name} instead.",
+        DeprecationWarning,
+    )
 
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     """
     Return the parsed argparser args.
 
-    Args look like this:
-    [
-        "StoreFlag|RetrieveFlag|StoreNoise|RetrieveNoise|Havoc", [Task type]
-        "$Address", [Address, either IP or domain]
-        "$TeamName",
-        "$Round",
-        "$Flag|$Noise",
-        "$MaxRunningTime",
-        "$CallIdx" [index of this task (for each type) in the current round]
-    ]
-
     :param argv: argv. Custom argvs. Will default to sys.argv if not provided.
     :return: args object
     """
     if argv is None:
         return parse_args(sys.argv[1:])
-    choices = CHECKER_METHODS + ["listen"]
     parser = argparse.ArgumentParser(description="Your friendly checker script")
-    # noinspection SpellCheckingInspection
+
     subparsers = parser.add_subparsers(
         help="The checker runmode (run/listen)", dest="runmode"
     )
@@ -94,96 +82,9 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     )
 
     runparser = subparsers.add_parser("run", help="Run checker on cmdline")
-    runparser.add_argument(
-        "method",
-        choices=choices,
-        help='The Method, one of {} or "listen" to start checker service'.format(
-            CHECKER_METHODS
-        ),
-    )
-    runparser.add_argument(
-        "-a",
-        "--address",
-        type=str,
-        default="localhost",
-        help="The ip or address of the remote team to check",
-    )
-    runparser.add_argument(
-        "-t",
-        "--team",
-        type=str,
-        default="team",
-        help="The name of the target team to check",
-        dest="team_name",
-    )
-    runparser.add_argument(
-        "-T",
-        "--team_id",
-        type=int,
-        default=1,
-        help="The Team_id belonging to the specified Team",
-    )
-    runparser.add_argument(
-        "-I",
-        "--run_id",
-        type=int,
-        default=1,
-        help="An id for this run. Used to find it in the DB later.",
-    )
-    runparser.add_argument(
-        "-r",
-        "--round",
-        type=int,
-        default=1,
-        help="The round we are in right now",
-        dest="round_id",
-    )
-    runparser.add_argument(
-        "-R",
-        "--round_length",
-        type=int,
-        default=300,
-        help="The round length in seconds (default 300)",
-    )
-    runparser.add_argument(
-        "-f",
-        "--flag",
-        type=str,
-        default="ENOFLAGENOFLAG=",
-        help="The Flag, a Fake flag or a Unique ID, depending on the mode",
-    )
-    runparser.add_argument(
-        "-F",
-        "--flag_round",
-        type=int,
-        default=1,
-        help="The Round the Flag belongs to (was placed)",
-    )
-    runparser.add_argument(
-        "-x",
-        "--timeout",
-        type=int,
-        default=DEFAULT_TIMEOUT,
-        help="The maximum amount of time the script has to execute in seconds",
-    )
-    runparser.add_argument(
-        "-i",
-        "--flag_idx",
-        type=int,
-        default=0,
-        help="Unique numerical index per round. Each id only occurs once and is tighly packed, "
-        "starting with 0. In a service supporting multiple flags, this would be used to "
-        "decide which flag to place.",
-    )
-    runparser.add_argument(
-        "-j",
-        "--json_logging",
-        dest="json_logging",
-        action="store_true",
-        help="If set, logging will be in ELK/Kibana friendly JSON format.",
-    )
+    add_arguments(runparser)
 
-    return parser.parse_args(args=argv)  # (return is of type argparse.Namespace)
+    return parser.parse_args(args=argv)
 
 
 class _CheckerMeta(ABCMeta):
@@ -217,26 +118,13 @@ class BaseChecker(metaclass=_CheckerMeta):
     Magic.
     """
 
-    flag_count: int
-    havoc_count: int
-    noise_count: int
+    flag_variants: int
+    noise_variants: int
+    havoc_variants: int
 
     def __init__(
         self,
-        request_dict: Dict[str, Any] = None,
-        run_id: int = None,
-        method: str = None,
-        address: str = None,
-        team: str = None,  # deprecated!
-        team_name: str = None,
-        team_id: int = None,
-        round: int = None,  # deprecated!
-        round_id: int = None,
-        flag_round: int = None,
-        round_length: int = 300,
-        flag: str = None,
-        flag_idx: int = None,
-        timeout: int = None,
+        task: CheckerTaskMessage,
         storage_dir: str = DB_DEFAULT_DIR,
         use_db_cache: bool = DB_GLOBAL_CACHE_SETTING,
         json_logging: bool = True,
@@ -244,19 +132,10 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         Init the Checker, fill the params.
 
-        :param request_dict: Dictionary containing the original request params
-        :param run_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
-        :param method: The method to run (e.g. getflag, putflag)
-        :param address: The address to target (e.g. team1.enowars.com)
-        :param team_name: The name of the team being targeted
-        :param team_id: The numerical ID of the team being targeted
-        :param round_id: The numerical round ID in which this checker is called
-        :param flag_round: The round in which the flag should be/was deployed
-        :param round_length: The length of a round in seconds
-        :param flag: The contents of the flag or noise
-        :param flag_idx: The index of the flag starting at 0, used for storing multiple flags per round
-        :param timeout: The timeout for the execution of this checker
+        :param task: The CheckerTaskMessage to be executed
         :param storage_dir: The directory to store persistent data in (used by StoredDict)
+        :param use_db_cache: whether the DB connections should be cached or a new DB connection should be created per request
+        :param json_logging: whether the JSON-based log format for ELK should be used instead of the more human-readable output
         """
         # We import requests after startup global imports may deadlock, see
         # https://github.com/psf/requests/issues/2925
@@ -265,35 +144,22 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.requests = requests
 
         self.time_started_at: datetime.datetime = datetime.datetime.now()
-        self.run_id: Optional[int] = run_id
+        self.task_id: int = task.task_id
         self.json_logging: bool = json_logging
 
-        self.method: Optional[str] = method
-        if not address:
-            raise TypeError("must specify address")
-        self.address: str = address
-        if team:
-            warnings.warn(
-                "Passing team as argument to BaseChecker is deprecated, use team_name instead",
-                DeprecationWarning,
-            )
-            team_name = team_name or team
-        self.team: Optional[str] = team_name
-        self.team_id: int = team_id or -1  # TODO: make required
-        if round:
-            warnings.warn(
-                "Passing round as argument to BaseChecker is deprecated, use round_id instead",
-                DeprecationWarning,
-            )
-            round_id = round_id or round
-        self.round: Optional[int] = round_id
-        self.flag_round: Optional[int] = flag_round
-        self.round_length: int = round_length
-        self.flag: Optional[str] = flag
-        if timeout:
-            self.timeout: Optional[int] = timeout // 1000
+        self.method: CheckerMethod = task.method
+        self.address: str = task.address
+        self.team_id: int = task.team_id
+        self.team_name: str = task.team_name
+        self.current_round_id: int = task.current_round_id
+        self.related_round_id: int = task.related_round_id
+        self.flag: Optional[str] = task.flag
+        self.variant_id: int = task.variant_id
+        self.timeout: float = task.timeout / 1000
+        self.round_length: float = task.round_length / 1000
+        self.task_chain_id: str = task.task_chain_id
 
-        self.flag_idx: Optional[int] = flag_idx
+        self._noise_cache: Optional[str] = None
 
         self.storage_dir = storage_dir
 
@@ -317,18 +183,11 @@ class BaseChecker(metaclass=_CheckerMeta):
             self.warning("No default port defined.")
             self.port = -1
 
-        self.request_dict: Optional[Dict[str, Any]] = request_dict  # kinda duplicate
-        self.config = {x: getattr(self, x) for x in VALID_ARGS}
-
         self.debug(
-            "Initialized checker for flag {} with in {} seconds".format(
-                json.dumps(self.config), datetime.datetime.now() - self.time_started_at
+            "Initialized checker for task {} in {} seconds".format(
+                jsons.dumps(task), datetime.datetime.now() - self.time_started_at,
             )
         )
-
-        if self.method == "havok":
-            self.method = "havoc"
-            self.warning("Ignoring method 'havok', calling 'havoc' instead")
 
     def _setup_logger(self) -> None:
         """
@@ -359,37 +218,52 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.critical: Callable[..., None] = self.logger.critical
 
     @property
-    def current_round(self) -> Optional[int]:
+    def chain_db(self) -> Any:
         """
-        Deprecated! Only for backwards compatibility! Use self.round instead.
+        get the team_db entry for the current chain. Short hand version for self.team_db[self.task_chain_id]
 
-        :return: current round
+        :return: the team_db entry
         """
-        warnings.warn(
-            "current_round is deprecated, use round instead", DeprecationWarning
-        )
-        return self.round
+        return self.team_db[self.task_chain_id]
+
+    @chain_db.setter
+    def chain_db(self, value: Any) -> None:
+        """
+        set the team_db entry for the current task chain. Short hand version for self.team_db[self.task_chain_id] = value
+
+        :param value: the value to set in the team_db
+        """
+        self.team_db[self.task_chain_id] = value
 
     @property
-    def noise(self) -> Optional[str]:
+    def noise(self) -> str:
         """
-        Pretty similar to a flag, just in a different mode (storeNoise vs storeFlag).
+        Creates a stable noise value for the current task chain.
+        Do not use for indexing (use self.task_chain_id instead).
 
-        :return: The noise
+        :return: A noise string, unique for each task_chain_id.
         """
-        return self.flag
+        if self._noise_cache is None:
+            if not self.task_chain_id:
+                self.warning("No valid task_chain_id when calling noise!")
+                return "<none>"
+            # We cache the hex in case it's called often.
+            m = hashlib.sha256()
+            m.update(self.task_chain_id.encode())
+            self._noise_cache = m.hexdigest()
+        return self._noise_cache
 
     @property
     def time_running(self) -> float:
         """
         How long this checker has been running for.
 
-        :return: time this checker has been running for
+        :return: time this checker has been running for in seconds
         """
         return (datetime.datetime.now() - self.time_started_at).total_seconds()
 
     @property
-    def time_remaining(self) -> int:
+    def time_remaining(self) -> float:
         """
         Return a remaining time that is safe to be used as timeout.
 
@@ -398,32 +272,24 @@ class BaseChecker(metaclass=_CheckerMeta):
         :return: A safe number of seconds that may still be used
         """
         return max(
-            int(
-                getattr(self, "timeout", DEFAULT_TIMEOUT)
-                - self.time_running
-                - TIME_BUFFER
-            ),
+            getattr(self, "timeout", DEFAULT_TIMEOUT) - self.time_running - TIME_BUFFER,
             1,
         )
 
     # ---- Basic checker functionality ---- #
 
-    def _run_method(self, method: Optional[str] = None) -> Optional[Result]:
+    def _run_method(self, method: CheckerMethod) -> Optional[CheckerTaskResult]:
         """
         Execute a checker method, pass all exceptions along to the calling function.
 
         :param method: When calling run, you may call a different method than the one passed on Checker creation
                         using this optional param.
-        :return: the Result code as int, as per the Result enum
+        :return: a CheckerTaskResult enum value
         """
-        if method not in CHECKER_METHODS:
-            raise ValueError(
-                "Method {} not supported! Supported: {}".format(method, CHECKER_METHODS)
-            )
 
-        return getattr(self, snake_caseify(method))()
+        return getattr(self, snake_caseify(method.value))()
 
-    def run(self, method: Optional[str] = None) -> CheckerResult:
+    def run(self, method: Optional[CheckerMethod] = None) -> CheckerResult:
         """
         Execute the checker and catch errors along the way.
 
@@ -441,22 +307,23 @@ class BaseChecker(metaclass=_CheckerMeta):
                     "Returning a result is not recommended and will be removed in the future. Raise EnoExceptions with additional text instead.",
                     DeprecationWarning,
                 )
-                if not Result.is_valid(ret):
+                try:
+                    CheckerTaskResult(ret)
+                except:
                     self.error(
                         "Illegal return value from {}: {}".format(self.method, ret)
                     )
                     return CheckerResult(
-                        Result.INTERNAL_ERROR
-                    )  # , "Illegal return value from {}: {}".format(self.method, ret)
+                        CheckerTaskResult.CHECKER_TASK_RESULT_INTERNAL_ERROR
+                    )
 
-                # Better wrap this, in case somebody returns raw ints (?)
-                ret = Result(ret)
+                ret = CheckerTaskResult(ret)
                 self.info("Checker [{}] resulted in {}".format(self.method, ret.name))
                 return CheckerResult(ret)
 
             # Returned Normally
             self.info("Checker [{}] executed successfully!".format(self.method))
-            return CheckerResult(Result.OK)
+            return CheckerResult(CheckerTaskResult.CHECKER_TASK_RESULT_OK)
 
         except EnoException as eno:
             stacktrace = "".join(
@@ -478,11 +345,15 @@ class BaseChecker(metaclass=_CheckerMeta):
             return CheckerResult.from_exception(eno)
         except self.requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
-            return CheckerResult(Result.MUMBLE, "Service returned HTTP Error",)
+            return CheckerResult(
+                CheckerTaskResult.CHECKER_TASK_RESULT_MUMBLE,
+                "Service returned HTTP Error",
+            )
         except EOFError as ex:
             self.info("Service returned EOF error [{}].".format(ex), exc_info=ex)
             return CheckerResult(
-                Result.MUMBLE, "Service returned EOF while reading response."
+                CheckerTaskResult.CHECKER_TASK_RESULT_MUMBLE,
+                "Service returned EOF while reading response.",
             )
         except (
             self.requests.ConnectionError,  # requests
@@ -497,7 +368,8 @@ class BaseChecker(metaclass=_CheckerMeta):
                 "Error in connection to service occurred: {}\n".format(ex), exc_info=ex
             )
             return CheckerResult(
-                Result.OFFLINE, message="Error in connection to service occured"
+                CheckerTaskResult.CHECKER_TASK_RESULT_OFFLINE,
+                message="Error in connection to service occured",
             )  # , ex.message
         except Exception as ex:
             stacktrace = "".join(traceback.format_exception(None, ex, ex.__traceback__))
@@ -515,7 +387,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         Store a flag in the service.
 
-        In case multiple flags are provided, self.flag_idx gives the appropriate index.
+        In case multiple flags are provided, self.variant_id gives the appropriate flag store to target.
         The flag itself can be retrieved from self.flag.
         On error, raise an Eno Exception.
 
@@ -528,7 +400,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         Retrieve a flag from the service.
 
-        Use self.flag to get the flag that needs to be recovered and self.roudn to get the round the flag was placed in.
+        Use self.flag to get the flag that needs to be recovered and self.task_chain_id as a key to retrieve data from the database stored during putflag
         On error, raise an EnoException.
 
         :raises: EnoException on error
@@ -542,7 +414,7 @@ class BaseChecker(metaclass=_CheckerMeta):
 
         The noise should later be recoverable.
         The difference between noise and flag is that noise does not have to remain secret for other teams.
-        This method can be called many times per round. Check how often using self.flag_idx.
+        This method can be called multiple times per round. Check which variant is called using self.variant_id.
         On error, raise an EnoException.
 
         :raises: EnoException on error
@@ -554,9 +426,9 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         Retrieve noise in the service.
 
-        The noise to be retrieved is inside self.flag
+        The noise to be retrieved, can be restored from the database by using the self.task_chain_id used to store it during putflag.
         The difference between noise and flag is, tht noise does not have to remain secret for other teams.
-        This method can be called many times per round. Check how often using flag_idx.
+        This method can be called many times per round. Check which variant is called using self.variant_id.
         On error, raise an EnoException.
 
         :raises: EnoException on error
@@ -672,7 +544,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         return self.get_team_db()
 
     def get_team_db(
-        self, team: Optional[str] = None
+        self, team_id: Optional[int] = None
     ) -> Union[NoSqlDict, StoredDict]:  # TODO: use a common supertype for all backends
         """
         Return the database for a specific team.
@@ -682,7 +554,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         :param team: Return a db for an other team. If none, the db for the local team will be returned.
         :return: The team local db
         """
-        team = team if team is not None else self.team
+        team = team_id if team_id is not None else self.team_id
         return self.db("team_{}".format(team), ignore_locks=True)
 
     # ---- Networking specific methods ---- #
@@ -709,7 +581,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         self,
         host: Optional[str] = None,
         port: Optional[int] = None,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         retries: int = 3,
     ) -> SimpleSocket:
         """
@@ -724,15 +596,15 @@ class BaseChecker(metaclass=_CheckerMeta):
         :return: A connected Telnet instance
         """
 
-        if timeout:
+        if timeout is not None:
 
-            def timeout_fun() -> int:
-                return cast(int, timeout)
+            def timeout_fun() -> float:
+                return cast(float, timeout)
 
         else:
 
-            def timeout_fun() -> int:
-                return self.time_remaining // 2
+            def timeout_fun() -> float:
+                return self.time_remaining / 2
 
         if port is None:
             port = self.port
@@ -809,7 +681,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         port: Optional[int] = None,
         scheme: str = "http",
         raise_http_errors: bool = False,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         **kwargs: Any,
     ) -> "requests.Response":
         """
@@ -837,7 +709,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         port: Optional[int] = None,
         scheme: str = "http",
         raise_http_errors: bool = False,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         **kwargs: Any,
     ) -> "requests.Response":
         """
@@ -866,7 +738,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         port: Optional[int] = None,
         scheme: str = "http",
         raise_http_errors: bool = False,
-        timeout: Optional[int] = None,
+        timeout: Optional[float] = None,
         **kwargs: Any,
     ) -> "requests.Response":
         """
@@ -886,7 +758,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         kwargs.setdefault("allow_redirects", False)
         url = self._sanitize_url(route, port, scheme)
         if timeout is None:
-            timeout = self.time_remaining // 2
+            timeout = self.time_remaining / 2
         self.debug(
             "Request: {} {} with params: {} and {} secs timeout.".format(
                 method, url, params, timeout
@@ -916,8 +788,7 @@ def run(
         checker_cls.service.run(host="::", debug=True, port=parsed.listen_port)
         return None
     else:
-        checker_args = vars(parsed)
-        del checker_args["runmode"]  # will always be 'run' at this point
-        result = checker_cls(**vars(parsed)).run()
-        print(f"Checker run resulted in Result. {result.result.name}")
+        task_message = task_message_from_namespace(parsed)
+        result = checker_cls(task_message).run()
+        print(f"Checker run resulted in Result: {result.result.name}")
         return result

@@ -18,7 +18,8 @@ setuptools.setup(
     url="https://github.com/ENOWARS/enochecker",
     packages=setuptools.find_packages("src"),
     package_dir={"": "src"},
-    package_data={"enochecker": ["py.typed"]},
+    include_package_data=True,
+    package_data={"enochecker": ["py.typed", "src/enochecker/post.html"]},
     install_requires=requirements,
     classifiers=[
         # How mature is this project? Common values are
@@ -31,8 +32,10 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
     ],
     zip_safe=False,  # This might be needed for requirements.txt
+    python_requires=">=3.7",
 )

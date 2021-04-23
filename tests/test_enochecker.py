@@ -8,20 +8,17 @@ from logging import DEBUG
 import enochecker
 import pytest
 from enochecker import (
-    CHECKER_METHODS,
     BaseChecker,
     BrokenServiceException,
     OfflineException,
-    Result,
     assert_equals,
     assert_in,
     ensure_bytes,
     ensure_unicode,
-    parse_args,
-    run,
     serve_once,
     snake_caseify,
 )
+from enochecker_core import CheckerMethod, CheckerTaskMessage, CheckerTaskResult
 
 STORAGE_DIR: str = "/tmp/enochecker_test"
 
@@ -42,27 +39,15 @@ def temp_storage_dir(func):
 
 class CheckerExampleImpl(BaseChecker):
     port = 9999
-    flag_count = 1
-    noise_count = 1
-    havoc_count = 1
+    flag_variants = 1
+    noise_variants = 1
+    havoc_variants = 1
 
     def __init__(
         self,
-        method=CHECKER_METHODS[0],
-        run_id=0,
-        address="localhost",
-        team_name="Testteam",
-        team_id=1,
-        flag_round=None,
-        round_length=300,
-        flag_idx=None,
-        storage_dir=None,
-        log_endpoint=None,
-        use_db_cache=True,
-        json_logging=True,
-        round_id=1,
+        method=CheckerMethod.CHECKER_METHOD_PUTFLAG,
         flag="ENOFLAG",
-        timeout=30000,
+        task_chain_id="test",
         **kwargs,
     ):
         """
@@ -71,43 +56,40 @@ class CheckerExampleImpl(BaseChecker):
         :param fail: If and how
         """
         super(CheckerExampleImpl, self).__init__(
-            method=method,
-            run_id=run_id,
-            address=address,
-            team_name=team_name,
-            team_id=team_id,
-            flag_round=flag_round,
-            round_length=round_length,
-            flag_idx=flag_idx,
-            storage_dir=storage_dir or STORAGE_DIR,
-            use_db_cache=use_db_cache,
-            json_logging=json_logging,
-            round_id=round_id,
-            flag=flag,
-            timeout=timeout,
+            CheckerTaskMessage(
+                task_id=1,
+                method=CheckerMethod(method),
+                address="localhost",
+                team_id=1,
+                team_name="team1",
+                current_round_id=1,
+                related_round_id=1,
+                flag=flag,
+                variant_id=0,
+                timeout=30000,
+                round_length=60000,
+                task_chain_id=task_chain_id,
+            ),
             **kwargs,
         )
         self.logger.setLevel(DEBUG)
 
     def putflag(self):
-        self.team_db["flag"] = self.flag
-        if self.flag_idx == 2:
-            self.info("RAN IDX 2")
-            raise Exception()
+        self.chain_db = self.flag
 
     def getflag(self):
         try:
-            if not self.team_db["flag"] == self.flag:
+            if not self.chain_db == self.flag:
                 raise BrokenServiceException("Flag not found!")
         except KeyError:
             raise BrokenServiceException("Flag not correct!")
 
     def putnoise(self):
-        self.team_db["noise"] = self.noise
+        self.chain_db = self.flag
 
     def getnoise(self):
         try:
-            if not self.team_db["noise"] == self.noise:
+            if not self.chain_db == self.flag:
                 raise BrokenServiceException("Noise not correct!")
         except KeyError:
             raise BrokenServiceException("Noise not found!")
@@ -115,7 +97,7 @@ class CheckerExampleImpl(BaseChecker):
     def havoc(self):
         raise OfflineException(
             "Could not connect to team {} at {}:{} because this is not a real checker script.".format(
-                self.team, self.address, self.port
+                self.team_id, self.address, self.port
             )
         )
 
@@ -184,57 +166,13 @@ def test_dict():
     assert len(db) == 0
 
 
-def test_args():
-    with pytest.raises(SystemExit):
-        parse_args()
-
-    argv = [
-        "run",
-        CHECKER_METHODS[0],
-        "-a",
-        "localhost",
-        "-t",
-        "TestTeam",
-        "-I",
-        "1",
-        "-f",
-        "ENOTESTFLAG",
-        "-x",
-        "30",
-        "-i",
-        "0",
-        "-R",
-        "500",
-        "-F",
-        "299",
-        "-T",
-        "19"
-        # "-p", "1337"
-    ]
-    args = parse_args(argv)
-
-    assert args.method == argv[1]
-    assert args.address == argv[3]
-    assert args.team_name == argv[5]
-    assert args.round_id == int(argv[7])
-    assert args.flag == argv[9]
-    assert args.timeout == int(argv[11])
-    assert args.flag_idx == int(argv[13])
-    assert args.round_length == int(argv[15])
-    assert args.flag_round == int(argv[17])
-    assert args.team_id == int(argv[19])
-
-    # assert args.port == int(argv[15])
-    # port should be specified in the basechecker as a constant, so this test isn't neccesary
-
-
 @temp_storage_dir
 def test_checker_connections():
     # TODO: Check timeouts?
     text = "ECHO :)"
     _ = serve_once(text, 9999)
     checker = CheckerExampleImpl(
-        CHECKER_METHODS[0],
+        CheckerMethod.CHECKER_METHOD_PUTFLAG,
     )  # Conflict between logging and enochecker.logging because of wildcart import
     assert (
         checker.http_get("/").text == text
@@ -244,7 +182,7 @@ def test_checker_connections():
     time.sleep(0.2)
 
     _ = serve_once(text, 9999)
-    checker = CheckerExampleImpl(CHECKER_METHODS[0])
+    checker = CheckerExampleImpl(CheckerMethod.CHECKER_METHOD_PUTFLAG)
     t = checker.connect()
     t.write(b"GET / HTTP/1.0\r\n\r\n")
     assert t.readline_expect("HTTP")
@@ -254,25 +192,21 @@ def test_checker_connections():
 @temp_storage_dir
 def test_checker():
     flag = "ENOFLAG"
-    noise = "buzzzz! :)"
+    task_chain_id = "test_task_chain_id"
 
     CheckerExampleImpl(method="putflag").run()
 
-    assert CheckerExampleImpl().team_db["flag"] == flag
+    assert CheckerExampleImpl().chain_db == flag
     CheckerExampleImpl(method="getflag", flag=flag).run()
 
-    CheckerExampleImpl(method="putnoise", flag=noise).run()
-    assert CheckerExampleImpl().team_db["noise"] == noise
-    CheckerExampleImpl(method="getnoise", flag=noise).run()
+    CheckerExampleImpl(method="putnoise", task_chain_id=task_chain_id).run()
+    assert CheckerExampleImpl(task_chain_id=task_chain_id).chain_db is not None
+    CheckerExampleImpl(method="getnoise", task_chain_id=task_chain_id).run()
 
-    assert CheckerExampleImpl(method="havoc").run().result == Result.OFFLINE
-
-    c = CheckerExampleImpl(method="putflag", round_id=1337)
-    with pytest.deprecated_call():
-        assert c.current_round == 1337
-    c.round = 15
-    with pytest.deprecated_call():
-        assert c.current_round == c.round
+    assert (
+        CheckerExampleImpl(method="havoc").run().result
+        == CheckerTaskResult.CHECKER_TASK_RESULT_OFFLINE
+    )
 
 
 @temp_storage_dir
@@ -288,16 +222,6 @@ def test_useragents():
             return
 
     assert first_agent != checker.http_useragent
-
-
-@temp_storage_dir
-def test_exceptionHandling(capsys):
-    # CheckerExampleImpl(method="putflag", call_idx=2).run()
-    run(CheckerExampleImpl, args=["run", "putflag", "-i", "2"])
-
-    a = capsys.readouterr()
-    with capsys.disabled():
-        print(a.out)
 
 
 def main():
