@@ -42,7 +42,7 @@ if TYPE_CHECKING:  # pragma: no cover
     import requests
 
 DEFAULT_TIMEOUT: int = 30000
-TIME_BUFFER: int = 5  # time in seconds we try to finish earlier
+TIME_BUFFER: int = 5000  # time in milliseconds we try to finish earlier
 
 # Global cache for all stored dicts.  TODO: Prune this at some point?
 global_db_cache: Dict[str, Union[StoredDict, NoSqlDict]] = {}
@@ -122,18 +122,7 @@ class BaseChecker(metaclass=_CheckerMeta):
 
         TODO: update docs
 
-        :param request_dict: Dictionary containing the original request params
-        :param run_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
-        :param method: The method to run (e.g. getflag, putflag)
-        :param address: The address to target (e.g. team1.enowars.com)
-        :param team_name: The name of the team being targeted
-        :param team_id: The numerical ID of the team being targeted
-        :param round_id: The numerical round ID in which this checker is called
-        :param flag_round: The round in which the flag should be/was deployed
-        :param round_length: The length of a round in seconds
-        :param flag: The contents of the flag or noise
-        :param flag_idx: The index of the flag starting at 0, used for storing multiple flags per round
-        :param timeout: The timeout for the execution of this checker
+        :param task: The CheckerTaskMessage to be executed
         :param storage_dir: The directory to store persistent data in (used by StoredDict)
         """
         # We import requests after startup global imports may deadlock, see
@@ -215,13 +204,15 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.critical: Callable[..., None] = self.logger.critical
 
     @property
-    def time_running(self) -> float:
+    def time_running(self) -> int:
         """
         How long this checker has been running for.
 
-        :return: time this checker has been running for
+        :return: time this checker has been running for in milliseconds
         """
-        return (datetime.datetime.now() - self.time_started_at).total_seconds()
+        return int(
+            (datetime.datetime.now() - self.time_started_at).total_seconds() * 1000
+        )
 
     @property
     def time_remaining(self) -> int:
@@ -230,15 +221,11 @@ class BaseChecker(metaclass=_CheckerMeta):
 
         Includes a buffer of TIME_BUFFER seconds.
 
-        :return: A safe number of seconds that may still be used
+        :return: A safe number of milliseconds that may still be used
         """
         return max(
-            int(
-                getattr(self, "timeout", DEFAULT_TIMEOUT)
-                - self.time_running
-                - TIME_BUFFER
-            ),
-            1,
+            getattr(self, "timeout", DEFAULT_TIMEOUT) - self.time_running - TIME_BUFFER,
+            1000,
         )
 
     # ---- Basic checker functionality ---- #
@@ -249,7 +236,7 @@ class BaseChecker(metaclass=_CheckerMeta):
 
         :param method: When calling run, you may call a different method than the one passed on Checker creation
                         using this optional param.
-        :return: the Result code as int, as per the Result enum
+        :return: a CheckerTaskResult enum value
         """
 
         return getattr(self, snake_caseify(method.value))()
@@ -352,7 +339,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         Store a flag in the service.
 
-        In case multiple flags are provided, self.flag_idx gives the appropriate index.
+        In case multiple flags are provided, self.variant_id gives the appropriate flag store to target.
         The flag itself can be retrieved from self.flag.
         On error, raise an Eno Exception.
 
@@ -365,7 +352,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         Retrieve a flag from the service.
 
-        Use self.flag to get the flag that needs to be recovered and self.roudn to get the round the flag was placed in.
+        Use self.flag to get the flag that needs to be recovered and self.task_chain_id as a key to retrieve data from the database stored during putflag
         On error, raise an EnoException.
 
         :raises: EnoException on error
@@ -379,7 +366,7 @@ class BaseChecker(metaclass=_CheckerMeta):
 
         The noise should later be recoverable.
         The difference between noise and flag is that noise does not have to remain secret for other teams.
-        This method can be called many times per round. Check how often using self.flag_idx.
+        This method can be called multiple times per round. Check which variant is called using self.variant_id.
         On error, raise an EnoException.
 
         :raises: EnoException on error
@@ -391,9 +378,9 @@ class BaseChecker(metaclass=_CheckerMeta):
         """
         Retrieve noise in the service.
 
-        The noise to be retrieved is inside self.flag
+        The noise to be retrieved, can be restored from the database by using the self.task_chain_id used to store it during putflag.
         The difference between noise and flag is, tht noise does not have to remain secret for other teams.
-        This method can be called many times per round. Check how often using flag_idx.
+        This method can be called many times per round. Check which variant is called using self.variant_id.
         On error, raise an EnoException.
 
         :raises: EnoException on error

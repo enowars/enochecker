@@ -31,17 +31,6 @@ class CheckerResult:
                 CheckerTaskResult.CHECKER_TASK_RESULT_INTERNAL_ERROR, message=None
             )
 
-    '''def to_dict(self) -> Dict[str, Optional[str]]:
-        """ Returns a dictionary representation of a given CheckerResult """
-        return {
-            "result": self.result.name,
-            "message": self.message,
-        }
-
-    def jsonify(self) -> Response:
-        """ Converts a Checkerresult to a valid json response (hopefully) according to spec """
-        return jsonify(self.to_dict())'''
-
 
 class EnoException(Exception, ABC):
     """Base error including the Result. Raise a subclass of me once we know what to do."""

@@ -57,10 +57,9 @@ def checker_routes(
         """
         Serve a single checker request.
 
-        The spec needs to be formed according to the spec above.
+        The request needs to be formed according to the spec of CheckerTaskMessage.
 
-        :param method: the method to run in a checker.
-        :return: jsonified result of the checker.
+        :return: CheckerResultMessage as json.
         """
         try:
             logger.info(request.json)
@@ -117,9 +116,9 @@ def checker_routes(
         """
         Return technical information about this service.
 
-        Includes the name and desired number of flags, havoc and noise per round.
+        Includes the name and supported variants of flags, havoc and noise.
 
-        :return: dictionary with information
+        :return: CheckerInfoMessage filled with the values from the checker
         """
         try:
             service_name: str = getattr(
