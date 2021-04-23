@@ -79,6 +79,7 @@ class ELKFormatter(logging.Formatter):
             module=record.module,
             function=record.funcName,
             service_name=self.checker.service_name,
+            method=self.checker.method.value if self.checker.method else None,
             task_id=self.checker.task_id,
             team_id=self.checker.team_id,
             team_name=self.checker.team_name,
