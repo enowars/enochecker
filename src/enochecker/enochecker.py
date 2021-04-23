@@ -155,8 +155,8 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.related_round_id: int = task.related_round_id
         self.flag: Optional[str] = task.flag
         self.variant_id: int = task.variant_id
-        self.timeout: float = task.timeout / 1000
-        self.round_length: float = task.round_length / 1000
+        self.timeout: float = task.timeout / 1000.0
+        self.round_length: float = task.round_length / 1000.0
         self.task_chain_id: str = task.task_chain_id
 
         self._noise_cache: Optional[str] = None
