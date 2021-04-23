@@ -47,9 +47,9 @@ def checker_routes(
 
         Includes a web interface for manually sending requests to the service.
 
-        :return: HTML page with info about this service
+        :return: Flask resposne containing the HTML page with info about this service
         """
-        logger.info("Request on /")
+        logger.info("Request on /", mimetype="text/html")
 
         return Response(INDEX_PAGE)
 
@@ -59,7 +59,7 @@ def checker_routes(
 
         The request needs to be formed according to the spec of CheckerTaskMessage.
 
-        :return: CheckerResultMessage as json.
+        :return: Flask response containing the CheckerResultMessage as JSON
         """
         try:
             logger.info(request.json)
@@ -148,9 +148,9 @@ class ExampleChecker(BaseChecker):
 
     def get_service_info() -> Response:
         """
-        Return JSON representation of the information from :func:`service_info`.
+        Return a Flask response containing the JSON representation of the information from :func:`service_info`.
 
-        :return: JSON representation of the service info
+        :return: Flask response containing the JSON representation of the service info
         """
         res_json = jsons.dumps(
             service_info(),
