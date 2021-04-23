@@ -184,7 +184,7 @@ class BaseChecker(metaclass=_CheckerMeta):
             self.port = -1
 
         self.debug(
-            "Initialized checker for task {} with in {} seconds".format(
+            "Initialized checker for task {} in {} seconds".format(
                 jsons.dumps(task), datetime.datetime.now() - self.time_started_at,
             )
         )

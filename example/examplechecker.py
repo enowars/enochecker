@@ -158,7 +158,7 @@ class ExampleChecker(BaseChecker):
     def getnoise(self) -> None:
         """
         This method retrieves noise in the service.
-        The noise to be retrieved is inside self.flag
+        The noise to be retrieved is inside self.noise
         The difference between noise and flag is, that noise does not have to remain secret for other teams.
         This method can be called many times per round.
         The engine will also trigger different variants, indicated by variant_id.
