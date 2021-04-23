@@ -532,10 +532,7 @@ class BaseChecker(metaclass=_CheckerMeta):
             return CheckerResult.from_exception(eno)
         except self.requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
-            return CheckerResult(
-                Result.MUMBLE,
-                "Service returned HTTP Error",
-            )
+            return CheckerResult(Result.MUMBLE, "Service returned HTTP Error",)
         except EOFError as ex:
             self.info("Service returned EOF error [{}].".format(ex), exc_info=ex)
             return CheckerResult(
@@ -958,8 +955,7 @@ class BaseChecker(metaclass=_CheckerMeta):
 
 
 def run(
-    checker_cls: Type[BaseChecker],
-    args: Optional[Sequence[str]] = None,
+    checker_cls: Type[BaseChecker], args: Optional[Sequence[str]] = None,
 ) -> Optional[CheckerResult]:
     """
     Run a checker, either from cmdline or as uwsgi script.

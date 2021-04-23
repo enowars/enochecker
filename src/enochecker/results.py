@@ -66,9 +66,7 @@ class EnoException(Exception, ABC):
     result: Result = Result.INTERNAL_ERROR
 
     def __init__(
-        self,
-        message: Optional[str],
-        internal_message: Optional[str] = None,
+        self, message: Optional[str], internal_message: Optional[str] = None,
     ):
         self.message: Optional[str] = message
         self.internal_message: Optional[str] = internal_message
