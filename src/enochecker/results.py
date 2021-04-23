@@ -38,7 +38,7 @@ class CheckerResult:
 
     @staticmethod
     def from_exception(e: Exception) -> "CheckerResult":
-        """ Converts a given Exception to an extended CheckerResult including Message
+        """Converts a given Exception to an extended CheckerResult including Message
         public_message isn't used anywhere yet"""
 
         if isinstance(e, EnoException):
@@ -66,7 +66,9 @@ class EnoException(Exception, ABC):
     result: Result = Result.INTERNAL_ERROR
 
     def __init__(
-        self, message: Optional[str], internal_message: Optional[str] = None,
+        self,
+        message: Optional[str],
+        internal_message: Optional[str] = None,
     ):
         self.message: Optional[str] = message
         self.internal_message: Optional[str] = internal_message

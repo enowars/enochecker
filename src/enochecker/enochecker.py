@@ -45,19 +45,31 @@ TIME_BUFFER: int = 5  # time in seconds we try to finish earlier
 VALID_ARGS = [
     "method",
     "address",
-    "team",
+    "team_name",
     "team_id",
     "round",
-    "flag_round",
+    "related_round_id",
     "flag",
+    "variant_id",
     "timeout",
-    "flag_idx",
+    "task_chain_id",
     "json_logging",
     "round_length",
 ]
 
 # Global cache for all stored dicts.  TODO: Prune this at some point?
 global_db_cache: Dict[str, Union[StoredDict, NoSqlDict]] = {}
+
+
+def warn_deprecated(old_name: str, new_name: str) -> None:
+    """
+    Print a warning for the deprecated feature, include the new name in the log
+    This needs python development mode or deprecation warnings enabled!
+    """
+    warnings.warn(
+        f"Checker uses deprecated {old_name}; use {new_name} instead.",
+        DeprecationWarning,
+    )
 
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -102,21 +114,20 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         ),
     )
     runparser.add_argument(
+        "-i",
+        "--task_id",
+        type=int,
+        default=1,
+        help="An id for this task. Must be unique in a CTF.",
+    )
+    runparser.add_argument(
         "-a",
         "--address",
         type=str,
         default="localhost",
         help="The ip or address of the remote team to check",
     )
-    runparser.add_argument(
-        "-t",
-        "--team",
-        type=str,
-        default="team",
-        help="The name of the target team to check",
-        dest="team_name",
-    )
-    runparser.add_argument(
+    parser.add_argument(
         "-T",
         "--team_id",
         type=int,
@@ -124,26 +135,27 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         help="The Team_id belonging to the specified Team",
     )
     runparser.add_argument(
-        "-I",
-        "--run_id",
-        type=int,
-        default=1,
-        help="An id for this run. Used to find it in the DB later.",
+        "-t",
+        "--team_name",
+        type=str,
+        default="team1",
+        help="The name of the target team to check",
+        dest="team_name",
     )
     runparser.add_argument(
         "-r",
-        "--round",
+        "--current_round_id",
         type=int,
         default=1,
         help="The round we are in right now",
-        dest="round_id",
+        dest="current_round_id",
     )
     runparser.add_argument(
         "-R",
-        "--round_length",
+        "--related_round_id",
         type=int,
-        default=300,
-        help="The round length in seconds (default 300)",
+        default=1,
+        help="The round in which the flag or noise was stored when method is getflag/getnoise. Equal to current_round_id otherwise.",
     )
     runparser.add_argument(
         "-f",
@@ -153,27 +165,32 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         help="The Flag, a Fake flag or a Unique ID, depending on the mode",
     )
     runparser.add_argument(
-        "-F",
-        "--flag_round",
+        "-v",
+        "--variant_id",
         type=int,
-        default=1,
-        help="The Round the Flag belongs to (was placed)",
+        default=0,
+        help="The variantId for the method being called",
     )
     runparser.add_argument(
         "-x",
         "--timeout",
         type=int,
-        default=DEFAULT_TIMEOUT,
-        help="The maximum amount of time the script has to execute in seconds",
+        default=30000,
+        help="The maximum amount of time the script has to execute in milliseconds (default 30 000)",
     )
-    runparser.add_argument(
-        "-i",
-        "--flag_idx",
+    parser.add_argument(
+        "-l",
+        "--round_length",
         type=int,
-        default=0,
-        help="Unique numerical index per round. Each id only occurs once and is tighly packed, "
-        "starting with 0. In a service supporting multiple flags, this would be used to "
-        "decide which flag to place.",
+        default=300000,
+        help="The round length in milliseconds (default 300 000)",
+    )
+    parser.add_argument(
+        "-I",
+        "--task_chain_id",
+        type=str,
+        default="task_chain_0",
+        help="A unique Id which must be identical for all related putflag/getflag calls and putnoise/getnoise calls",
     )
     runparser.add_argument(
         "-j",
@@ -224,19 +241,18 @@ class BaseChecker(metaclass=_CheckerMeta):
     def __init__(
         self,
         request_dict: Dict[str, Any] = None,
-        run_id: int = None,
+        task_id: int = None,
         method: str = None,
         address: str = None,
-        team: str = None,  # deprecated!
         team_name: str = None,
         team_id: int = None,
-        round: int = None,  # deprecated!
-        round_id: int = None,
-        flag_round: int = None,
-        round_length: int = 300,
+        current_round_id: int = None,
+        related_round_id: int = None,
+        round_length: int = 300000,
         flag: str = None,
-        flag_idx: int = None,
+        variant_id: int = None,
         timeout: int = None,
+        task_chain_id: str = None,
         storage_dir: str = DB_DEFAULT_DIR,
         use_db_cache: bool = DB_GLOBAL_CACHE_SETTING,
         json_logging: bool = True,
@@ -245,7 +261,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         Init the Checker, fill the params.
 
         :param request_dict: Dictionary containing the original request params
-        :param run_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
+        :param task_id: Unique ID for this run, assigned by the ctf framework. Used as handle for logging.
         :param method: The method to run (e.g. getflag, putflag)
         :param address: The address to target (e.g. team1.enowars.com)
         :param team_name: The name of the team being targeted
@@ -257,6 +273,8 @@ class BaseChecker(metaclass=_CheckerMeta):
         :param flag_idx: The index of the flag starting at 0, used for storing multiple flags per round
         :param timeout: The timeout for the execution of this checker
         :param storage_dir: The directory to store persistent data in (used by StoredDict)
+        :param variant_id: The variant of this run
+        :param task_chain_id: The context of this run
         """
         # We import requests after startup global imports may deadlock, see
         # https://github.com/psf/requests/issues/2925
@@ -265,35 +283,28 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.requests = requests
 
         self.time_started_at: datetime.datetime = datetime.datetime.now()
-        self.run_id: Optional[int] = run_id
+        self.task_id: Optional[int] = task_id
         self.json_logging: bool = json_logging
 
         self.method: Optional[str] = method
         if not address:
             raise TypeError("must specify address")
         self.address: str = address
-        if team:
-            warnings.warn(
-                "Passing team as argument to BaseChecker is deprecated, use team_name instead",
-                DeprecationWarning,
-            )
-            team_name = team_name or team
-        self.team: Optional[str] = team_name
-        self.team_id: int = team_id or -1  # TODO: make required
-        if round:
-            warnings.warn(
-                "Passing round as argument to BaseChecker is deprecated, use round_id instead",
-                DeprecationWarning,
-            )
-            round_id = round_id or round
-        self.round: Optional[int] = round_id
-        self.flag_round: Optional[int] = flag_round
+        self.team: Optional[str] = team_name  # shorthand
+        self.team_name: Optional[str] = team_name
+        self.team_id: int = team_id
+        self.round: Optional[int] = current_round_id  # shorthand
+        self.current_round_id: Optional[int] = current_round_id
+        self.related_round_id: Optional[int] = related_round_id
         self.round_length: int = round_length
         self.flag: Optional[str] = flag
         if timeout:
-            self.timeout: Optional[int] = timeout // 1000
+            self.timeout: Optional[float] = timeout // 1000
 
-        self.flag_idx: Optional[int] = flag_idx
+        self.variant_id: int = variant_id
+
+        self.ctx: str = task_chain_id  # shorthand
+        self.task_chain_id: str = task_chain_id
 
         self.storage_dir = storage_dir
 
@@ -359,25 +370,55 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.critical: Callable[..., None] = self.logger.critical
 
     @property
+    def flag_idx(self) -> int:
+        """
+        Deprecated! Only for backwards compatibility! Use self.variant_id instead.
+
+        :return: the variant id
+        """
+        warn_deprecated("flag_idx", "variant_id")
+        return self.variant_id
+
+    @property
+    def flag_round(self) -> Optional[int]:
+        """
+        Deprecated! Only for backwards compatibility! Use self.task_id instead.
+
+        :return: the realted round id
+        """
+
+        warn_deprecated("flag_round", "related_round_id")
+        return self.related_round_id
+
+    @property
+    def run_id(self) -> Optional[int]:
+        """
+        Deprecated! Only for backwards compatibility! Use self.task_id instead.
+
+        :return: task id
+        """
+        warn_deprecated("run_id", "task_id")
+        return self.task_id
+
+    @property
     def current_round(self) -> Optional[int]:
         """
         Deprecated! Only for backwards compatibility! Use self.round instead.
 
         :return: current round
         """
-        warnings.warn(
-            "current_round is deprecated, use round instead", DeprecationWarning
-        )
+        warn_deprecated("current_round", "round")
         return self.round
 
     @property
     def noise(self) -> Optional[str]:
         """
-        Pretty similar to a flag, just in a different mode (storeNoise vs storeFlag).
+        Deprecated! Only for backwards compatibility! Use self.ctx instead.
 
-        :return: The noise
+        :return: The context of this run
         """
-        return self.flag
+        warn_deprecated("noise", "ctx")
+        return self.ctx
 
     @property
     def time_running(self) -> float:
@@ -478,7 +519,10 @@ class BaseChecker(metaclass=_CheckerMeta):
             return CheckerResult.from_exception(eno)
         except self.requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
-            return CheckerResult(Result.MUMBLE, "Service returned HTTP Error",)
+            return CheckerResult(
+                Result.MUMBLE,
+                "Service returned HTTP Error",
+            )
         except EOFError as ex:
             self.info("Service returned EOF error [{}].".format(ex), exc_info=ex)
             return CheckerResult(
@@ -901,7 +945,8 @@ class BaseChecker(metaclass=_CheckerMeta):
 
 
 def run(
-    checker_cls: Type[BaseChecker], args: Optional[Sequence[str]] = None,
+    checker_cls: Type[BaseChecker],
+    args: Optional[Sequence[str]] = None,
 ) -> Optional[CheckerResult]:
     """
     Run a checker, either from cmdline or as uwsgi script.

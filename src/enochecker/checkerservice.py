@@ -34,15 +34,16 @@ CHECKER_METHODS: List[str] = [
 spec: List[Union[Required, Optional]] = [
     Required("method", CHECKER_METHODS),  # method to execute
     Required("address", str),  # address to check
-    Optional("runId", int, 0),  # internal ID of this run inside our db
+    Optional("taskId", int, 1),  # the ID of this run
     Optional("teamName", str, "FakeTeam"),  # the team name
     Optional("teamId", int, 1),  # team ID
-    Optional("roundId", int, 0),  # which tick we are in
+    Optional("currentRoundId", int, 0),  # which tick we are in
     Optional("relatedRoundId", int, 0),  # Flag-Related
-    Optional("roundLength", int, 300),  # the default tick time
+    Optional("roundLength", int, 300000),  # the default tick time
     Optional("flag", str, "ENOTESTFLAG"),  # the flag or noise to drop or get
-    Optional("flagIndex", int, 0),
-    Optional("timeout", int, 30),  # timeout we have for this run
+    Optional("variantId", int, 0),  # the variant ID
+    Optional("timeout", int, 30000),  # timeout we have for this run
+    Optional("taskChainId", str, "task_chain_0"),  # timeout we have for this run
 ]
 
 UI_TEMPLATE = """
@@ -169,7 +170,6 @@ def assert_types(
 
     def key_to_name(key: str) -> str:
         key = key.replace("Index", "Idx")  # -> flagIndex -> flag_idx
-        key = key.replace("relatedRoundId", "flagRound")
         return snake_caseify(key)
 
     for entry in spec:

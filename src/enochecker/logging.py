@@ -79,7 +79,7 @@ class ELKFormatter(logging.Formatter):
             "flagIndex": self.checker.flag_idx,
             "runId": self.checker.run_id,
             "roundId": self.checker.round,
-            "relatedRoundId": self.checker.flag_round,
+            "relatedRoundId": self.checker.related_round_id,
             "message": message,
             "teamName": self.checker.team,
             "teamId": self.checker.team_id,
