@@ -246,13 +246,13 @@ class BaseChecker(metaclass=_CheckerMeta):
         method: str = None,
         address: str = None,
         team_name: str = None,
-        team_id: int = None,
+        team_id: int = 0,
         current_round_id: int = None,
         related_round_id: int = None,
         round_length: int = 300000,
         flag: str = None,
-        variant_id: int = None,
-        timeout: int = None,
+        variant_id: int = 0,
+        timeout: int = 30000,
         task_chain_id: str = None,
         storage_dir: str = DB_DEFAULT_DIR,
         use_db_cache: bool = DB_GLOBAL_CACHE_SETTING,
@@ -304,8 +304,8 @@ class BaseChecker(metaclass=_CheckerMeta):
 
         self.variant_id: int = variant_id
 
-        self.ctx: str = task_chain_id  # shorthand
-        self.task_chain_id: str = task_chain_id
+        self.ctx: Optional[str] = task_chain_id  # shorthand
+        self.task_chain_id: Optional[str] = task_chain_id
 
         self.storage_dir = storage_dir
 

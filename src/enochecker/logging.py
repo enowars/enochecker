@@ -85,7 +85,7 @@ class ELKFormatter(logging.Formatter):
             "teamId": self.checker.team_id,
             "serviceName": self.checker.service_name,
             "method": self.checker.method,
-            "task_chain_id": self.ctx,
+            "task_chain_id": self.checker.ctx,
         }
 
         return LOGGING_PREFIX + json.dumps(log_output)
