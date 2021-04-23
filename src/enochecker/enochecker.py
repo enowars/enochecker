@@ -134,8 +134,8 @@ class BaseChecker(metaclass=_CheckerMeta):
 
         :param task: The CheckerTaskMessage to be executed
         :param storage_dir: The directory to store persistent data in (used by StoredDict)
-        :param variant_id: The variant of this run
-        :param task_chain_id: The context of this run
+        :param use_db_cache: whether the DB connections should be cached or a new DB connection should be created per request
+        :param json_logging: whether the JSON-based log format for ELK should be used instead of the more human-readable output
         """
         # We import requests after startup global imports may deadlock, see
         # https://github.com/psf/requests/issues/2925
@@ -238,14 +238,14 @@ class BaseChecker(metaclass=_CheckerMeta):
     @property
     def noise(self) -> str:
         """
-        Creates a stable noise value for the current context.
-        Do not use for indexing (use self.ctx instead).
+        Creates a stable noise value for the current task chain.
+        Do not use for indexing (use self.task_chain_id instead).
 
-        :return: A noise string, unique for each ctx.
+        :return: A noise string, unique for each task_chain_id.
         """
         if self._noise_cache is None:
             if not self.task_chain_id:
-                self.warning("No valid ctx when calling noise!")
+                self.warning("No valid task_chain_id when calling noise!")
                 return "<none>"
             # We cache the hex in case it's called often.
             m = hashlib.sha256()
