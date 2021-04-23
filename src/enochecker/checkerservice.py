@@ -1,6 +1,7 @@
 """Flask service to run a checker as HTTP service."""
 
 import logging
+import os
 from typing import TYPE_CHECKING, Callable, Tuple, Type
 
 import jsons
@@ -21,61 +22,8 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.Logger(__name__)
 logger.setLevel(logging.DEBUG)
 
-UI_TEMPLATE = """
-
-"""
-
-tiny_poster = """
-<script>
-// To make testing/posting a bit easier, we can do it from the browser here.
-var checker_request_count = 0
-var checker_pending_requests = 0
-var checker_results = []
-
-function post(str) {
-    var xhr = new XMLHttpRequest()
-    var started = Date.now()
-    xhr.open("POST", "/")
-    xhr.setRequestHeader("Content-Type", "application/json")
-    xhr.onerror = console.error
-    xhr.onload = xhr.onerror = function () {
-        checker_results = ["Request " + checker_request_count.toString() + " resulted after " + ((Date.now() - started)/1000) + " s in:\\n" + xhr.responseText + "\\n"].concat(checker_results)
-        console.log(xhr.responseText)
-        document.getElementById("out").innerText = "<plaintext>\\n\\n" + checker_results.join("\\n")
-        checker_request_count++
-        checker_pending_requests--
-        update_pending()
-    }
-    xhr.send(str)
-    checker_pending_requests++
-    update_pending()
-}
-
-function update_pending(){
-    if (checker_pending_requests === 0) {
-        document.getElementById("pending_para").textContent = ""
-    } else {
-        document.getElementById("pending_para").textContent = checker_pending_requests.toString() + "Requests pending"
-    }
-}
-
-</script>
-<div>
-<p>Only select one method from the given list.</p>
-<p>Values in brackets are optional, so you can delete those lines if you don't want to specify them.</p>
-<button onclick=post(document.getElementById("jsonTextbox").value)>Post</button></div>
-<p id="pending_para"></p>
-"""
-
-
-def serialize_spec() -> str:
-    """
-    Return a checker json spec
-
-    :return: formatted string
-    """
-    # TODO: update
-    return ""
+with open(os.path.join(os.path.dirname(__file__), "post.html")) as f:
+    INDEX_PAGE = f.read()
 
 
 def checker_routes(
@@ -103,18 +51,7 @@ def checker_routes(
         """
         logger.info("Request on /")
 
-        serialized_spec = serialize_spec()
-
-        return Response(
-            "<h1>Welcome to {} :)</h1>"
-            '<p>Expecting POST with a JSON:</p><div><textarea id="jsonTextbox" rows={} cols="80">{}</textarea>{}</div>'
-            '<a href="https://www.youtube.com/watch?v=SBClImpnfAg"><br>check it out now</a><div id="out">'.format(
-                checker_cls.__name__,
-                len(serialized_spec.split("\n")) + 3,
-                serialized_spec,
-                tiny_poster,
-            )
-        )
+        return Response(INDEX_PAGE)
 
     def serve_checker() -> Response:
         """
