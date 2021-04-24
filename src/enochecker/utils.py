@@ -6,9 +6,6 @@ import logging
 import re
 import socket
 import telnetlib
-import threading
-import time
-from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -179,91 +176,6 @@ def debase64ify(
         return base64.b64decode(s, altchars).decode("utf-8")
     else:
         return base64.b64decode(s).decode("utf-8")
-
-
-def start_daemon(target: Callable[..., Any]) -> threading.Thread:
-    """
-    Start a thread as daemon.
-
-    :param target: the function
-    :return: the started thread
-    """
-    t = threading.Thread(target=target)
-    t.daemon = True
-    t.start()
-    return t
-
-
-def serve_once(
-    html: Union[str, bytes, "requests.Response"],
-    start_port: int = 5000,
-    autoincrement_port: bool = True,
-    content_type: str = "text/html",
-    headers: Optional[Dict[str, str]] = None,
-    logger: Optional[logging.Logger] = None,
-) -> int:
-    """
-    Render Text in the users browser.
-
-    Opens a web server that serves a HTML string once and shuts down after the first request.
-    The port will be open when this function returns. (though serving the request may take a few mils)
-
-    :param html: The html code to deliver on the initial request
-    :param start_port: The port it should try to listen on first.
-    :param autoincrement_port: If the port should be increased if the server cannot listen on the provided start_port
-    :param content_type: The content type this server should report (change it if you want json, for example)
-    :param headers: Additional headers as {header_key: value} dict.
-    :param logger: the optional logger to redirect logs to.
-    :return: The port the server started listening on
-    """
-    # see https://github.com/psf/requests/issues/2925
-    import requests
-
-    logger_: logging.Logger = logger or utilslogger
-    headers_: Dict[str, str] = headers or {}
-    if isinstance(html, requests.Response):
-        payload: bytes = html.text.encode("UTF-8")
-    elif isinstance(html, str):
-        payload = html.encode("UTF-8")
-    else:
-        payload = html
-
-    class OutputHandler(BaseHTTPRequestHandler):
-
-        # noinspection PyPep8Naming
-        def do_GET(self) -> None:
-            self.send_response(200)
-            self.send_header("Content-type", content_type)
-            for key, value in headers_.items():
-                self.send_header(key, value)
-            self.end_headers()
-            self.wfile.write(payload)
-            logger_.info("Served HTTP once. Stopping.")
-            start_daemon(self.server.shutdown)
-
-    for port in range(start_port, PORT_MAX):
-        try:
-            server = HTTPServer(("", port), OutputHandler)
-            logging.debug("Serving {} bytes on port {}".format(len(payload), port))
-            start_daemon(server.serve_forever)
-            time.sleep(0.1)  # some extra time thrown in for good measure. :)
-            return port
-        except OSError as ex:
-            if not autoincrement_port:
-                logger_.info(
-                    "Serve once was not set to automatically increment port {} but faced socket exception{}".format(
-                        start_port, ex
-                    ),
-                    exc_info=True,
-                    stack_info=True,
-                )
-                break
-
-    raise OSError(
-        "No unused port found, start_port={}, autoincrement_port={}".format(
-            start_port, autoincrement_port
-        )
-    )
 
 
 class SimpleSocket(telnetlib.Telnet):
