@@ -6,17 +6,7 @@ import logging
 import re
 import socket
 import telnetlib
-from typing import (
-    Any,
-    Callable,
-    List,
-    Match,
-    Optional,
-    Pattern,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import Any, Callable, List, Match, Optional, Pattern, Sequence, Tuple, Union
 
 from .results import BrokenServiceException
 
