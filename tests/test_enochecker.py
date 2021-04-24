@@ -2,7 +2,6 @@
 import functools
 import sys
 import tempfile
-import time
 from logging import DEBUG
 
 import pytest
@@ -17,7 +16,6 @@ from enochecker import (
     assert_in,
     ensure_bytes,
     ensure_unicode,
-    serve_once,
     snake_caseify,
 )
 
