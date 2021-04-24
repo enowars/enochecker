@@ -323,30 +323,6 @@ Will raise an exception if failed.
 :param timeout: a timeout
 :return read: the bytes read
 
-## start_daemon
-```python
-start_daemon(target)
-```
-
-starts a thread as daemon
-:param target: the function
-:return: the started thread
-
-## serve_once
-```python
-serve_once(html, start_port=5000, autoincrement_port=True, content_type='text/html', headers=None)
-```
-
-Render Text in the users browser
-Opens a web server that serves a HTML string once and shuts down after the first request.
-The port will be open when this function returns. (though serving the request may take a few mils)
-:param html: The html code to deliver on the initial request
-:param start_port: The port it should try to listen on first.
-:param autoincrement_port: If the port should be increased if the server cannot listen on the provided start_port
-:param content_type: The content type this server should report (change it if you want json, for example)
-:param headers: Additional headers as {header_key: value} dict.
-:return: The port the server started listening on
-
 ## SimpleSocket
 ```python
 SimpleSocket(self, host=None, port=0, timeout=<object object at 0x000000000303A670>)

@@ -169,29 +169,6 @@ def test_dict():
 
 
 @temp_storage_dir
-def test_checker_connections():
-    # TODO: Check timeouts?
-    text = "ECHO :)"
-    _ = serve_once(text, 9999)
-    checker = CheckerExampleImpl(
-        CheckerMethod.CHECKER_METHOD_PUTFLAG,
-    )  # Conflict between logging and enochecker.logging because of wildcart import
-    assert (
-        checker.http_get("/").text == text
-    )  # Should probably rename it to enologger to avoid further conflicts
-
-    # Give server time to shut down
-    time.sleep(0.2)
-
-    _ = serve_once(text, 9999)
-    checker = CheckerExampleImpl(CheckerMethod.CHECKER_METHOD_PUTFLAG)
-    t = checker.connect()
-    t.write(b"GET / HTTP/1.0\r\n\r\n")
-    assert t.readline_expect("HTTP")
-    t.close()
-
-
-@temp_storage_dir
 def test_checker():
     flag = "ENOFLAG"
     task_chain_id = "test_task_chain_id"
