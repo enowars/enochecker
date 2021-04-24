@@ -7,10 +7,8 @@ import re
 import socket
 import telnetlib
 from typing import (
-    TYPE_CHECKING,
     Any,
     Callable,
-    Dict,
     List,
     Match,
     Optional,
@@ -21,9 +19,6 @@ from typing import (
 )
 
 from .results import BrokenServiceException
-
-if TYPE_CHECKING:  # pragma: no cover
-    import requests
 
 PORT_MAX = 65535
 
