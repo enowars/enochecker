@@ -1256,32 +1256,6 @@ May raise socket.error if the connection is closed.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="enochecker.utils.serve_once">
-<code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">serve_once</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">html</span></em>, <em class="sig-param"><span class="n">start_port</span><span class="o">=</span><span class="default_value">5000</span></em>, <em class="sig-param"><span class="n">autoincrement_port</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">content_type</span><span class="o">=</span><span class="default_value">'text/html'</span></em>, <em class="sig-param"><span class="n">headers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.serve_once" title="Permalink to this definition">¶</a></dt>
-<dd><p>Render Text in the users browser.</p>
-<p>Opens a web server that serves a HTML string once and shuts down after the first request.
-The port will be open when this function returns. (though serving the request may take a few mils)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>html</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardRef</span></code>]) – The html code to deliver on the initial request</p></li>
-<li><p><strong>start_port</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – The port it should try to listen on first.</p></li>
-<li><p><strong>autoincrement_port</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If the port should be increased if the server cannot listen on the provided start_port</p></li>
-<li><p><strong>content_type</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The content type this server should report (change it if you want json, for example)</p></li>
-<li><p><strong>headers</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]) – Additional headers as {header_key: value} dict.</p></li>
-<li><p><strong>logger</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Logger</span></code>]) – the optional logger to redirect logs to.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>The port the server started listening on</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt id="enochecker.utils.sha256ify">
 <code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">sha256ify</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">s</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.sha256ify" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the sha256 hash.</p>
@@ -1312,23 +1286,6 @@ The port will be open when this function returns. (though serving the request ma
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>camel_or_snake_whatever</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="enochecker.utils.start_daemon">
-<code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">start_daemon</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">target</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.start_daemon" title="Permalink to this definition">¶</a></dt>
-<dd><p>Start a thread as daemon.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>target</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[…, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]) – the function</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Thread</span></code></p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the started thread</p>
 </dd>
 </dl>
 </dd></dl>
