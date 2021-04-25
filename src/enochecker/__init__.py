@@ -14,10 +14,8 @@ from .utils import (  # the util stuff
     ensure_bytes,
     ensure_unicode,
     ensure_valid_filename,
-    serve_once,
     sha256ify,
     snake_caseify,
-    start_daemon,
 )
 
 name = "enochecker"
