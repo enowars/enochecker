@@ -219,7 +219,7 @@ class NoSqlDict(MutableMapping):
 
         if result:
             self.cache[key] = result["value"]
-            self.hash_cache[key] = result
+            self.hash_cache[key] = value_to_hash(result)
             return result["value"]
         raise KeyError("Could not find {} in {}".format(key, self))
 
