@@ -27,18 +27,6 @@ DB_DEFAULT_HOST = "localhost"
 DB_DEFAULT_PORT = 27017
 
 
-def to_keyfmt(key: Any) -> str:
-    """
-    Convert a string to a key used in the MongoDB.
-
-    Currently this only returns the string representation of the key.
-
-    :param key: the key to format
-    :return: string representation of the key
-    """
-    return str(key)  # + type(key).__name__
-
-
 def _try_n_times(func: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(func)
     def try_n_times(self: "NoSqlDict", *args: Any, **kwargs: Any) -> Any:
@@ -148,7 +136,7 @@ class NoSqlDict(MutableMapping):
             )
 
     @_try_n_times
-    def __setitem__(self, key: Any, value: Any) -> None:
+    def __setitem__(self, key: str, value: Any) -> None:
         """
         Set an entry in the dictionary.
 
@@ -157,16 +145,18 @@ class NoSqlDict(MutableMapping):
         :param key: key in the dictionary
         :param value: value in the dictionary
         """
+        key = str(key)
+
         self.cache[key] = value
 
         query_dict = {
-            "key": to_keyfmt(key),
+            "key": key,
             "checker": self.checker_name,
             "name": self.dict_name,
         }
 
         to_insert = {
-            "key": to_keyfmt(key),
+            "key": key,
             "checker": self.checker_name,
             "name": self.dict_name,
             "value": value,
@@ -175,7 +165,7 @@ class NoSqlDict(MutableMapping):
         self.db.replace_one(query_dict, to_insert, upsert=True)
 
     @_try_n_times
-    def __getitem__(self, key: Any, print_result: bool = False) -> Any:
+    def __getitem__(self, key: str, print_result: bool = False) -> Any:
         """
         Get an entry from the dictionary.
 
@@ -185,11 +175,12 @@ class NoSqlDict(MutableMapping):
         :param print_result: TODO
         :return: retrieved value
         """
+        key = str(key)
         if key in self.cache.items():
             return self.cache[key]
 
         to_extract = {
-            "key": to_keyfmt(key),
+            "key": key,
             "checker": self.checker_name,
             "name": self.dict_name,
         }
@@ -205,7 +196,7 @@ class NoSqlDict(MutableMapping):
         raise KeyError("Could not find {} in {}".format(key, self))
 
     @_try_n_times
-    def __delitem__(self, key: Any) -> None:
+    def __delitem__(self, key: str) -> None:
         """
         Delete an entry from the dictionary.
 
@@ -213,11 +204,12 @@ class NoSqlDict(MutableMapping):
 
         :param key: key to delete
         """
+        key = str(key)
         if key in self.cache:
             del self.cache[key]
 
         to_extract = {
-            "key": to_keyfmt(key),
+            "key": key,
             "checker": self.checker_name,
             "name": self.dict_name,
         }

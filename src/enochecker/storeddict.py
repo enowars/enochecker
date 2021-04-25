@@ -152,6 +152,7 @@ class StoredDict(MutableMapping):
 
         :param locked_key: the key we locked
         """
+        locked_key = str(locked_key)
         if locked_key not in self._locks:
             raise KeyError("{} was not locked.".format(locked_key))
         self._dir_lockname(locked_key)
@@ -166,6 +167,7 @@ class StoredDict(MutableMapping):
         :param key: the key that needs to be stored
         :return: the value contained in the key
         """
+        key = str(key)
         val = self[key]
         self[key] = val
         return val
@@ -198,6 +200,7 @@ class StoredDict(MutableMapping):
 
         :param key: the key to lock
         """
+        key = str(key)
         if key in self._locks:
             raise KeyError("{} already locked".format(key))
         self._create_lock_file(self._dir_lockname(key))
@@ -211,6 +214,7 @@ class StoredDict(MutableMapping):
         :param key: The key
         :return: True if locked by this process, False otherwise
         """
+        key = str(key)
         return key in self._locks
 
     @_locked
@@ -263,6 +267,7 @@ class StoredDict(MutableMapping):
         :param key: the key to look up
         :return: the value
         """
+        key = str(key)
         locked = self.is_locked(key) or self.ignore_locks
         if not locked:
             self.lock(key)
@@ -285,6 +290,7 @@ class StoredDict(MutableMapping):
         :param key: Key to store
         :param value: Value to store
         """
+        key = str(key)
         self._cache[key] = value
         self.persist()
 
@@ -295,6 +301,7 @@ class StoredDict(MutableMapping):
 
         :param key: the key to delete
         """
+        key = str(key)
         self._to_delete.add(key)
         self.persist()
 
