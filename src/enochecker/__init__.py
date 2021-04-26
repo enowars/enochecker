@@ -12,7 +12,6 @@ from .utils import (  # the util stuff
     base64ify,
     debase64ify,
     ensure_bytes,
-    ensure_unicode,
     ensure_valid_filename,
     sha256ify,
     snake_caseify,

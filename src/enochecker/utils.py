@@ -84,22 +84,6 @@ def ensure_bytes(obj: Union[bytes, str, Any]) -> bytes:
     return str(obj).encode("utf-8")
 
 
-def ensure_unicode(obj: Union[bytes, str, Any]) -> str:
-    """
-    Convert an object to an utf-8-encoded string.
-
-    :param obj: str or bytes (or anything else) to convert to string representation
-    :return: the string representation of the object
-    """
-    if obj is None:
-        raise ValueError("Cannot stringify None")
-    if isinstance(obj, bytes):
-        return obj.decode("utf-8")
-    if isinstance(obj, str):
-        return obj
-    return str(obj)
-
-
 def ensure_valid_filename(s: str, min_length: int = 3) -> str:
     """
     Get a valid file name from the input.
@@ -117,14 +101,13 @@ def ensure_valid_filename(s: str, min_length: int = 3) -> str:
     return s
 
 
-def snake_caseify(camel: Union[str, bytes]) -> str:
+def snake_caseify(camel: str) -> str:
     """
     Turn camels into snake (-cases).
 
     :param camel: camelOrSnakeWhatever
     :return: camel_or_snake_whatever
     """
-    camel = ensure_unicode(camel)
     half_snake = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", camel)
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", half_snake).lower()
 

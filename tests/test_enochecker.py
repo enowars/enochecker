@@ -15,7 +15,6 @@ from enochecker import (
     assert_equals,
     assert_in,
     ensure_bytes,
-    ensure_unicode,
     snake_caseify,
 )
 
@@ -120,9 +119,7 @@ def test_assert_equals():
 def test_conversions():
     assert isinstance(ensure_bytes("test"), bytes)
     assert isinstance(ensure_bytes(b"test"), bytes)
-    assert isinstance(ensure_unicode("test"), type(""))
-    assert isinstance(ensure_unicode(b"test"), type(""))
-    assert ensure_unicode(ensure_bytes("test")) == "test"
+    assert ensure_bytes("test").decode() == "test"
 
 
 def test_assert_in():

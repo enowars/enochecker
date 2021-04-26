@@ -10,7 +10,6 @@ from enochecker.utils import (
     base64ify,
     debase64ify,
     ensure_bytes,
-    ensure_unicode,
     ensure_valid_filename,
     sha256ify,
     snake_caseify,
@@ -58,15 +57,6 @@ def test_ensure_bytes():
     assert ensure_bytes(b"a") == b"a"
     assert ensure_bytes("a") == b"a"
     assert ensure_bytes(1) == b"1"
-
-
-def test_ensure_unicode():
-    with pytest.raises(ValueError):
-        ensure_unicode(None)
-
-    assert ensure_unicode(b"a") == "a"
-    assert ensure_unicode("a") == "a"
-    assert ensure_unicode(1) == "1"
 
 
 def test_ensure_valid_filename():
