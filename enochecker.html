@@ -1161,6 +1161,24 @@ May raise socket.error if the connection is closed.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt id="enochecker.utils.assert_true">
+<code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">assert_true</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">expression</span></em>, <em class="sig-param"><span class="n">message</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">autobyteify</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.assert_true" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raise a BrokenServiceException if expression is not True.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>o1</strong> – the element that should be True</p></li>
+<li><p><strong>message</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – The exception message in case of an error (optional)</p></li>
+<li><p><strong>autobyteify</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – will call ensure_bytes on both parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt id="enochecker.utils.base64ify">
 <code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">base64ify</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">s</span></em>, <em class="sig-param"><span class="n">altchars</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.base64ify" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the base64 representation of a value.</p>
