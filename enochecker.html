@@ -734,8 +734,6 @@ This needs python development mode or deprecation warnings enabled!</p>
 <dt id="enochecker.nosqldict.NoSqlDict.persist">
 <code class="sig-name descname">persist</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.nosqldict.NoSqlDict.persist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Persist the changes in the backend.</p>
-<p>Currently this function does nothing since every access queries the database already.
-In the future changes to the DB might be cached until they are explicitly persisted.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
@@ -759,6 +757,24 @@ In the future changes to the DB might be cached until they are explicitly persis
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>string representation of the key</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="enochecker.nosqldict.value_to_hash">
+<code class="sig-prename descclassname">enochecker.nosqldict.</code><code class="sig-name descname">value_to_hash</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.nosqldict.value_to_hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a stable hash for a value based on the json representation.</p>
+<p>Used to check whether the value in the DB has changed without calling __setitem__, for example when writing to nested dicts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> – the value to hash</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>hash in string format</p>
 </dd>
 </dl>
 </dd></dl>
