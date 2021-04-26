@@ -274,7 +274,7 @@ class StoredDict(MutableMapping):
         try:
             with open(self._dir_jsonname(key), "rb") as f:
                 val = json.loads(f.read().decode("utf-8"))
-        except OSError as ex:
+        except (OSError, json.decoder.JSONDecodeError) as ex:
             raise KeyError("Key {} not found - {}".format(key, ex))
         finally:
             if not locked:
