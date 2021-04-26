@@ -1,5 +1,6 @@
 """Backend for team_db based on MongoDB."""
 
+import json
 import logging
 from collections.abc import MutableMapping
 from functools import wraps
@@ -25,6 +26,18 @@ DB_DEFAULT_USER = None
 DB_DEFAULT_PASS = None
 DB_DEFAULT_HOST = "localhost"
 DB_DEFAULT_PORT = 27017
+
+
+def value_to_hash(value: Any) -> int:
+    """
+    Create a stable hash for a value based on the json representation.
+
+    Used to check whether the value in the DB has changed without calling __setitem__, for example when writing to nested dicts.
+
+    :param key: the value to hash
+    :return: hash in string format
+    """
+    return hash(json.dumps(value, sort_keys=True))
 
 
 def _try_n_times(func: Callable[..., Any]) -> Callable[..., Any]:
@@ -118,6 +131,7 @@ class NoSqlDict(MutableMapping):
         self.dict_name = base64ify(name, altchars=b"-_")
         self.checker_name = checker_name
         self.cache: Dict[Any, Any] = {}
+        self.hash_cache: Dict[Any, Any] = {}
         host_: str = host or DB_DEFAULT_HOST
         if isinstance(port, int):
             port_: int = port
@@ -148,7 +162,11 @@ class NoSqlDict(MutableMapping):
         key = str(key)
 
         self.cache[key] = value
+        self.hash_cache[key] = value_to_hash(value)
 
+        self._upsert(key, value)
+
+    def _upsert(self, key: Any, value: Any) -> None:
         query_dict = {
             "key": key,
             "checker": self.checker_name,
@@ -192,6 +210,7 @@ class NoSqlDict(MutableMapping):
 
         if result:
             self.cache[key] = result["value"]
+            self.hash_cache[key] = value_to_hash(result)
             return result["value"]
         raise KeyError("Could not find {} in {}".format(key, self))
 
@@ -240,9 +259,14 @@ class NoSqlDict(MutableMapping):
     def persist(self) -> None:
         """
         Persist the changes in the backend.
-
-        Currently this function does nothing since every access queries the database already.
-        In the future changes to the DB might be cached until they are explicitly persisted.
         """
-        # TODO: could wait until here before hitting the mongodb...
-        pass
+        for (key, value) in self.cache.items():
+            hash_ = value_to_hash(value)
+            if self.hash_cache[key] != hash_:
+                self._upsert(key, value)
+
+    def __del__(self) -> None:
+        """
+        When this object goes out of scope, persist all unsaved entries from the cache
+        """
+        self.persist()
