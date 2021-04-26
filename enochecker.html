@@ -1235,23 +1235,6 @@ May raise socket.error if the connection is closed.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="enochecker.utils.ensure_unicode">
-<code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">ensure_unicode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.ensure_unicode" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert an object to an utf-8-encoded string.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>obj</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]) – str or bytes (or anything else) to convert to string representation</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the string representation of the object</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt id="enochecker.utils.ensure_valid_filename">
 <code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">ensure_valid_filename</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">s</span></em>, <em class="sig-param"><span class="n">min_length</span><span class="o">=</span><span class="default_value">3</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.ensure_valid_filename" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a valid file name from the input.</p>
@@ -1295,7 +1278,7 @@ May raise socket.error if the connection is closed.</p>
 <dd><p>Turn camels into snake (-cases).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>camel</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]) – camelOrSnakeWhatever</p>
+<dd class="field-odd"><p><strong>camel</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – camelOrSnakeWhatever</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
