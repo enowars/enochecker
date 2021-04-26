@@ -259,11 +259,7 @@ Raises an exception if o1 != o2
 ensure_bytes(obj)
 ```
 Converts to bytes
-## ensure_unicode
-```python
-ensure_unicode(obj)
-```
-Converts to utf-8
+
 ## ensure_valid_filename
 ```python
 ensure_valid_filename(s, min_length=3)
