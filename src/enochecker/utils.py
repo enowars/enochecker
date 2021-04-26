@@ -53,6 +53,19 @@ def assert_equals(
         )
 
 
+def assert_true(
+    expression: Any, message: Optional[str] = None, autobyteify: bool = False
+) -> None:
+    """
+    Raise a BrokenServiceException if expression is not True.
+
+    :param o1: the element that should be True
+    :param message: The exception message in case of an error (optional)
+    :param autobyteify: will call ensure_bytes on both parameters.
+    """
+    assert_equals(expression, True, message, autobyteify)
+
+
 def ensure_bytes(obj: Union[bytes, str, Any]) -> bytes:
     """
     Convert an object to bytes.
