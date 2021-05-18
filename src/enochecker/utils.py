@@ -206,9 +206,9 @@ class SimpleSocket:
             return self.timeout  # type: ignore
 
     def read_until_satisfied(
-            self,
-            checkfunc: Callable[[str], Union[int,tuple]],
-            timeout: Optional[float] = None
+        self,
+        checkfunc: Callable[[str], Union[int, tuple]],
+        timeout: Optional[float] = None,
     ) -> bytes:
         """
         :param checkfunc: checking function that returns the index in the buffer below
@@ -237,7 +237,9 @@ class SimpleSocket:
                         ind = ret
                     if ind >= 0:
                         if ind <= len(buf):
-                            raise Exception("checkfunc returned index outside of newly added data")
+                            raise Exception(
+                                "checkfunc returned index outside of newly added data"
+                            )
                         else:
                             buf += self.socket.recv(ind - len(buf))
                 timeout = deadline - time.time()
@@ -325,9 +327,7 @@ class SimpleSocket:
         return (index, match, buf)
 
     def read_until(
-        self,
-        match: Union[bytes, str],
-        timeout: Optional[float] = None
+        self, match: Union[bytes, str], timeout: Optional[float] = None
     ) -> bytes:
         """
         Read until the expected string has been seen, or a timeout is hit (default is default socket timeout).
@@ -377,7 +377,8 @@ class SimpleSocket:
         while True:
             new = self.socket.recv(64)
             self.eof = not new
-            if self.eof: break
+            if self.eof:
+                break
             buf += new
         return buf
 
