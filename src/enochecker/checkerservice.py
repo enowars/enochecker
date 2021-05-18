@@ -28,6 +28,7 @@ with open(os.path.join(os.path.dirname(__file__), "post.html")) as f:
 
 def checker_routes(
     checker_cls: Type["BaseChecker"],
+    disable_json_logging: bool,
 ) -> Tuple[
     Callable[[], Response],
     Callable[[], Response],
@@ -73,7 +74,7 @@ def checker_routes(
             except jsons.exceptions.UnfulfilledArgumentError as e:
                 return Response(e._msg, status=400)
 
-            checker = checker_cls(task_msg)
+            checker = checker_cls(task_msg, json_logging=(not disable_json_logging))
 
             checker.logger.info(task_msg)
             res = checker.run()
@@ -164,7 +165,9 @@ class ExampleChecker(BaseChecker):
     return index, serve_checker, service_info, get_service_info
 
 
-def init_service(checker: Type["BaseChecker"]) -> Flask:
+def init_service(
+    checker: Type["BaseChecker"], disable_json_logging: bool = False
+) -> Flask:
     """
     Initialize a flask app that can be used for WSGI or listen directly.
 
@@ -174,7 +177,9 @@ def init_service(checker: Type["BaseChecker"]) -> Flask:
     :return: a flask app with post and get routes set, ready for checking.
     """
     app = Flask(__name__)
-    index, checker_route, service_info, get_service_info = checker_routes(checker)
+    index, checker_route, service_info, get_service_info = checker_routes(
+        checker, disable_json_logging=disable_json_logging
+    )
 
     app.route("/", methods=["GET"])(index)
     app.route("/", methods=["POST"])(checker_route)
