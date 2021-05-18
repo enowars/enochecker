@@ -6,7 +6,6 @@ import logging
 import re
 import selectors
 import socket
-import telnetlib
 import time
 from typing import Any, Callable, List, Match, Optional, Pattern, Sequence, Tuple, Union
 
