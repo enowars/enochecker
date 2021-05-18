@@ -192,6 +192,10 @@ class SimpleSocket:
         else:
             self.logger = utilslogger
 
+    def close(self) -> None:
+        if self.socket:
+            self.socket.close()
+
     @property
     def current_default_timeout(self) -> float:
         """
@@ -202,13 +206,13 @@ class SimpleSocket:
         if self.timeout_fun:
             return self.timeout_fun()
         else:
-            return self.timeout  # type: ignore
+            return self.timeout
 
     def read_until_satisfied(
         self,
-        checkfunc: Callable[[str], Union[int, tuple]],
+        checkfunc: Callable[[bytes], Tuple[int, Any]],
         timeout: Optional[float] = None,
-    ) -> bytes:
+    ) -> Any:
         """
         :param checkfunc: checking function that returns the index in the buffer below
             which data should be returned, the rest can should stay in the socket buffer.
@@ -229,11 +233,7 @@ class SimpleSocket:
                 if selector.select(timeout):
                     # this recv() wont block since atleast 1 byte is available
                     new = self.socket.recv(64, socket.MSG_PEEK)
-                    ret = checkfunc(buf + new)
-                    if type(ret) is tuple:
-                        ind, extraret = ret
-                    else:
-                        ind = ret
+                    ind, extraret = checkfunc(buf + new)
                     if ind >= 0:
                         if ind <= len(buf):
                             raise Exception(
@@ -291,7 +291,7 @@ class SimpleSocket:
 
     def expect(
         self,
-        regexes: Sequence[Union[Pattern[bytes], bytes, str]],
+        regexes: List[Any],
         timeout: Optional[float] = None,
     ) -> Tuple[int, Optional[Match[bytes]], bytes]:
         """
@@ -314,12 +314,12 @@ class SimpleSocket:
             if not hasattr(regexes[i], "search"):
                 regexes[i] = re.compile(ensure_bytes(regexes[i]))
 
-        def check_patterns(buf):
+        def check_patterns(buf: bytes) -> Tuple[int, Any]:
             for i in range(len(regexes)):
                 match = regexes[i].search(buf)
                 if match:
                     return match.end(), (i, match)
-            return -1
+            return -1, None
 
         buf, (index, match) = self.read_until_satisfied(check_patterns, timeout)
 
@@ -341,14 +341,14 @@ class SimpleSocket:
         if self.eof:
             raise EOFError("connection is closed")
 
-        match = ensure_bytes(match)
+        bmatch: bytes = ensure_bytes(match)
 
-        def check_suffix(buf):
-            index = buf.find(match)
+        def check_suffix(buf: bytes) -> Tuple[int, Any]:
+            index = buf.find(bmatch)
             if index >= 0:
-                return index + len(match)
+                return index + len(match), None
             else:
-                return -1
+                return -1, None
 
         buf, _ = self.read_until_satisfied(check_suffix, timeout)
 
