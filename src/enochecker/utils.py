@@ -323,4 +323,4 @@ class SimpleSocket(telnetlib.Telnet):
         :param buffer: The buffer to write
         """
         self.msg("send %r", buffer)
-        self.sock.sendall(ensure_bytes(buffer))
+        self.socket.sendall(ensure_bytes(buffer))
