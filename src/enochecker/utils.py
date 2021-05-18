@@ -318,7 +318,7 @@ class SimpleSocket(telnetlib.Telnet):
         May raise socket.error if the connection is closed.
 
         This overwrites `Telnetlib`'s `write` function, as it
-        would otherwise double the `IAC` (0x255) character...
+        would otherwise double the `IAC` (0xFF) character...
 
         :param buffer: The buffer to write
         """
