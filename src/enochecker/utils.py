@@ -317,6 +317,10 @@ class SimpleSocket(telnetlib.Telnet):
         Can block if the connection is blocked.
         May raise socket.error if the connection is closed.
 
+        This overwrites `Telnetlib`'s `write` function, as it
+        would otherwise double the `IAC` (0x255) character...
+
         :param buffer: The buffer to write
         """
-        super().write(ensure_bytes(buffer))
+        self.msg("send %r", buffer)
+        self.sock.sendall(ensure_bytes(buffer))
