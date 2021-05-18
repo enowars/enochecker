@@ -7,7 +7,7 @@ import re
 import selectors
 import socket
 import time
-from typing import Any, Callable, List, Match, Optional, Pattern, Sequence, Tuple, Union
+from typing import Any, Callable, List, Match, Optional, Tuple, Union
 
 from .results import BrokenServiceException
 
