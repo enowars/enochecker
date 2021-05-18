@@ -4,10 +4,10 @@ import base64
 import hashlib
 import logging
 import re
-import selectors
 import socket
 import telnetlib
 import time
+import selectors
 from typing import Any, Callable, List, Match, Optional, Pattern, Sequence, Tuple, Union
 
 from .results import BrokenServiceException
@@ -184,10 +184,15 @@ class SimpleSocket:
         :param logger: The optional logger to use
         :param timeout_fun: function that will output the current timeout on each call.
         """
+<<<<<<< HEAD
         self.eof: bool = False
         self.timeout: float = 0
         self.socket: socket.socket = socket.create_connection((host, port), timeout)
         self.timeout_fun: Optional[Callable[[], float]] = timeout_fun
+=======
+        self.eof = False
+        self.socket: socket.socket = socket.create_connection((host, port), timeout)
+>>>>>>> 7f65c8590fe6d64845a868f3e96f51da41c0a6de
         if logger:
             self.logger = logger
         else:
@@ -313,6 +318,7 @@ class SimpleSocket:
             if not hasattr(regexes[i], "search"):
                 regexes[i] = re.compile(ensure_bytes(regexes[i]))
 
+<<<<<<< HEAD
         def check_patterns(buf):
             for i in range(len(regexes)):
                 match = regexes[i].search(buf)
@@ -323,6 +329,24 @@ class SimpleSocket:
         buf, (index, match) = self.read_until_satisfied(check_patterns, timeout)
 
         return (index, match, buf)
+=======
+        regexes = regexes[:]
+        for i in range(len(regexes)):
+            if not hasattr(regexes[i], "search"):
+                regexes[i] = re.compile(regexes[i])
+
+        buf = b""
+        while True:
+            new = self.socket.recv(50, socket.MSG_PEEK)
+            nbuf = buf + new
+            for i in range(len(regexes)
+                m = regexes[i].search(nbuf)
+                if m:
+                    e = m.end()
+                    buf += self.socket.recv(m.end() - len(buf))
+                    return (i, m, buf)
+            buf += self.socket.recv(50)
+>>>>>>> 7f65c8590fe6d64845a868f3e96f51da41c0a6de
 
     def read_until(
         self,
@@ -338,6 +362,7 @@ class SimpleSocket:
             possibly the empty string.  Raise EOFError if the connection
             is closed and no cooked data is available.
         """
+<<<<<<< HEAD
 
         if self.eof:
             raise EOFError("connection is closed")
@@ -353,6 +378,24 @@ class SimpleSocket:
 
         buf, _ = self.read_until_satisfied(check_suffix, timeout)
 
+=======
+        if timeout is None:
+            timeout = self.current_default_timeout
+        match = ensure_bytes(match)
+
+        buf = b""
+        while True:
+            new = self.sock.recv(50, socket.MSG_PEEK)
+            self.eof = not new
+            if self.eof: break
+            nbuf = buf + new
+            ind = nbuf.find(match):
+            if ind:
+                buf += self.sock.recv(ind + len(match) - len(buf))
+                break
+            else:
+                buf += self.sock.recv(50)
+>>>>>>> 7f65c8590fe6d64845a868f3e96f51da41c0a6de
         return buf
 
     def read_n_lines(
@@ -375,7 +418,11 @@ class SimpleSocket:
         """
         buf = b""
         while True:
+<<<<<<< HEAD
             new = self.socket.recv(64)
+=======
+            new = self.sock.recv(50)
+>>>>>>> 7f65c8590fe6d64845a868f3e96f51da41c0a6de
             self.eof = not new
             if self.eof: break
             buf += new
