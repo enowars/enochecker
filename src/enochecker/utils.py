@@ -349,18 +349,3 @@ class SimpleSocket(pwnlib.tubes.remote.remote):
         :param buffer: The buffer to write
         """
         super().send(ensure_bytes(buffer))
-
-    def readn(self, size: int, timeout: Optional[float] = None) -> bytes:
-        """
-        Read n bytes from the socket.
-
-        Can block if the connection is blocked.
-        May raise socket.error if the connection is closed.
-
-        :param size: Number of bytes to read
-        :param timeout: Timeout for read operation
-        """
-        if timeout is None:
-            timeout = self.current_default_timeout
-
-        return super().recvn(size, timeout=timeout)
