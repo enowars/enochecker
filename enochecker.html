@@ -983,10 +983,10 @@ param exist_ok: ignore already existing path and do nothing</p>
 <p>Collection of utilities for checker development.</p>
 <dl class="py class">
 <dt id="enochecker.utils.SimpleSocket">
-<em class="property">class </em><code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">SimpleSocket</code><span class="sig-paren">(</span><em class="sig-param">host=None</em>, <em class="sig-param">port=0</em>, <em class="sig-param">timeout=&lt;object object&gt;</em>, <em class="sig-param">logger=None</em>, <em class="sig-param">timeout_fun=None</em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.SimpleSocket" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">telnetlib.Telnet</span></code></p>
-<p>Telnetlib with some additions.</p>
-<p>Read Telnetlib doku for more.</p>
+<em class="property">class </em><code class="sig-prename descclassname">enochecker.utils.</code><code class="sig-name descname">SimpleSocket</code><span class="sig-paren">(</span><em class="sig-param">host=None</em>, <em class="sig-param">port=0</em>, <em class="sig-param">timeout=&lt;object object&gt;</em>, <em class="sig-param">logger=None</em>, <em class="sig-param">timeout_fun=None</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.SimpleSocket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pwnlib.tubes.remote.remote</span></code></p>
+<p>Convenient socket wrapper using pwnlib’s tubes.remote</p>
+<p>Read Pwnlib documentation for more info.</p>
 <dl class="py method">
 <dt id="enochecker.utils.SimpleSocket.current_default_timeout">
 <em class="property">property </em><code class="sig-name descname">current_default_timeout</code><a class="headerlink" href="#enochecker.utils.SimpleSocket.current_default_timeout" title="Permalink to this definition">¶</a></dt>
@@ -1062,7 +1062,8 @@ returned; and the text read up till and including the match.</p>
 <dl class="py method">
 <dt id="enochecker.utils.SimpleSocket.read_until">
 <code class="sig-name descname">read_until</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">match</span></em>, <em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.SimpleSocket.read_until" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read until the expected string has been seen, or a timeout is hit (default is default socket timeout).</p>
+<dd><p>Read until the expected string has been seen, or a timeout is hit
+(default is default socket timeout).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
