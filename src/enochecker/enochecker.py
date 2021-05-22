@@ -5,6 +5,7 @@ import datetime
 import hashlib
 import logging
 import os
+import re
 import socket
 import sys
 import traceback
@@ -121,6 +122,7 @@ class BaseChecker(metaclass=_CheckerMeta):
     flag_variants: int
     noise_variants: int
     havoc_variants: int
+    exploit_variants: int
 
     def __init__(
         self,
@@ -158,6 +160,12 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.timeout: float = task.timeout / 1000
         self.round_length: float = task.round_length / 1000
         self.task_chain_id: str = task.task_chain_id
+        self.flag_regex: Optional[str] = task.flag_regex
+        if self.flag_regex:
+            self._flag_regex: re.Pattern = re.compile(self.flag_regex)
+            self._flag_regex_bytes: re.Pattern = re.compile(self.flag_regex.encode())
+        self.flag_hash: Optional[str] = task.flag_hash
+        self.attack_info: Optional[str] = task.attack_info
 
         self._noise_cache: Optional[str] = None
 
@@ -279,7 +287,9 @@ class BaseChecker(metaclass=_CheckerMeta):
 
     # ---- Basic checker functionality ---- #
 
-    def _run_method(self, method: CheckerMethod) -> Optional[CheckerTaskResult]:
+    def _run_method(
+        self, method: CheckerMethod
+    ) -> Optional[Union[CheckerTaskResult, str]]:
         """
         Execute a checker method, pass all exceptions along to the calling function.
 
@@ -303,28 +313,54 @@ class BaseChecker(metaclass=_CheckerMeta):
 
         try:
             ret = self._run_method(method)
+            if method == CheckerMethod.EXPLOIT and (type(ret) == str or ret is None):
+                if type(ret) == str:
+                    self.info(
+                        "Checker [{}] executed successfully and returned found flag: {}".format(
+                            method, ret
+                        )
+                    )
+                    return CheckerResult(CheckerTaskResult.OK, flag=cast(str, ret))
+                else:
+                    self.info(
+                        "Checker [{}] did not return a string, assuming Mumble".format(
+                            method
+                        )
+                    )
+                    return CheckerResult(CheckerTaskResult.MUMBLE)
+
             if ret is not None:
-                warnings.warn(
-                    "Returning a result is not recommended and will be removed in the future. Raise EnoExceptions with additional text instead.",
-                    DeprecationWarning,
-                )
-                try:
-                    CheckerTaskResult(ret)
-                except:
-                    self.error(
-                        "Illegal return value from {}: {}".format(self.method, ret)
+                if type(ret) == str and method == CheckerMethod.PUTFLAG:
+                    self.info(
+                        "Checker [{}] executed successfully and returned attack info: {}".format(
+                            method, ret
+                        )
                     )
                     return CheckerResult(
-                        CheckerTaskResult.CHECKER_TASK_RESULT_INTERNAL_ERROR
+                        CheckerTaskResult.OK, attack_info=cast(str, ret)
                     )
+                else:
+                    warnings.warn(
+                        "Returning a result is not recommended and will be removed in the future. Raise EnoExceptions with additional text instead.",
+                        DeprecationWarning,
+                    )
+                    try:
+                        CheckerTaskResult(ret)
+                    except:
+                        self.error(
+                            "Illegal return value from {}: {}".format(self.method, ret)
+                        )
+                        return CheckerResult(CheckerTaskResult.INTERNAL_ERROR)
 
-                ret = CheckerTaskResult(ret)
-                self.info("Checker [{}] resulted in {}".format(self.method, ret.name))
-                return CheckerResult(ret)
+                    ret = CheckerTaskResult(ret)
+                    self.info(
+                        "Checker [{}] resulted in {}".format(self.method, ret.name)
+                    )
+                    return CheckerResult(ret)
 
             # Returned Normally
             self.info("Checker [{}] executed successfully!".format(self.method))
-            return CheckerResult(CheckerTaskResult.CHECKER_TASK_RESULT_OK)
+            return CheckerResult(CheckerTaskResult.OK)
 
         except EnoException as eno:
             stacktrace = "".join(
@@ -347,13 +383,13 @@ class BaseChecker(metaclass=_CheckerMeta):
         except self.requests.HTTPError as ex:
             self.info("Service returned HTTP Errorcode [{}].".format(ex), exc_info=ex)
             return CheckerResult(
-                CheckerTaskResult.CHECKER_TASK_RESULT_MUMBLE,
+                CheckerTaskResult.MUMBLE,
                 "Service returned HTTP Error",
             )
         except EOFError as ex:
             self.info("Service returned EOF error [{}].".format(ex), exc_info=ex)
             return CheckerResult(
-                CheckerTaskResult.CHECKER_TASK_RESULT_MUMBLE,
+                CheckerTaskResult.MUMBLE,
                 "Service returned EOF while reading response.",
             )
         except (
@@ -369,7 +405,7 @@ class BaseChecker(metaclass=_CheckerMeta):
                 "Error in connection to service occurred: {}\n".format(ex), exc_info=ex
             )
             return CheckerResult(
-                CheckerTaskResult.CHECKER_TASK_RESULT_OFFLINE,
+                CheckerTaskResult.OFFLINE,
                 message="Error in connection to service occured",
             )  # , ex.message
         except Exception as ex:
@@ -384,7 +420,7 @@ class BaseChecker(metaclass=_CheckerMeta):
                 db.persist()
 
     @abstractmethod
-    def putflag(self) -> None:
+    def putflag(self) -> Optional[str]:
         """
         Store a flag in the service.
 
@@ -392,6 +428,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         The flag itself can be retrieved from self.flag.
         On error, raise an Eno Exception.
 
+        :return: An optional attack info string that will be publicly available to help in exploits (e.g. the username of the user to attack)
         :raises: EnoException on error
         """
         pass
@@ -448,15 +485,44 @@ class BaseChecker(metaclass=_CheckerMeta):
         pass
 
     @abstractmethod
-    def exploit(self) -> None:
+    def exploit(self) -> str:
         """
         Use this method strictly for testing purposes.
 
         Will hopefully not be called during the actual CTF.
 
-        :raises: EnoException on Error
+        :return: The flag found during the execution of this exploit
+        :raises: EnoException on Error or if the flag was not found
         """
         pass
+
+    def search_flag(self, data: str) -> Optional[str]:
+        """
+        Search for the flag in the input data using the flag_regex and flag_hash.
+
+        Used only in the exploit method.
+
+        :return: The flag if it was found, None otherwise
+        """
+        for flag in self._flag_regex.findall(data):
+            hash_ = hashlib.sha256(flag.encode()).hexdigest()
+            if hash_ == self.flag_hash:
+                return flag
+        return None
+
+    def search_flag_bytes(self, data: bytes) -> Optional[str]:
+        """
+        Search for the flag in the input data using the flag_regex and flag_hash, where flag_regex is interpreted as binary regular expression.
+
+        Used only in the exploit method.
+
+        :return: The flag if it was found, None otherwise
+        """
+        for flag in self._flag_regex_bytes.findall(data):
+            hash_ = hashlib.sha256(flag).hexdigest()
+            if hash_ == self.flag_hash:
+                return flag.decode()
+        return None
 
     # ---- DB specific methods ---- #
     def db(

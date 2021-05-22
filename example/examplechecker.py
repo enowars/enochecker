@@ -191,7 +191,7 @@ class ExampleChecker(BaseChecker):
 
         # You should probably do some more in-depth checks here.
 
-    def exploit(self) -> None:
+    def exploit(self) -> str:
         """
         This method was added for CI purposes for exploits to be tested.
         Will (hopefully) not be called during actual CTF.

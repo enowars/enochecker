@@ -1,8 +1,8 @@
 certifi==2020.12.5
 chardet==4.0.0
 click==7.1.2
-enochecker-cli==0.6.0
-enochecker-core==0.8.1
+enochecker-cli==0.7.0
+enochecker-core==0.10.0
 Flask==1.1.2
 idna==2.10
 itsdangerous==1.1.0
