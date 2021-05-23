@@ -8,7 +8,11 @@ from enochecker_core import CheckerTaskResult
 
 class CheckerResult:
     def __init__(
-        self, result: CheckerTaskResult, message: Optional[str] = None
+        self,
+        result: CheckerTaskResult,
+        message: Optional[str] = None,
+        attack_info: Optional[str] = None,
+        flag: Optional[str] = None,
     ) -> None:
 
         if message == "":
@@ -16,6 +20,8 @@ class CheckerResult:
 
         self.result = result
         self.message = message
+        self.attack_info = attack_info
+        self.flag = flag
 
     @staticmethod
     def from_exception(e: Exception) -> "CheckerResult":
@@ -27,15 +33,13 @@ class CheckerResult:
             return CheckerResult(result=e.result, message=message)
 
         else:
-            return CheckerResult(
-                CheckerTaskResult.CHECKER_TASK_RESULT_INTERNAL_ERROR, message=None
-            )
+            return CheckerResult(CheckerTaskResult.INTERNAL_ERROR, message=None)
 
 
 class EnoException(Exception, ABC):
     """Base error including the Result. Raise a subclass of me once we know what to do."""
 
-    result: CheckerTaskResult = CheckerTaskResult.CHECKER_TASK_RESULT_INTERNAL_ERROR
+    result: CheckerTaskResult = CheckerTaskResult.INTERNAL_ERROR
 
     def __init__(
         self,
@@ -60,13 +64,13 @@ class EnoException(Exception, ABC):
 class BrokenServiceException(EnoException):
     """Indicates a broken Service."""
 
-    result: CheckerTaskResult = CheckerTaskResult.CHECKER_TASK_RESULT_MUMBLE
+    result: CheckerTaskResult = CheckerTaskResult.MUMBLE
 
 
 class OfflineException(EnoException):
     """Service was not reachable (at least once) during our checks."""
 
-    result: CheckerTaskResult = CheckerTaskResult.CHECKER_TASK_RESULT_OFFLINE
+    result: CheckerTaskResult = CheckerTaskResult.OFFLINE
 
 
 class BrokenCheckerException(EnoException):
@@ -76,4 +80,4 @@ class BrokenCheckerException(EnoException):
     Used internally if something goes horribly wrong.
     """
 
-    result: CheckerTaskResult = CheckerTaskResult.CHECKER_TASK_RESULT_INTERNAL_ERROR
+    result: CheckerTaskResult = CheckerTaskResult.INTERNAL_ERROR

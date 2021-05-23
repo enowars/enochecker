@@ -28,6 +28,7 @@ with open(os.path.join(os.path.dirname(__file__), "post.html")) as f:
 
 def checker_routes(
     checker_cls: Type["BaseChecker"],
+    disable_json_logging: bool,
 ) -> Tuple[
     Callable[[], Response],
     Callable[[], Response],
@@ -73,13 +74,16 @@ def checker_routes(
             except jsons.exceptions.UnfulfilledArgumentError as e:
                 return Response(e._msg, status=400)
 
-            checker = checker_cls(task_msg)
+            checker = checker_cls(task_msg, json_logging=(not disable_json_logging))
 
             checker.logger.info(task_msg)
             res = checker.run()
 
             result_message = CheckerResultMessage(
-                result=res.result, message=res.message
+                result=res.result,
+                message=res.message,
+                attack_info=res.attack_info,
+                flag=res.flag,
             )
 
             res_json = jsons.dumps(
@@ -101,7 +105,7 @@ def checker_routes(
                 exc_info=ex,
             )
             result_message = CheckerResultMessage(
-                result=CheckerTaskResult.CHECKER_TASK_RESULT_INTERNAL_ERROR,
+                result=CheckerTaskResult.INTERNAL_ERROR,
                 message=f"Critical checker error occured\n{exception_to_string(ex)}",
             )
             res_json = jsons.dumps(
@@ -130,6 +134,7 @@ def checker_routes(
                 flag_variants=checker_cls.flag_variants,
                 noise_variants=checker_cls.noise_variants,
                 havoc_variants=checker_cls.havoc_variants,
+                exploit_variants=checker_cls.exploit_variants,
             )
 
         except Exception:
@@ -142,6 +147,7 @@ class ExampleChecker(BaseChecker):
     flag_variants  = 1
     noise_variants = 1
     havoc_variants = 1
+    exploit_variants = 1
 """
             )
             raise AttributeError("REQUIRED SERVICE INFO FIELDS NOT SPECIFIED!")
@@ -164,7 +170,9 @@ class ExampleChecker(BaseChecker):
     return index, serve_checker, service_info, get_service_info
 
 
-def init_service(checker: Type["BaseChecker"]) -> Flask:
+def init_service(
+    checker: Type["BaseChecker"], disable_json_logging: bool = False
+) -> Flask:
     """
     Initialize a flask app that can be used for WSGI or listen directly.
 
@@ -174,7 +182,9 @@ def init_service(checker: Type["BaseChecker"]) -> Flask:
     :return: a flask app with post and get routes set, ready for checking.
     """
     app = Flask(__name__)
-    index, checker_route, service_info, get_service_info = checker_routes(checker)
+    index, checker_route, service_info, get_service_info = checker_routes(
+        checker, disable_json_logging=disable_json_logging
+    )
 
     app.route("/", methods=["GET"])(index)
     app.route("/", methods=["POST"])(checker_route)

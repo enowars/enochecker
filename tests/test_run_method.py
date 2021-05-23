@@ -20,10 +20,11 @@ def checker_cls():
         flag_variants = 1
         noise_variants = 1
         havoc_variants = 1
+        exploit_variants = 1
 
         def __init__(
             self,
-            method=CheckerMethod.CHECKER_METHOD_PUTFLAG,
+            method=CheckerMethod.PUTFLAG,
             **kwargs,
         ):
             """
@@ -73,12 +74,14 @@ def checker_cls():
         yield CheckerExampleImpl
 
 
-@pytest.mark.parametrize("method", list(CheckerMethod))
+@pytest.mark.parametrize(
+    "method", [m for m in list(CheckerMethod) if m != CheckerMethod.EXPLOIT]
+)
 def test_run_return_nothing(method, checker_cls):
     c = checker_cls(method)
     res = c.run()
     assert isinstance(res, CheckerResult)
-    assert res.result == CheckerTaskResult.CHECKER_TASK_RESULT_OK
+    assert res.result == CheckerTaskResult.OK
 
 
 @pytest.mark.parametrize(
@@ -105,7 +108,7 @@ def test_raise_broken_service_exception(method, checker_cls):
     c = checker_cls(method)
     res = c.run()
     assert isinstance(res, CheckerResult)
-    assert res.result == CheckerTaskResult.CHECKER_TASK_RESULT_MUMBLE
+    assert res.result == CheckerTaskResult.MUMBLE
     assert res.message == "msg123"
 
 
@@ -118,7 +121,7 @@ def test_raise_offline_exception(method, checker_cls):
     c = checker_cls(method)
     res = c.run()
     assert isinstance(res, CheckerResult)
-    assert res.result == CheckerTaskResult.CHECKER_TASK_RESULT_OFFLINE
+    assert res.result == CheckerTaskResult.OFFLINE
     assert res.message == "msg123"
 
 
@@ -131,7 +134,7 @@ def test_raise_unhandled_exception(method, checker_cls):
     c = checker_cls(method)
     res = c.run()
     assert isinstance(res, CheckerResult)
-    assert res.result == CheckerTaskResult.CHECKER_TASK_RESULT_INTERNAL_ERROR
+    assert res.result == CheckerTaskResult.INTERNAL_ERROR
     assert (
         not res.message
     )  # make sure no checker internals are leaked to the scoreboard
@@ -140,14 +143,14 @@ def test_raise_unhandled_exception(method, checker_cls):
 @pytest.mark.parametrize("method", list(CheckerMethod))
 def test_invalid_return(method, checker_cls):
     def meth(self):
-        return "lolthisisinvalid"
+        return CheckerTaskResult.INTERNAL_ERROR
 
     setattr(checker_cls, str(method), meth)
     c = checker_cls(method)
     with pytest.deprecated_call():
         res = c.run()
     assert isinstance(res, CheckerResult)
-    assert res.result == CheckerTaskResult.CHECKER_TASK_RESULT_INTERNAL_ERROR
+    assert res.result == CheckerTaskResult.INTERNAL_ERROR
     assert (
         not res.message
     )  # make sure no checker internals are leaked to the scoreboard
@@ -157,7 +160,7 @@ def test_run_invalid_method(checker_cls):
     c = checker_cls()
     res = c.run("lolthisisinvalid")
     assert isinstance(res, CheckerResult)
-    assert res.result == CheckerTaskResult.CHECKER_TASK_RESULT_INTERNAL_ERROR
+    assert res.result == CheckerTaskResult.INTERNAL_ERROR
 
 
 @pytest.mark.parametrize(
@@ -171,7 +174,7 @@ def test_requests_mumble(method, exc, checker_cls):
     c = checker_cls(method)
     res = c.run()
     assert isinstance(res, CheckerResult)
-    assert res.result == CheckerTaskResult.CHECKER_TASK_RESULT_MUMBLE
+    assert res.result == CheckerTaskResult.MUMBLE
     assert res.message
 
 
@@ -198,7 +201,7 @@ def test_offline_exceptions(method, exc, checker_cls):
     c = checker_cls(method)
     res = c.run()
     assert isinstance(res, CheckerResult)
-    assert res.result == CheckerTaskResult.CHECKER_TASK_RESULT_OFFLINE
+    assert res.result == CheckerTaskResult.OFFLINE
     assert res.message
 
 
