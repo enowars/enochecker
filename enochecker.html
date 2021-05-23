@@ -280,14 +280,22 @@ Manual locking ist still possible.</p></li>
 <dd><p>Use this method strictly for testing purposes.</p>
 <p>Will hopefully not be called during the actual CTF.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p>EnoException on Error</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The flag found during the execution of this exploit</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p>EnoException on Error or if the flag was not found</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py attribute">
+<dt id="enochecker.enochecker.BaseChecker.exploit_variants">
+<code class="sig-name descname">exploit_variants</code><em class="property">: int</em><em class="property"> = None</em><a class="headerlink" href="#enochecker.enochecker.BaseChecker.exploit_variants" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="enochecker.enochecker.BaseChecker.flag_variants">
@@ -516,11 +524,14 @@ Do not use for indexing (use self.task_chain_id instead).</p>
 The flag itself can be retrieved from self.flag.
 On error, raise an Eno Exception.</p>
 <dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An optional attack info string that will be publicly available to help in exploits (e.g. the username of the user to attack)</p>
+</dd>
 <dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p>EnoException on error</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -557,6 +568,36 @@ using this optional param.</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>A CheckerResult as a representation of the CheckerResult response as definded in the Spec.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="enochecker.enochecker.BaseChecker.search_flag">
+<code class="sig-name descname">search_flag</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.enochecker.BaseChecker.search_flag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search for the flag in the input data using the flag_regex and flag_hash.</p>
+<p>Used only in the exploit method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The flag if it was found, None otherwise</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="enochecker.enochecker.BaseChecker.search_flag_bytes">
+<code class="sig-name descname">search_flag_bytes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.enochecker.BaseChecker.search_flag_bytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search for the flag in the input data using the flag_regex and flag_hash, where flag_regex is interpreted as binary regular expression.</p>
+<p>Used only in the exploit method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The flag if it was found, None otherwise</p>
 </dd>
 </dl>
 </dd></dl>
@@ -792,7 +833,7 @@ This needs python development mode or deprecation warnings enabled!</p>
 
 <dl class="py class">
 <dt id="enochecker.results.CheckerResult">
-<em class="property">class </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">CheckerResult</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">result</span></em>, <em class="sig-param"><span class="n">message</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.CheckerResult" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">enochecker.results.</code><code class="sig-name descname">CheckerResult</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">result</span></em>, <em class="sig-param"><span class="n">message</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attack_info</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">flag</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.results.CheckerResult" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt id="enochecker.results.CheckerResult.from_exception">
