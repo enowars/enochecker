@@ -80,7 +80,10 @@ def checker_routes(
             res = checker.run()
 
             result_message = CheckerResultMessage(
-                result=res.result, message=res.message
+                result=res.result,
+                message=res.message,
+                attack_info=res.attack_info,
+                flag=res.flag,
             )
 
             res_json = jsons.dumps(
@@ -102,7 +105,7 @@ def checker_routes(
                 exc_info=ex,
             )
             result_message = CheckerResultMessage(
-                result=CheckerTaskResult.CHECKER_TASK_RESULT_INTERNAL_ERROR,
+                result=CheckerTaskResult.INTERNAL_ERROR,
                 message=f"Critical checker error occured\n{exception_to_string(ex)}",
             )
             res_json = jsons.dumps(
@@ -131,6 +134,7 @@ def checker_routes(
                 flag_variants=checker_cls.flag_variants,
                 noise_variants=checker_cls.noise_variants,
                 havoc_variants=checker_cls.havoc_variants,
+                exploit_variants=checker_cls.exploit_variants,
             )
 
         except Exception:
@@ -143,6 +147,7 @@ class ExampleChecker(BaseChecker):
     flag_variants  = 1
     noise_variants = 1
     havoc_variants = 1
+    exploit_variants = 1
 """
             )
             raise AttributeError("REQUIRED SERVICE INFO FIELDS NOT SPECIFIED!")
