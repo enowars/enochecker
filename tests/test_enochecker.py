@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import functools
+import hashlib
 import sys
 import tempfile
 from logging import DEBUG
@@ -40,12 +41,16 @@ class CheckerExampleImpl(BaseChecker):
     flag_variants = 1
     noise_variants = 1
     havoc_variants = 1
+    exploit_variants = 1
 
     def __init__(
         self,
-        method=CheckerMethod.CHECKER_METHOD_PUTFLAG,
+        method=CheckerMethod.PUTFLAG,
         flag="ENOFLAG",
         task_chain_id="test",
+        flag_regex="ENOFLAG",
+        flag_hash=hashlib.sha256(b"ENOFLAG").hexdigest(),
+        attack_info=None,
         **kwargs,
     ):
         """
@@ -67,6 +72,9 @@ class CheckerExampleImpl(BaseChecker):
                 timeout=30000,
                 round_length=60000,
                 task_chain_id=task_chain_id,
+                flag_regex=flag_regex,
+                flag_hash=flag_hash,
+                attack_info=attack_info,
             ),
             use_db_cache=False,
             **kwargs,
@@ -177,10 +185,7 @@ def test_checker():
     assert CheckerExampleImpl(task_chain_id=task_chain_id).chain_db is not None
     CheckerExampleImpl(method="getnoise", task_chain_id=task_chain_id).run()
 
-    assert (
-        CheckerExampleImpl(method="havoc").run().result
-        == CheckerTaskResult.CHECKER_TASK_RESULT_OFFLINE
-    )
+    assert CheckerExampleImpl(method="havoc").run().result == CheckerTaskResult.OFFLINE
 
 
 @temp_storage_dir
@@ -196,6 +201,99 @@ def test_useragents():
             return
 
     assert first_agent != checker.http_useragent
+
+
+@temp_storage_dir
+def test_search_flag():
+    flag = "ENOabcdefgh="
+    wrong_flag = "ENOstuvwxyz="
+    flag_regex = r"ENO.{8}="
+    flag_hash = hashlib.sha256(b"ENOabcdefgh=").hexdigest()
+
+    def exploitfn(self: CheckerExampleImpl):
+        return self.search_flag("somestuff" + wrong_flag + flag + "morestuff")
+
+    setattr(CheckerExampleImpl, "exploit", exploitfn)
+    checker = CheckerExampleImpl(
+        method="exploit", flag_regex=flag_regex, flag_hash=flag_hash
+    )
+
+    result = checker.run()
+    assert result.result == CheckerTaskResult.OK
+    assert result.flag == flag
+
+
+@temp_storage_dir
+def test_search_flag_not_found():
+    wrong_flag = "ENOstuvwxyz="
+    flag_regex = r"ENO.{8}="
+    flag_hash = hashlib.sha256(b"ENOabcdefgh=").hexdigest()
+
+    def exploitfn(self: CheckerExampleImpl):
+        return self.search_flag("somestuff" + wrong_flag + "morestuff")
+
+    setattr(CheckerExampleImpl, "exploit", exploitfn)
+    checker = CheckerExampleImpl(
+        method="exploit", flag_regex=flag_regex, flag_hash=flag_hash
+    )
+
+    result = checker.run()
+    assert result.result == CheckerTaskResult.MUMBLE
+    assert result.flag == None
+
+
+@temp_storage_dir
+def test_search_flag_bytes():
+    flag = b"ENOabcdefgh="
+    wrong_flag = b"ENOstuvwxyz="
+    flag_regex = r"ENO.{8}="
+    flag_hash = hashlib.sha256(b"ENOabcdefgh=").hexdigest()
+
+    def exploitfn(self: CheckerExampleImpl):
+        return self.search_flag_bytes(b"somestuff" + wrong_flag + flag + b"morestuff")
+
+    setattr(CheckerExampleImpl, "exploit", exploitfn)
+    checker = CheckerExampleImpl(
+        method="exploit", flag_regex=flag_regex, flag_hash=flag_hash
+    )
+
+    result = checker.run()
+    assert result.result == CheckerTaskResult.OK
+    assert result.flag == flag.decode()
+
+
+@temp_storage_dir
+def test_search_flag_bytes_not_found():
+    wrong_flag = b"ENOstuvwxyz="
+    flag_regex = r"ENO.{8}="
+    flag_hash = hashlib.sha256(b"ENOabcdefgh=").hexdigest()
+
+    def exploitfn(self: CheckerExampleImpl):
+        return self.search_flag_bytes(b"somestuff" + wrong_flag)
+
+    setattr(CheckerExampleImpl, "exploit", exploitfn)
+    checker = CheckerExampleImpl(
+        method="exploit", flag_regex=flag_regex, flag_hash=flag_hash
+    )
+
+    result = checker.run()
+    assert result.result == CheckerTaskResult.MUMBLE
+    assert result.flag == None
+
+
+@temp_storage_dir
+def test_return_attack_info():
+    attack_info = "some super fancy info"
+
+    def putflagfn(self: CheckerExampleImpl):
+        return attack_info
+
+    setattr(CheckerExampleImpl, "putflag", putflagfn)
+    checker = CheckerExampleImpl(method="putflag")
+
+    result = checker.run()
+    assert result.result == CheckerTaskResult.OK
+    assert result.attack_info == attack_info
 
 
 def main():

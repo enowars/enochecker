@@ -88,6 +88,9 @@ class ELKFormatter(logging.Formatter):
             flag=self.checker.flag,
             variant_id=self.checker.variant_id,
             task_chain_id=self.checker.task_chain_id,
+            flag_regex=self.checker.flag_regex,
+            flag_hash=self.checker.flag_hash,
+            attack_info=self.checker.attack_info,
         )
 
         return LOGGING_PREFIX + jsons.dumps(
