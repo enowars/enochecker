@@ -170,7 +170,7 @@
 <p>Flask service to run a checker as HTTP service.</p>
 <dl class="py function">
 <dt id="enochecker.checkerservice.checker_routes">
-<code class="sig-prename descclassname">enochecker.checkerservice.</code><code class="sig-name descname">checker_routes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">checker_cls</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.checkerservice.checker_routes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">enochecker.checkerservice.</code><code class="sig-name descname">checker_routes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">checker_cls</span></em>, <em class="sig-param"><span class="n">disable_json_logging</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.checkerservice.checker_routes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a flask app for the given checker class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -187,7 +187,7 @@
 
 <dl class="py function">
 <dt id="enochecker.checkerservice.init_service">
-<code class="sig-prename descclassname">enochecker.checkerservice.</code><code class="sig-name descname">init_service</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">checker</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.checkerservice.init_service" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">enochecker.checkerservice.</code><code class="sig-name descname">init_service</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">checker</span></em>, <em class="sig-param"><span class="n">disable_json_logging</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.checkerservice.init_service" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize a flask app that can be used for WSGI or listen directly.</p>
 <p>The Engine may communicate with it over socket.</p>
 <dl class="field-list simple">
