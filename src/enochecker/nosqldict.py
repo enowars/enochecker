@@ -28,7 +28,7 @@ DB_DEFAULT_HOST = "localhost"
 DB_DEFAULT_PORT = 27017
 
 
-def value_to_hash(value: Any) -> int:
+def value_to_hash(value: Any) -> Optional[int]:
     """
     Create a stable hash for a value based on the json representation.
 
@@ -37,7 +37,10 @@ def value_to_hash(value: Any) -> int:
     :param key: the value to hash
     :return: hash in string format
     """
-    return hash(json.dumps(value, sort_keys=True))
+    try:
+        return hash(json.dumps(value, sort_keys=True))
+    except TypeError:
+        return None
 
 
 def _try_n_times(func: Callable[..., Any]) -> Callable[..., Any]:
@@ -162,7 +165,9 @@ class NoSqlDict(MutableMapping):
         key = str(key)
 
         self.cache[key] = value
-        self.hash_cache[key] = value_to_hash(value)
+        hash_ = value_to_hash(value)
+        if hash_:
+            self.hash_cache[key] = hash_
 
         self._upsert(key, value)
 
@@ -210,7 +215,9 @@ class NoSqlDict(MutableMapping):
 
         if result:
             self.cache[key] = result["value"]
-            self.hash_cache[key] = value_to_hash(result)
+            hash_ = value_to_hash(result)
+            if hash_:
+                self.hash_cache[key] = hash_
             return result["value"]
         raise KeyError("Could not find {} in {}".format(key, self))
 
@@ -262,7 +269,11 @@ class NoSqlDict(MutableMapping):
         """
         for (key, value) in self.cache.items():
             hash_ = value_to_hash(value)
-            if self.hash_cache[key] != hash_:
+            if (
+                (not hash_)
+                or (key not in self.hash_cache)
+                or (self.hash_cache[key] != hash_)
+            ):
                 self._upsert(key, value)
 
     def __del__(self) -> None:
