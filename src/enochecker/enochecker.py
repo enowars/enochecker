@@ -71,6 +71,12 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     if argv is None:
         return parse_args(sys.argv[1:])
     parser = argparse.ArgumentParser(description="Your friendly checker script")
+    parser.add_argument(
+        "-j",
+        "--disable-json-logging",
+        action="store_true",
+        help="Disable the JSON (ENOLOGMESSAGE) output",
+    )
 
     subparsers = parser.add_subparsers(
         help="The checker runmode (run/listen)", dest="runmode"
@@ -853,10 +859,15 @@ def run(
     """
     parsed = parse_args(args)
     if parsed.runmode == "listen":
-        checker_cls.service.run(host="::", debug=True, port=parsed.listen_port)
+        flask_app = init_service(
+            checker_cls, disable_json_logging=parsed.disable_json_logging
+        )
+        flask_app.run(host="::", debug=True, port=parsed.listen_port)
         return None
     else:
         task_message = task_message_from_namespace(parsed)
-        result = checker_cls(task_message).run()
+        result = checker_cls(
+            task_message, json_logging=(not parsed.disable_json_logging)
+        ).run()
         print(f"Checker run resulted in Result: {result.result.name}")
         return result
