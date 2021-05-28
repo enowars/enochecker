@@ -171,6 +171,20 @@ def test_dict():
     assert len(db) == 0
 
 
+@pytest.mark.parametrize(
+    "value", [b"binarydata", {"test": b"test", "test2": 123}, ["asd", 123, b"xyz"]]
+)
+@temp_storage_dir
+def test_storeddict_complex_types(value):
+    db = enochecker.storeddict.StoredDict(name="test", base_path=STORAGE_DIR)
+
+    db["test"] = value
+    db.persist()
+
+    db.reload()
+    assert db["test"] == value
+
+
 @temp_storage_dir
 def test_checker():
     flag = "ENOFLAG"

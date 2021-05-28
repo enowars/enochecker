@@ -1,6 +1,5 @@
 """Backend for team_db based on a local filesystem directory."""
 
-import json
 import logging
 import os
 import threading
@@ -9,6 +8,8 @@ from collections.abc import MutableMapping
 from functools import wraps
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterator, Optional, Set
+
+import bson
 
 from .utils import base64ify, debase64ify, ensure_valid_filename
 
@@ -22,7 +23,7 @@ DB_LOCK_RETRYCOUNT = (
     6  # 2**6 / 10 seconds are 6.4 secs. -> That's how long the db will wait for a log
 )
 DB_PREFIX = "_store_"  # Prefix all db files will get
-DB_EXTENSION = ".json"  # Extension all db files will get
+DB_EXTENSION = ".bson"  # Extension all db files will get
 DB_LOCK_EXTENSION = ".lock"  # Extension all lock folders will get
 DB_GLOBAL_CACHE_SETTING = True
 
@@ -129,9 +130,9 @@ class StoredDict(MutableMapping):
         """
         return os.path.join(self.path, DB_PREFIX + base64ify(key, b"+-"))
 
-    def _dir_jsonname(self, key: str) -> str:
+    def _dir_bsonname(self, key: str) -> str:
         """
-        Return the path for the json db file for this key.
+        Return the path for the bson db file for this key.
 
         See :func:`_dir`
         """
@@ -240,7 +241,7 @@ class StoredDict(MutableMapping):
             locked = self.is_locked(key) or self.ignore_locks
             if not locked:
                 self.lock(key)
-            os.remove(self._dir_jsonname(key))
+            os.remove(self._dir_bsonname(key))
             if not locked:
                 self.release(key)
             self.logger.debug(f"Deleted {key} from db {self.name}")
@@ -251,8 +252,8 @@ class StoredDict(MutableMapping):
             if not locked:
                 self.lock(key)
             try:
-                with open(self._dir_jsonname(key), "wb") as f:
-                    f.write(json.dumps(self._cache[key]).encode("utf-8"))
+                with open(self._dir_bsonname(key), "wb") as f:
+                    f.write(bson.BSON.encode({"value": self._cache[key]}))
             finally:
                 if not locked:
                     self.release(key)
@@ -272,9 +273,9 @@ class StoredDict(MutableMapping):
         if not locked:
             self.lock(key)
         try:
-            with open(self._dir_jsonname(key), "rb") as f:
-                val = json.loads(f.read().decode("utf-8"))
-        except (OSError, json.decoder.JSONDecodeError) as ex:
+            with open(self._dir_bsonname(key), "rb") as f:
+                val = bson.BSON(f.read()).decode()["value"]
+        except (OSError, bson.errors.BSONError) as ex:
             raise KeyError("Key {} not found - {}".format(key, ex))
         finally:
             if not locked:
