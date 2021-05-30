@@ -4,7 +4,7 @@ import json
 import logging
 from collections.abc import MutableMapping
 from functools import wraps
-from threading import RLock, current_thread
+from threading import Lock, RLock, current_thread
 from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Optional, Union
 
 from . import utils
@@ -135,6 +135,7 @@ class NoSqlDict(MutableMapping):
         self.checker_name = checker_name
         self.cache: Dict[Any, Any] = {}
         self.hash_cache: Dict[Any, Any] = {}
+        self._lock: Lock = Lock()
         host_: str = host or DB_DEFAULT_HOST
         if isinstance(port, int):
             port_: int = port
@@ -142,9 +143,8 @@ class NoSqlDict(MutableMapping):
             port_ = int(port or DB_DEFAULT_PORT)
         username_: Optional[str] = username or DB_DEFAULT_USER
         password_: Optional[str] = password or DB_DEFAULT_PASS
-        self.db = self.get_client(host_, port_, username_, password_, self.logger)[
-            checker_name
-        ][self.dict_name]
+        self.client = self.get_client(host_, port_, username_, password_, self.logger)
+        self.db = self.client[checker_name][self.dict_name]
         try:
             self.db.index_information()["checker_key"]
         except KeyError:
@@ -162,14 +162,17 @@ class NoSqlDict(MutableMapping):
         :param key: key in the dictionary
         :param value: value in the dictionary
         """
-        key = str(key)
+        with self._lock:
+            key = str(key)
 
-        self.cache[key] = value
-        hash_ = value_to_hash(value)
-        if hash_:
-            self.hash_cache[key] = hash_
+            self.cache[key] = value
+            hash_ = value_to_hash(value)
+            if hash_:
+                self.hash_cache[key] = hash_
+            elif key in self.hash_cache:
+                del self.hash_cache[key]
 
-        self._upsert(key, value)
+            self._upsert(key, value)
 
     def _upsert(self, key: Any, value: Any) -> None:
         query_dict = {
@@ -198,28 +201,31 @@ class NoSqlDict(MutableMapping):
         :param print_result: TODO
         :return: retrieved value
         """
-        key = str(key)
-        if key in self.cache.items():
-            return self.cache[key]
+        with self._lock:
+            key = str(key)
 
-        to_extract = {
-            "key": key,
-            "checker": self.checker_name,
-            "name": self.dict_name,
-        }
+            if key in self.cache:
+                return self.cache[key]
 
-        result = self.db.find_one(to_extract)
+            to_extract = {
+                "key": key,
+                "checker": self.checker_name,
+                "name": self.dict_name,
+            }
 
-        if print_result:
-            self.logger.debug(result)
+            result = self.db.find_one(to_extract)
 
-        if result:
-            self.cache[key] = result["value"]
-            hash_ = value_to_hash(result)
-            if hash_:
-                self.hash_cache[key] = hash_
-            return result["value"]
-        raise KeyError("Could not find {} in {}".format(key, self))
+            if print_result:
+                self.logger.debug(result)
+
+            if result:
+                val = result["value"]
+                self.cache[key] = val
+                hash_ = value_to_hash(val)
+                if hash_:
+                    self.hash_cache[key] = hash_
+                return val
+            raise KeyError("Could not find {} in {}".format(key, self))
 
     @_try_n_times
     def __delitem__(self, key: str) -> None:
@@ -230,16 +236,19 @@ class NoSqlDict(MutableMapping):
 
         :param key: key to delete
         """
-        key = str(key)
-        if key in self.cache:
-            del self.cache[key]
+        with self._lock:
+            key = str(key)
+            if key in self.cache:
+                del self.cache[key]
+            if key in self.hash_cache:
+                del self.hash_cache[key]
 
-        to_extract = {
-            "key": key,
-            "checker": self.checker_name,
-            "name": self.dict_name,
-        }
-        self.db.delete_one(to_extract)
+            to_extract = {
+                "key": key,
+                "checker": self.checker_name,
+                "name": self.dict_name,
+            }
+            self.db.delete_one(to_extract)
 
     @_try_n_times
     def __len__(self) -> int:
@@ -267,14 +276,18 @@ class NoSqlDict(MutableMapping):
         """
         Persist the changes in the backend.
         """
-        for (key, value) in self.cache.items():
-            hash_ = value_to_hash(value)
-            if (
-                (not hash_)
-                or (key not in self.hash_cache)
-                or (self.hash_cache[key] != hash_)
-            ):
-                self._upsert(key, value)
+        with self._lock:
+            for (key, value) in list(self.cache.items()):
+                hash_ = value_to_hash(value)
+                if (
+                    (not hash_)
+                    or (key not in self.hash_cache)
+                    or (self.hash_cache[key] != hash_)
+                ):
+                    self._upsert(key, value)
+                del self.cache[key]
+                if key in self.hash_cache:
+                    del self.hash_cache[key]
 
     def __del__(self) -> None:
         """
