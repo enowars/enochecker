@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 import functools
 import hashlib
+import secrets
 import sys
 import tempfile
 from logging import DEBUG
+from unittest import mock
 
 import pytest
 from enochecker_core import CheckerMethod, CheckerTaskMessage, CheckerTaskResult
@@ -308,6 +310,44 @@ def test_return_attack_info():
     result = checker.run()
     assert result.result == CheckerTaskResult.OK
     assert result.attack_info == attack_info
+
+
+@pytest.mark.nosqldict
+def test_nested_change_enochecker():
+    import os
+
+    with mock.patch.dict(
+        os.environ,
+        {
+            "MONGO_ENABLED": "1",
+        },
+    ):
+        dict_name = secrets.token_hex(8)
+
+        def putflagfn(self: CheckerExampleImpl):
+            db = self.db(dict_name)
+            x = {
+                "asd": 123,
+            }
+            db["test"] = x
+
+            x["asd"] = 456
+
+        def getflagfn(self: CheckerExampleImpl):
+            db = self.db(dict_name)
+            assert db["test"]["asd"] == 456
+
+        setattr(CheckerExampleImpl, "putflag", putflagfn)
+        checker = CheckerExampleImpl(method="putflag")
+
+        result = checker.run()
+        assert result.result == CheckerTaskResult.OK
+
+        setattr(CheckerExampleImpl, "getflag", getflagfn)
+        checker = CheckerExampleImpl(method="getflag")
+
+        result = checker.run()
+        assert result.result == CheckerTaskResult.OK
 
 
 def main():

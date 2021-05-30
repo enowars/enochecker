@@ -178,7 +178,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         self.storage_dir = storage_dir
 
         self._setup_logger()
-        if use_db_cache:
+        if use_db_cache and not os.getenv("MONGO_ENABLED"):
             self._active_dbs: Dict[str, Union[NoSqlDict, StoredDict]] = global_db_cache
         else:
             self._active_dbs = {}

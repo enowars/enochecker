@@ -18,5 +18,9 @@ format:
 
 test:
 	pip3 install .
-	coverage run -m pytest
+ifdef GITHUB_ACTIONS
+	coverage run -m pytest -v --with_nosqldict
+else
+	coverage run -m pytest -v
+endif
 	coverage report -m
