@@ -12,6 +12,6 @@ MarkupSafe==1.1.1
 pymongo==3.11.3
 requests==2.25.1
 typish==1.9.2
-urllib3==1.26.4
+urllib3==1.26.5
 Werkzeug==1.0.1
 pwntools==4.5.0
