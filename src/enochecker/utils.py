@@ -204,10 +204,10 @@ class SimpleSocket(pwnlib.tubes.remote.remote):
             self.logger = logger
         else:
             self.logger = utilslogger
-        self.recv = self.recv_patched  # type: ignore
+        self.recv: None = self.recv_patched  # type: ignore
         self.timeout_fun: Optional[Callable[[], float]] = timeout_fun
 
-    def recv_patched(self, *args, **kwargs):
+    def recv_patched(self, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> bytes:
         data = super().recv(*args, **kwargs)
         if data == b"":
             raise EOFError("Received empty string, timeout elapsed?")
