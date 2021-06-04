@@ -204,7 +204,14 @@ class SimpleSocket(pwnlib.tubes.remote.remote):
             self.logger = logger
         else:
             self.logger = utilslogger
+        self.recv = self.recv_patched  # type: ignore
         self.timeout_fun: Optional[Callable[[], float]] = timeout_fun
+
+    def recv_patched(self, *args, **kwargs):
+        data = super().recv(*args, **kwargs)
+        if data == b"":
+            raise EOFError("Received empty string, timeout elapsed?")
+        return data
 
     @property
     def current_default_timeout(self) -> float:
