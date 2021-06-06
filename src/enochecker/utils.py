@@ -200,6 +200,7 @@ class SimpleSocket(pwnlib.tubes.remote.remote):
         """
         super().__init__(host, port, timeout=timeout, *args, **kwargs)
         self.socket: socket.socket = self.sock  # alias
+        self.recv.__doc__ = super().recv.__doc__
         if logger:
             self.logger = logger
         else:
@@ -207,7 +208,6 @@ class SimpleSocket(pwnlib.tubes.remote.remote):
         self.timeout_fun: Optional[Callable[[], float]] = timeout_fun
 
     def recv(self, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> bytes:
-        __doc__ = super().__doc__
         data = super().recv(*args, **kwargs)
         if data == b"":
             raise EOFError("Recv Timeout")
