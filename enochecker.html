@@ -1146,6 +1146,42 @@ is closed and no cooked data is available.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="enochecker.utils.SimpleSocket.recv">
+<code class="sig-name descname">recv</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.SimpleSocket.recv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receives up to <cite>numb</cite> bytes of data from the tube, and returns
+as soon as any quantity of data is available.</p>
+<p>If the request is not satisfied before <code class="docutils literal notranslate"><span class="pre">timeout</span></code> seconds pass,
+all data is buffered and an empty string (<code class="docutils literal notranslate"><span class="pre">''</span></code>) is returned.</p>
+<dl class="simple">
+<dt>Raises:</dt><dd><p>exceptions.EOFError: The connection is closed</p>
+</dd>
+<dt>Returns:</dt><dd><p>A bytes object containing bytes received from the socket,
+or <code class="docutils literal notranslate"><span class="pre">''</span></code> if a timeout occurred while waiting.</p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">tube</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Fake a data source</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">recv_raw</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="sa">b</span><span class="s1">&#39;Hello, world&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span> <span class="o">==</span> <span class="sa">b</span><span class="s1">&#39;Hello, world&#39;</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">unrecv</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;Woohoo&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span> <span class="o">==</span> <span class="sa">b</span><span class="s1">&#39;Woohoo&#39;</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">context</span><span class="o">.</span><span class="n">local</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;debug&#39;</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">_</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span> 
+<span class="go">[...] Received 0xc bytes:</span>
+<span class="go">    b&#39;Hello, world&#39;</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="enochecker.utils.SimpleSocket.write">
 <code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">buffer</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.SimpleSocket.write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write a string to the socket.</p>
