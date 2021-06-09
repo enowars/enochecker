@@ -1147,7 +1147,7 @@ is closed and no cooked data is available.</p>
 
 <dl class="py method">
 <dt id="enochecker.utils.SimpleSocket.recv">
-<code class="sig-name descname">recv</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#enochecker.utils.SimpleSocket.recv" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">recv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">numb</span><span class="o">=</span><span class="default_value">4096</span></em>, <em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">default</span></em><span class="sig-paren">)</span> &#x2192; bytes<a class="headerlink" href="#enochecker.utils.SimpleSocket.recv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Receives up to <cite>numb</cite> bytes of data from the tube, and returns
 as soon as any quantity of data is available.</p>
 <p>If the request is not satisfied before <code class="docutils literal notranslate"><span class="pre">timeout</span></code> seconds pass,
@@ -1174,11 +1174,6 @@ or <code class="docutils literal notranslate"><span class="pre">''</span></code>
 <span class="go">    b&#39;Hello, world&#39;</span>
 </pre></div>
 </div>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
