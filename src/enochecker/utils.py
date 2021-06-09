@@ -207,7 +207,7 @@ class SimpleSocket(pwnlib.tubes.remote.remote):
             self.logger = utilslogger
         self.timeout_fun: Optional[Callable[[], float]] = timeout_fun
 
-    @wraps(pwnlib.tubes.remote.remote.recv)  # type: ignore
+    @wraps(pwnlib.tubes.remote.remote.recv)
     def recv(self, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> bytes:
         data = super().recv(*args, **kwargs)
         if data == b"":
