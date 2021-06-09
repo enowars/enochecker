@@ -5,6 +5,7 @@ import hashlib
 import logging
 import re
 import socket
+from functools import wraps
 from typing import (
     Any,
     Callable,
@@ -200,13 +201,13 @@ class SimpleSocket(pwnlib.tubes.remote.remote):
         """
         super().__init__(host, port, timeout=timeout, *args, **kwargs)
         self.socket: socket.socket = self.sock  # alias
-        self.recv.__doc__ = super().recv.__doc__
         if logger:
             self.logger = logger
         else:
             self.logger = utilslogger
         self.timeout_fun: Optional[Callable[[], float]] = timeout_fun
 
+    @wraps(pwnlib.tubes.remote.remote.recv)
     def recv(self, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> bytes:
         data = super().recv(*args, **kwargs)
         if data == b"":
