@@ -172,14 +172,6 @@ def debase64ify(
         return base64.b64decode(s).decode("utf-8")
 
 
-def docstring_from(cls: Any) -> Any:
-    @wraps(cls)
-    def docstring_setter(fn: Any) -> Any:
-        return fn
-
-    return docstring_setter
-
-
 class SimpleSocket(pwnlib.tubes.remote.remote):
     """
     Convenient socket wrapper using pwnlib's tubes.remote
@@ -215,7 +207,7 @@ class SimpleSocket(pwnlib.tubes.remote.remote):
             self.logger = utilslogger
         self.timeout_fun: Optional[Callable[[], float]] = timeout_fun
 
-    @docstring_from(pwnlib.tubes.remote.remote.recv)  # type: ignore
+    @wraps(pwnlib.tubes.remote.remote.recv)  # type: ignore
     def recv(self, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> bytes:
         data = super().recv(*args, **kwargs)
         if data == b"":
