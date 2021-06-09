@@ -5,6 +5,7 @@ import hashlib
 import logging
 import re
 import socket
+from functools import wraps
 from typing import (
     Any,
     Callable,
@@ -172,11 +173,11 @@ def debase64ify(
 
 
 def docstring_from(cls: Any) -> Any:
-    def docstring_setting_decorator(fn: Any) -> Any:
-        fn.__doc__ = cls.__doc__
+    @wraps(cls)
+    def docstring_setter(fn: Any) -> Any:
         return fn
 
-    return docstring_setting_decorator
+    return docstring_setter
 
 
 class SimpleSocket(pwnlib.tubes.remote.remote):
