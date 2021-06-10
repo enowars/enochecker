@@ -848,6 +848,7 @@ class BaseChecker(metaclass=_CheckerMeta):
 def run(
     checker_cls: Type[BaseChecker],
     args: Optional[Sequence[str]] = None,
+    **kwargs: Any,
 ) -> Optional[CheckerResult]:
     """
     Run a checker, either from cmdline or as uwsgi script.
@@ -862,12 +863,15 @@ def run(
         flask_app = init_service(
             checker_cls, disable_json_logging=parsed.disable_json_logging
         )
-        flask_app.run(host="::", debug=True, port=parsed.listen_port)
+        kwargs.setdefault("host", "::")
+        kwargs.setdefault("debug", True)
+        kwargs.setdefault("port", parsed.listen_port)
+        flask_app.run(**kwargs)
         return None
     else:
         task_message = task_message_from_namespace(parsed)
         result = checker_cls(
             task_message, json_logging=(not parsed.disable_json_logging)
-        ).run()
+        ).run(**kwargs)
         print(f"Checker run resulted in Result: {result.result.name}")
         return result
