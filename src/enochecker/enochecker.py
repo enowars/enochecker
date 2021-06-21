@@ -494,6 +494,8 @@ class BaseChecker(metaclass=_CheckerMeta):
     def exploit(self) -> str:
         """
         Use this method strictly for testing purposes.
+        It should run exploits just like a real team would.
+        It may not use stored data.
 
         Will hopefully not be called during the actual CTF.
 
@@ -545,6 +547,10 @@ class BaseChecker(metaclass=_CheckerMeta):
                 Manual locking ist still possible.
         :return: A dict that will be self storing. Alternatively,
         """
+        if self.method == CheckerMethod.EXPLOIT:
+            raise EnoException(
+                "The exploit method must not rely on stored data! Database access prevented."
+            )
         try:
             db = self._active_dbs[name]
             db.logger = self.logger
