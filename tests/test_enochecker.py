@@ -14,6 +14,7 @@ import enochecker
 from enochecker import (
     BaseChecker,
     BrokenServiceException,
+    EnoException,
     OfflineException,
     assert_equals,
     assert_in,
@@ -310,6 +311,18 @@ def test_return_attack_info():
     result = checker.run()
     assert result.result == CheckerTaskResult.OK
     assert result.attack_info == attack_info
+
+
+@temp_storage_dir
+def test_exploit_access_db():
+    def exploitfn(self: CheckerExampleImpl):
+        _ = self.team_db["asd"]
+
+    setattr(CheckerExampleImpl, "exploit", exploitfn)
+    checker = CheckerExampleImpl(method="exploit")
+
+    result = checker.run()
+    assert result.result == CheckerTaskResult.INTERNAL_ERROR
 
 
 @pytest.mark.nosqldict
