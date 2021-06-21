@@ -14,7 +14,6 @@ import enochecker
 from enochecker import (
     BaseChecker,
     BrokenServiceException,
-    EnoException,
     OfflineException,
     assert_equals,
     assert_in,
