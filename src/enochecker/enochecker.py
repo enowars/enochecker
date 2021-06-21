@@ -512,10 +512,18 @@ class BaseChecker(metaclass=_CheckerMeta):
 
         :return: The flag if it was found, None otherwise
         """
-        for flag in self._flag_regex.findall(data):
-            hash_ = hashlib.sha256(flag.encode()).hexdigest()
-            if hash_ == self.flag_hash:
-                return flag
+        if self._flag_regex:
+            for flag in self._flag_regex.findall(data):
+                hash_ = hashlib.sha256(flag.encode()).hexdigest()
+                if hash_ == self.flag_hash:
+                    return flag
+        elif self.flag:
+            if self.flag in data:
+                return self.flag
+        else:
+            raise EnoException(
+                "Called search_flag, but no flag or flag_regex was specified"
+            )
         return None
 
     def search_flag_bytes(self, data: bytes) -> Optional[str]:
@@ -526,10 +534,18 @@ class BaseChecker(metaclass=_CheckerMeta):
 
         :return: The flag if it was found, None otherwise
         """
-        for flag in self._flag_regex_bytes.findall(data):
-            hash_ = hashlib.sha256(flag).hexdigest()
-            if hash_ == self.flag_hash:
-                return flag.decode()
+        if self._flag_regex_bytes:
+            for flag in self._flag_regex_bytes.findall(data):
+                hash_ = hashlib.sha256(flag).hexdigest()
+                if hash_ == self.flag_hash:
+                    return flag.decode()
+        elif self.flag:
+            if self.flag.encode() in data:
+                return self.flag
+        else:
+            raise EnoException(
+                "Called search_flag_bytes, but no flag or flag_regex_bytes was specified"
+            )
         return None
 
     # ---- DB specific methods ---- #
