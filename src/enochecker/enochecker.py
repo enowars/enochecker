@@ -44,7 +44,7 @@ if TYPE_CHECKING:  # pragma: no cover
     import requests
 
 DEFAULT_TIMEOUT: float = 30
-TIME_BUFFER: float = 5  # time in seconds we try to finish earlier
+TIME_BUFFER: float = 2  # time in seconds we try to finish earlier
 
 # Global cache for all stored dicts.  TODO: Prune this at some point?
 global_db_cache: Dict[str, Union[StoredDict, NoSqlDict]] = {}
@@ -683,7 +683,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         else:
 
             def timeout_fun() -> float:
-                return self.time_remaining / 2
+                return self.time_remaining
 
         if port is None:
             port = self.port
@@ -837,7 +837,7 @@ class BaseChecker(metaclass=_CheckerMeta):
         kwargs.setdefault("allow_redirects", False)
         url = self._sanitize_url(route, port, scheme)
         if timeout is None:
-            timeout = self.time_remaining / 2
+            timeout = self.time_remaining
         self.debug(
             "Request: {} {} with params: {} and {} secs timeout.".format(
                 method, url, params, timeout
