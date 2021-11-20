@@ -53,7 +53,7 @@ class EnoException(Exception, ABC):
         return self.message if self.message else ""
 
     def message_contains(self, flag: Optional[str]) -> bool:
-        """" If the string is in the message """
+        """If the string is in the message"""
         if not self.message:
             return False
         if not flag:
